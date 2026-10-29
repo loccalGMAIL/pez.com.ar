@@ -9,7 +9,7 @@ desde un subdominio con un panel de Filament.
 | Tema | Decisión |
 |---|---|
 | Framework | Laravel 12 + Filament 5 (estable actual, requiere PHP 8.2+) |
-| Ubicación | Misma app, panel en subdominio (`gestion.pez.com.ar`, configurable por `.env`) |
+| Ubicación | Misma app, panel en subdominio (`sistema.pez.com.ar`, configurable por `.env`) |
 | Usuarios | Un solo usuario administrador (sin roles/permisos por ahora) |
 | Moneda | Solo ARS (montos guardados como enteros en centavos) |
 | Facturación electrónica (ARCA/AFIP) | Más adelante; por ahora cobranza interna |
@@ -25,8 +25,8 @@ desde un subdominio con un panel de Filament.
   raíz del subdominio.
 - Rutas públicas de `routes/web.php` envueltas en `Route::domain(config('app.domain'))`
   para que la landing y el panel no se pisen en `/`.
-- Variables nuevas en `.env`: `APP_DOMAIN=pez.com.ar`, `ADMIN_DOMAIN=gestion.pez.com.ar`.
-  En local: `pez.test` / `gestion.pez.test`.
+- Variables nuevas en `.env`: `APP_DOMAIN=pez.com.ar`, `ADMIN_DOMAIN=sistema.pez.com.ar`.
+  En local: `pez.test` / `sistema.pez.test`.
 - `SESSION_DOMAIN` sin punto inicial: la sesión del panel no se comparte con el sitio público.
 - En hPanel, el subdominio debe apuntar al mismo `public/` de Laravel (si hPanel no
   permite elegir la carpeta, un symlink de la carpeta del subdominio a `public/`).
@@ -108,7 +108,7 @@ Estados:
 
 ## Fases
 
-1. **Base:** instalar Filament, panel en subdominio, separación de rutas por dominio,
+1. ✅ **Base:** instalar Filament, panel en subdominio, separación de rutas por dominio,
    usuario admin (`make:filament-user`), configuración de deploy/cron, tests de dominios.
 2. **Clientes y catálogo:** modelos, migraciones, factories, recursos y tests.
 3. **Presupuestos:** ítems, numeración, totales, estados, PDF archivado y envío por mail.
@@ -119,3 +119,27 @@ Estados:
 7. **Futuro:** facturación electrónica, links de pago MercadoPago, portal de clientes.
 
 Cada fase incluye migraciones con `down()`, factories, tests (`php artisan test`) y Pint.
+
+## Puesta en marcha en Hostinger (fase 1)
+
+1. En hPanel → Dominios → Subdominios, crear `sistema.pez.com.ar` apuntando a la misma
+   carpeta `public/` de Laravel que usa `pez.com.ar` (o symlink de la carpeta que cree
+   hPanel hacia `public/`).
+2. En el `.env` del servidor:
+   ```
+   APP_DOMAIN=pez.com.ar
+   ADMIN_DOMAIN=sistema.pez.com.ar
+   SESSION_DOMAIN=null
+   ```
+3. Por SSH, en la carpeta del proyecto:
+   ```
+   git pull
+   composer install --no-dev -o   # también publica los assets de Filament
+   php artisan migrate --force
+   php artisan make:filament-user   # solo la primera vez
+   php artisan optimize
+   ```
+4. Entrar a `https://sistema.pez.com.ar` (SSL del subdominio activado en hPanel).
+
+Si se usa `www.pez.com.ar`, debe redirigir a `pez.com.ar`: las rutas públicas solo
+responden en `APP_DOMAIN`.
