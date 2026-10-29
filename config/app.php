@@ -56,6 +56,21 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Application Domains
+    |--------------------------------------------------------------------------
+    |
+    | The public site and the management panel are served by this same app
+    | from different hosts. Routes are bound to these domains so the landing
+    | and the panel never answer on each other's host.
+    |
+    */
+
+    'domain' => env('APP_DOMAIN', 'pez.com.ar'),
+
+    'admin_domain' => env('ADMIN_DOMAIN', 'sistema.pez.com.ar'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Timezone
     |--------------------------------------------------------------------------
     |
@@ -65,7 +80,7 @@ return [
     |
     */
 
-    'timezone' => 'UTC',
+    'timezone' => env('APP_TIMEZONE', 'America/Argentina/Buenos_Aires'),
 
     /*
     |--------------------------------------------------------------------------
@@ -78,11 +93,11 @@ return [
     |
     */
 
-    'locale' => env('APP_LOCALE', 'en'),
+    'locale' => env('APP_LOCALE', 'es'),
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
-    'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+    'faker_locale' => env('APP_FAKER_LOCALE', 'es_AR'),
 
     /*
     |--------------------------------------------------------------------------
