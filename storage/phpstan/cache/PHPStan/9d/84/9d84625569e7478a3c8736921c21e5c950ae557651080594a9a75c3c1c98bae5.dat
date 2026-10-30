@@ -1,1 +1,0 @@
-O:23:"PHPStan\Cache\CacheItem":2:{s:11:"variableKey";s:73:"v2-50e277d4e57713bcb8a73dfdab6cf3371a85296857b5d47c7d6f609dba9bd414-8.3.6";s:4:"data";a:3:{s:7:"classes";a:1:{s:46:"illuminate\database\eloquent\softdeletingscope";b:1;}s:9:"functions";a:0:{}s:9:"constants";a:0:{}}}
