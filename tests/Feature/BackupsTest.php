@@ -21,6 +21,24 @@ class BackupsTest extends TestCase
         $this->assertNotEmpty(config('backup.backup.source.databases'));
     }
 
+    public function test_failure_mails_always_have_a_valid_recipient(): void
+    {
+        // laravel-backup validates this address while the app boots (also during
+        // composer install, before any .env exists), so it can never be empty.
+        foreach (['', 'avisos@pez.com.ar'] as $configured) {
+            putenv("BACKUP_NOTIFICATION_EMAIL={$configured}");
+            $_ENV['BACKUP_NOTIFICATION_EMAIL'] = $_SERVER['BACKUP_NOTIFICATION_EMAIL'] = $configured;
+
+            $to = (require config_path('backup.php'))['notifications']['mail']['to'];
+
+            $this->assertNotFalse(filter_var($to, FILTER_VALIDATE_EMAIL));
+            $configured === '' || $this->assertSame($configured, $to);
+        }
+
+        putenv('BACKUP_NOTIFICATION_EMAIL');
+        unset($_ENV['BACKUP_NOTIFICATION_EMAIL'], $_SERVER['BACKUP_NOTIFICATION_EMAIL']);
+    }
+
     public function test_backups_run_every_night_and_are_monitored(): void
     {
         $commands = collect(app(Schedule::class)->events())->map(fn ($event) => $event->command)->join("\n");
@@ -61,17 +79,29 @@ class BackupsTest extends TestCase
         Storage::disk('backups')->assertMissing('pez-sistema/old.zip');
     }
 
-    public function test_makes_a_files_backup_from_the_panel_and_reports_failures(): void
+    public function test_makes_a_backup_from_the_panel(): void
     {
         $this->actingAs(User::factory()->create());
         Storage::fake('backups');
+        // The in-memory test database can't be dumped the same way everywhere
+        // (it depends on the sqlite3 binary), so back up the files only.
+        config(['backup.backup.source.databases' => []]);
 
-        // The in-memory test database can't be dumped, so a full run fails and says so.
+        Livewire::test(Backups::class)
+            ->callAction('backupNow')
+            ->assertNotified('Backup hecho');
+
+        $this->assertCount(1, Backups::backups());
+    }
+
+    public function test_reports_a_failed_backup(): void
+    {
+        $this->actingAs(User::factory()->create());
+        Storage::fake('backups');
+        config(['backup.backup.source.databases' => ['missing-connection']]);
+
         Livewire::test(Backups::class)
             ->callAction('backupNow')
             ->assertNotified('No se pudo hacer el backup');
-
-        $this->artisan('backup:run', ['--only-files' => true, '--disable-notifications' => true])->assertSuccessful();
-        $this->assertCount(1, Backups::backups());
     }
 }

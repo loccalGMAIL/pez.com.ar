@@ -13,6 +13,8 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+## [2.0.0] - 2026-10-30
+
 ### Agregado
 
 - Panel de gestión con Filament 5 en `sistema.pez.com.ar` (configurable con
@@ -97,6 +99,12 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 - Idioma por defecto español y zona horaria `America/Argentina/Buenos_Aires`.
 - El workflow de tests corre en los push a `master`, en PHP 8.3 y 8.4.
 - Este changelog reemplaza al del esqueleto de Laravel.
+
+### Corregido
+
+- La app ya no falla al arrancar (por ejemplo en `composer install` del CI, antes de
+  tener `.env`) cuando no hay email para los avisos de backup: usa
+  `BACKUP_NOTIFICATION_EMAIL`, si no `MAIL_FROM_ADDRESS` y si no `info@pez.com.ar`.
 
 ### Eliminado
 
