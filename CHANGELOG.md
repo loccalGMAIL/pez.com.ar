@@ -13,6 +13,8 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+## [2.3.0] - 2026-10-30
+
 ### Agregado
 
 - El panel se puede instalar como aplicación (PWA) en la computadora o el celular, con
