@@ -4,7 +4,7 @@ This document provides guidance for AI agents working in this codebase.
 
 ## Project Overview
 
-This is a Laravel 12 application with Vite/Tailwind frontend. It follows Laravel conventions and uses PHP 8.2+.
+This is a Laravel 13 application with a Filament 5 admin panel and a Vite/Tailwind landing. It follows Laravel conventions and uses PHP 8.3+.
 
 ## Versioning and Changelog
 
@@ -86,8 +86,8 @@ php artisan test
 
 ### General Conventions
 
-- **PHP Version**: 8.2 minimum
-- **Framework**: Laravel 12
+- **PHP Version**: 8.3 minimum
+- **Framework**: Laravel 13 (Filament 5 panel)
 - **Indent**: 4 spaces for PHP, 2 spaces for YAML
 - **Line endings**: LF (Unix)
 - **Charset**: UTF-8

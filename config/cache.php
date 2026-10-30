@@ -112,6 +112,19 @@ return [
     |
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Serializable Classes
+    |--------------------------------------------------------------------------
+    |
+    | Laravel 13 hardening: cached values are unserialized without allowing any
+    | class, so a leaked APP_KEY can't be turned into a gadget chain. The app
+    | only caches arrays and scalars (App\Support\Settings).
+    |
+    */
+
+    'serializable_classes' => false,
+
     'prefix' => env('CACHE_PREFIX', Str::slug((string) env('APP_NAME', 'laravel')).'-cache-'),
 
 ];

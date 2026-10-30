@@ -70,6 +70,11 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
 
 ### Cambiado
 
+- **Laravel 13** (13.39) con PHPUnit 12, Tinker 3 y Guzzle 8. Requiere **PHP 8.3 o
+  superior** (elegirlo en hPanel antes de desplegar). El panel usa el middleware
+  `PreventRequestForgery`, que reemplaza a `VerifyCsrfToken`, y el caché ya no
+  deserializa objetos (`serializable_classes` en `false`).
+- El workflow de tests corre en PHP 8.3 y 8.4.
 - Encabezado, pie, estilos y bloque del cliente de los PDF compartidos entre
   presupuesto y recibo (`resources/views/pdf/layout.blade.php`).
 - PDF del presupuesto rediseñado según el modelo de PEZ: encabezado con logo, título,
