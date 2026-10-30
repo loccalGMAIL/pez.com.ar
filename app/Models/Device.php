@@ -24,6 +24,7 @@ class Device extends Model
         'model',
         'serial_number',
         'notes',
+        'photos',
         'is_active',
     ];
 
@@ -31,6 +32,7 @@ class Device extends Model
     {
         return [
             'type' => DeviceType::class,
+            'photos' => 'array',
             'is_active' => 'boolean',
         ];
     }

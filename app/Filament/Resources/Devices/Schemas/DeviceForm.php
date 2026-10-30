@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Devices\Schemas;
 
 use App\Enums\DeviceType;
+use App\Filament\Forms\PhotosUpload;
+use App\Filament\Forms\SerialNumberInput;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -12,7 +14,10 @@ use Filament\Schemas\Schema;
 
 class DeviceForm
 {
-    public static function configure(Schema $schema): Schema
+    /**
+     * @param  bool  $withClient  false when the client is implied (inline creation from a work order)
+     */
+    public static function configure(Schema $schema, bool $withClient = true): Schema
     {
         return $schema
             ->columns(2)
@@ -25,7 +30,7 @@ class DeviceForm
                     ->default(fn () => request()->query('client'))
                     ->required()
                     // Inside the client's page the client is implied.
-                    ->hidden(fn ($livewire) => $livewire instanceof RelationManager)
+                    ->hidden(fn ($livewire) => ! $withClient || $livewire instanceof RelationManager)
                     ->columnSpanFull(),
                 Select::make('type')
                     ->label('Tipo')
@@ -41,9 +46,7 @@ class DeviceForm
                 TextInput::make('model')
                     ->label('Modelo')
                     ->maxLength(255),
-                TextInput::make('serial_number')
-                    ->label('Número de serie')
-                    ->maxLength(255),
+                SerialNumberInput::make(),
                 Toggle::make('is_active')
                     ->label('En uso')
                     ->helperText('Desactivalo cuando el cliente lo da de baja.')
@@ -53,6 +56,10 @@ class DeviceForm
                     ->label('Notas')
                     ->helperText('Configuración, accesos, ubicación…')
                     ->rows(3)
+                    ->columnSpanFull(),
+                PhotosUpload::make('photos', 'devices')
+                    ->label('Fotos')
+                    ->helperText('Opcional: el equipo, la etiqueta con el número de serie…')
                     ->columnSpanFull(),
             ]);
     }

@@ -4,6 +4,9 @@ namespace App\Filament\Resources\WorkOrders\Schemas;
 
 use App\Enums\QuoteStatus;
 use App\Enums\WorkOrderStatus;
+use App\Filament\Forms\PhotosUpload;
+use App\Filament\Resources\Devices\Schemas\DeviceForm;
+use App\Models\Device;
 use App\Models\WorkOrder;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
@@ -63,7 +66,14 @@ class WorkOrderForm
                             ))
                             ->getOptionLabelFromRecordUsing(fn ($record) => $record->label)
                             ->preload()
-                            ->helperText('Equipos del cliente involucrados. Se cargan desde la ficha del cliente.'),
+                            ->helperText('Equipos del cliente involucrados. Si el equipo es nuevo, cargalo con el "+".')
+                            ->createOptionForm(fn (Schema $schema) => DeviceForm::configure($schema, withClient: false))
+                            ->createOptionUsing(function (array $data, Get $get, $livewire): int {
+                                $data['client_id'] = $livewire instanceof RelationManager ? $livewire->getOwnerRecord()->getKey() : $get('client_id');
+
+                                return Device::create($data)->getKey();
+                            })
+                            ->disabled(fn (Get $get, $livewire) => ! $livewire instanceof RelationManager && blank($get('client_id'))),
                         Select::make('quote_id')
                             ->label('Presupuesto')
                             ->relationship('quote', 'number', fn (Builder $query, Get $get, $livewire) => $query
@@ -74,6 +84,10 @@ class WorkOrderForm
                         Textarea::make('description')
                             ->label('Pedido / problema')
                             ->rows(4)
+                            ->columnSpanFull(),
+                        PhotosUpload::make('reception_photos', 'work-orders/reception')
+                            ->label('Fotos de recepción')
+                            ->helperText('Opcional: estado en que se recibe el equipo (golpes, faltantes, accesorios).')
                             ->columnSpanFull(),
                     ]),
                 Section::make('Resolución')

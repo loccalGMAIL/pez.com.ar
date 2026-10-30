@@ -15,6 +15,12 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
 
 ### Agregado
 
+- Fotos opcionales de los equipos y fotos de recepción en los trabajos (estado en que
+  llega el equipo). Se achican en el navegador antes de subir y se guardan en privado;
+  desde el celular se pueden sacar con la cámara.
+- Lectura del número de serie con la cámara (códigos de barras Code 128/39/93, EAN, UPC,
+  ITF, QR y DataMatrix). El lector se descarga solo al usarlo y requiere HTTPS.
+- Alta de un equipo nuevo desde el mismo formulario del trabajo, al recibirlo.
 - Equipos de cada cliente (tipo, identificación, marca, modelo, número de serie, notas)
   con historial de trabajos y envíos a service.
 - Trabajos numerados desde `T-00001`: cliente, equipos, presupuesto de origen, pedido,
@@ -57,6 +63,8 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
 
 ### Cambiado
 
+- PDF del presupuesto con un estilo más sobrio, en blanco y negro, siguiendo el formato
+  de los presupuestos anteriores.
 - URLs del panel en español: `/clientes`, `/equipos`, `/catalogo`, `/presupuestos`,
   `/trabajos`, `/service-externo`, `/proveedores`.
 - Las rutas públicas (landing, contacto, gracias) solo responden en `APP_DOMAIN`;

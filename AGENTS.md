@@ -58,6 +58,9 @@ npm run build
 
 # Watch mode
 npm run dev -- --watch
+
+# Panel barcode scanner bundle (committed in resources/js/dist, not part of public/build)
+npm run build:scanner
 ```
 
 ### Full Development Setup

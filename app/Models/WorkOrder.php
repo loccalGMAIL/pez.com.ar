@@ -30,6 +30,7 @@ class WorkOrder extends Model
         'opened_on',
         'due_on',
         'hours',
+        'reception_photos',
         'attachments',
     ];
 
@@ -46,6 +47,7 @@ class WorkOrder extends Model
             'finished_at' => 'datetime',
             'delivered_at' => 'datetime',
             'hours' => 'decimal:2',
+            'reception_photos' => 'array',
             'attachments' => 'array',
         ];
     }

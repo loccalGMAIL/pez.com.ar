@@ -4,6 +4,7 @@ namespace App\Filament\Resources\WorkOrders\Schemas;
 
 use App\Filament\Resources\Clients\ClientResource;
 use App\Filament\Resources\Quotes\QuoteResource;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -63,6 +64,13 @@ class WorkOrderInfolist
                         TextEntry::make('resolution')
                             ->label('Diagnóstico y trabajo realizado')
                             ->placeholder('—'),
+                        ImageEntry::make('reception_photos')
+                            ->label('Fotos de recepción')
+                            ->disk('local')
+                            ->visibility('private')
+                            ->imageHeight(120)
+                            ->placeholder('—')
+                            ->columnSpanFull(),
                         TextEntry::make('attachments')
                             ->label('Adjuntos')
                             ->state(fn ($record) => collect($record->attachments ?? [])->map(fn ($path) => basename($path))->all())

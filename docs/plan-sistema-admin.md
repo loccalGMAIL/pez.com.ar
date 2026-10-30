@@ -35,6 +35,9 @@ desde un subdominio con un panel de Filament.
 ### Deploy sin npm
 
 - La landing ya se compila local y se commitea `public/build` (se mantiene así).
+- El lector de códigos de barras del panel se compila aparte con `npm run build:scanner`
+  y se commitea en `resources/js/dist/`; `php artisan filament:assets` lo publica en
+  `public/js/app/`. Así no se toca el build de la landing. La cámara requiere HTTPS.
 - Filament trae sus assets precompilados: se publican con `php artisan filament:assets`
   (corre solo en `post-autoload-dump` al hacer `composer install` en el servidor).
 - **No** usar un tema custom de Filament compilado con Vite; personalización vía

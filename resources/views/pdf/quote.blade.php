@@ -7,24 +7,23 @@
     <meta charset="utf-8">
     <title>Presupuesto {{ $quote->code }}</title>
     <style>
-        @page { margin: 32px 40px; }
-        body { font-family: DejaVu Sans, sans-serif; font-size: 11px; color: #1f2937; }
-        h1 { font-size: 20px; margin: 0; }
-        .muted { color: #6b7280; }
-        .accent { color: #047857; }
-        .header { width: 100%; border-bottom: 3px solid #10b981; padding-bottom: 12px; margin-bottom: 18px; }
+        @page { margin: 36px 44px; }
+        body { font-family: DejaVu Sans, sans-serif; font-size: 10.5px; color: #000; }
+        h1 { font-size: 18px; margin: 0; }
+        .muted { color: #444; }
+        .header { width: 100%; margin-bottom: 22px; }
         .header td { vertical-align: top; }
         .right { text-align: right; }
-        .box { width: 100%; margin-bottom: 18px; }
+        .box { width: 100%; margin-bottom: 22px; }
         .box td { vertical-align: top; width: 50%; }
-        .label { font-size: 9px; text-transform: uppercase; letter-spacing: .5px; color: #6b7280; }
+        .label { font-weight: bold; }
         table.items { width: 100%; border-collapse: collapse; }
-        table.items th { background: #ecfdf5; color: #065f46; font-size: 10px; text-align: left; padding: 6px 8px; border-bottom: 1px solid #a7f3d0; }
-        table.items td { padding: 6px 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+        table.items th { font-weight: bold; font-size: 11px; text-align: center; padding: 4px 6px 10px; vertical-align: bottom; }
+        table.items th.desc { text-align: center; }
+        table.items td { padding: 2px 6px; vertical-align: top; }
         table.items .num { text-align: right; white-space: nowrap; }
-        table.totals { width: 45%; margin-left: 55%; margin-top: 10px; border-collapse: collapse; }
-        table.totals td { padding: 4px 8px; }
-        table.totals .total td { font-size: 14px; font-weight: bold; border-top: 2px solid #10b981; padding-top: 8px; }
+        table.items tr.total td { font-weight: bold; padding-top: 12px; }
+        .bar { height: 14px; background: #000; margin-top: 18px; }
         .section { margin-top: 22px; }
         .pre { white-space: pre-line; }
     </style>
@@ -33,7 +32,7 @@
     <table class="header">
         <tr>
             <td>
-                <h1 class="accent">{{ $company['name'] }}</h1>
+                <h1>{{ $company['name'] }}</h1>
                 <div class="muted">
                     @if ($company['cuit']) CUIT {{ $company['cuit'] }}<br>@endif
                     @if ($company['address']) {{ $company['address'] }}<br>@endif
@@ -41,8 +40,7 @@
                 </div>
             </td>
             <td class="right">
-                <div class="label">Presupuesto</div>
-                <h1>{{ $quote->code }}</h1>
+                <h1>Presupuesto {{ $quote->code }}</h1>
                 <div>Fecha: {{ $quote->issue_date->format('d/m/Y') }}</div>
                 <div>Válido hasta: {{ $quote->valid_until->format('d/m/Y') }}</div>
             </td>
@@ -72,10 +70,10 @@
     <table class="items">
         <thead>
             <tr>
-                <th>Descripción</th>
-                <th class="num">Cantidad</th>
-                <th class="num">Precio unitario</th>
-                <th class="num">Importe</th>
+                <th class="desc">Descripción</th>
+                <th>Cantidad</th>
+                <th>Precio<br>Unitario $</th>
+                <th>Importe $</th>
             </tr>
         </thead>
         <tbody>
@@ -87,25 +85,24 @@
                     <td class="num">{{ QuotePdf::money($item->subtotal) }}</td>
                 </tr>
             @endforeach
+            @if ($quote->discount > 0)
+                <tr class="total">
+                    <td class="right" colspan="3">SUBTOTAL</td>
+                    <td class="num">{{ QuotePdf::money($quote->subtotal) }}</td>
+                </tr>
+                <tr>
+                    <td class="right" colspan="3">Descuento</td>
+                    <td class="num">- {{ QuotePdf::money($quote->discount) }}</td>
+                </tr>
+            @endif
+            <tr class="total">
+                <td class="right" colspan="3">TOTAL</td>
+                <td class="num">{{ QuotePdf::money($quote->total) }}</td>
+            </tr>
         </tbody>
     </table>
 
-    <table class="totals">
-        @if ($quote->discount > 0)
-            <tr>
-                <td>Subtotal</td>
-                <td class="num right">{{ QuotePdf::money($quote->subtotal) }}</td>
-            </tr>
-            <tr>
-                <td>Descuento</td>
-                <td class="num right">- {{ QuotePdf::money($quote->discount) }}</td>
-            </tr>
-        @endif
-        <tr class="total">
-            <td>Total</td>
-            <td class="num right">{{ QuotePdf::money($quote->total) }}</td>
-        </tr>
-    </table>
+    <div class="bar"></div>
 
     @if ($quote->notes)
         <div class="section">

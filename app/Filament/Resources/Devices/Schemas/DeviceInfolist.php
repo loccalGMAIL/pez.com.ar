@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Devices\Schemas;
 
 use App\Filament\Resources\Clients\ClientResource;
 use Filament\Infolists\Components\IconEntry;
+use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
@@ -43,6 +44,13 @@ class DeviceInfolist
                             ->label('Notas')
                             ->placeholder('—')
                             ->columnSpan(2),
+                        ImageEntry::make('photos')
+                            ->label('Fotos')
+                            ->disk('local')
+                            ->visibility('private')
+                            ->imageHeight(120)
+                            ->placeholder('—')
+                            ->columnSpanFull(),
                     ]),
             ]);
     }
