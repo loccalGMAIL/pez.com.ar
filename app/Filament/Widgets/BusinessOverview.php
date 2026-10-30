@@ -46,7 +46,7 @@ class BusinessOverview extends StatsOverviewWidget
             Stat::make('Presupuestos sin respuesta', $pendingQuotes->count())
                 ->description(QuotePdf::money($pendingQuotes->sum('total') / 100).' en juego')
                 ->url(QuoteResource::getUrl('index')),
-            Stat::make('Trabajos abiertos', WorkOrder::whereIn('status', WorkOrderStatus::open())->count())
+            Stat::make('Órdenes de trabajo abiertas', WorkOrder::whereIn('status', WorkOrderStatus::open())->count())
                 ->url(WorkOrderResource::getUrl('index')),
             Stat::make('Equipos en service externo', ExternalRepair::out()->count())
                 ->url(ExternalRepairResource::getUrl('index')),

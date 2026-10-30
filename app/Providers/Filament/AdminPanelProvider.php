@@ -2,18 +2,18 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Pages\Dashboard;
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\Quotes\ShareQuoteOnWhatsApp;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
+use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
-use Filament\Widgets\AccountWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
@@ -32,8 +32,12 @@ class AdminPanelProvider extends PanelProvider
             ->domain(config('app.admin_domain'))
             ->path('')
             ->login()
+            ->profile(isSimple: false)
             ->brandName('PEZ Sistema')
-            ->navigationGroups(['Ventas', 'Taller', 'Cobranza', 'Sistema'])
+            ->navigationGroups(array_map(
+                fn (string $label) => NavigationGroup::make($label)->collapsed(),
+                ['Ventas', 'Taller', 'Cobranza', 'Sistema'],
+            ))
             ->colors([
                 'primary' => Color::Emerald,
             ])
@@ -43,9 +47,6 @@ class AdminPanelProvider extends PanelProvider
                 Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
-            ->widgets([
-                AccountWidget::class,
-            ])
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -60,6 +61,7 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
+            ->renderHook(PanelsRenderHook::TOPBAR_END, fn () => view('filament.version'))
             ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn () => view('filament.auth.google-button'))
             ->routes(function () {
                 Route::get('auth/google/redirect', [GoogleLoginController::class, 'redirect'])->name('auth.google.redirect');

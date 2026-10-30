@@ -25,7 +25,7 @@ class ExternalRepairForm
             ->columns(2)
             ->components([
                 Select::make('work_order_id')
-                    ->label('Trabajo')
+                    ->label('Orden de trabajo')
                     ->relationship('workOrder', 'title', fn (Builder $query, ?ExternalRepair $record) => $query
                         ->where(fn ($query) => $query->whereIn('status', WorkOrderStatus::open())->when($record, fn ($query) => $query->orWhere('id', $record->work_order_id))))
                     ->getOptionLabelFromRecordUsing(fn (WorkOrder $record) => "{$record->code} — {$record->client->business_name}: {$record->title}")
@@ -51,7 +51,7 @@ class ExternalRepairForm
                     ))
                     ->getOptionLabelFromRecordUsing(fn ($record) => $record->label)
                     ->preload()
-                    ->helperText('Equipos asociados al trabajo.'),
+                    ->helperText('Equipos asociados a la orden de trabajo.'),
                 Textarea::make('problem')
                     ->label('Falla / qué se pide')
                     ->required()

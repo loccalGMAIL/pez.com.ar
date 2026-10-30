@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\WorkOrders\Pages;
 
 use App\Enums\WorkOrderStatus;
+use App\Filament\Resources\WorkOrders\Actions\WorkOrderActions;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use App\Models\WorkOrder;
 use Filament\Actions\Action;
@@ -19,12 +20,14 @@ class ViewWorkOrder extends ViewRecord
     public function getTitle(): string
     {
         // The resource's record title is its number (P-00100, T-00001, R-00001).
-        return "Trabajo {$this->getRecordTitle()}";
+        return "Orden de trabajo {$this->getRecordTitle()}";
     }
 
     protected function getHeaderActions(): array
     {
         return [
+            WorkOrderActions::shareOnWhatsApp(),
+            WorkOrderActions::downloadPdf(),
             Action::make('changeStatus')
                 ->label('Cambiar estado')
                 ->icon(Heroicon::OutlinedArrowPath)
@@ -41,12 +44,12 @@ class ViewWorkOrder extends ViewRecord
                 ->label('Cobrar')
                 ->icon(Heroicon::OutlinedReceiptPercent)
                 ->color('gray')
-                ->modalHeading('Cargar el trabajo en la cuenta corriente')
+                ->modalHeading('Cargar la orden de trabajo en la cuenta corriente')
                 ->modalDescription(fn (WorkOrder $record) => $record->quote_id
-                    ? "Este trabajo viene del presupuesto {$record->quote?->code}: si ya se cobró por ahí, cargá solo lo adicional."
+                    ? "Esta orden viene del presupuesto {$record->quote?->code}: si ya se cobró por ahí, cargá solo lo adicional."
                     : null)
                 ->fillForm(fn (WorkOrder $record) => [
-                    'concept' => "Trabajo {$record->code} — {$record->title}",
+                    'concept' => "Orden de trabajo {$record->code} — {$record->title}",
                     'amount' => $record->externalRepairsPrice() ?: null,
                 ])
                 ->schema([

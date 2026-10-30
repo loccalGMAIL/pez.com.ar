@@ -37,10 +37,6 @@ class WorkOrderInfolist
                         TextEntry::make('opened_on')
                             ->label('Ingreso')
                             ->date('d/m/Y'),
-                        TextEntry::make('due_on')
-                            ->label('Comprometido para')
-                            ->date('d/m/Y')
-                            ->placeholder('—'),
                         TextEntry::make('finished_at')
                             ->label('Terminado')
                             ->dateTime('d/m/Y H:i')

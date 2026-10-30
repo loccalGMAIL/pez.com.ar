@@ -178,7 +178,7 @@ class BillingResourcesTest extends TestCase
 
         Livewire::test(ViewWorkOrder::class, ['record' => $order->getRouteKey()])
             ->mountAction('charge')
-            ->assertActionDataSet(['amount' => 18000.0, 'concept' => 'Trabajo T-00001 — Impresora'])
+            ->assertActionDataSet(['amount' => 18000.0, 'concept' => 'Orden de trabajo T-00001 — Impresora'])
             ->callMountedAction()
             ->assertHasNoActionErrors();
 

@@ -143,7 +143,7 @@ class Settings extends Page
                     ->schema([
                         TextInput::make('billing_due_days')
                             ->label('Plazo de pago de los cargos')
-                            ->helperText('Días desde que se genera un cargo (abonos, presupuestos, trabajos) hasta su vencimiento.')
+                            ->helperText('Días desde que se genera un cargo (abonos, presupuestos, órdenes de trabajo) hasta su vencimiento.')
                             ->integer()
                             ->minValue(0)
                             ->suffix('días')

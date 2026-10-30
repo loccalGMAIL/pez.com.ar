@@ -9,9 +9,13 @@ This is a Laravel 13 application with a Filament 5 admin panel and a Vite/Tailwi
 ## Versioning and Changelog
 
 - The project follows Semantic Versioning; releases are tagged `vX.Y.Z` on `master`.
+- Branches are named `vXX.XX.XX-nnnn`: `vXX.XX.XX` is the version the feature or fix
+  will ship in (MINOR for features, PATCH for fixes, MAJOR for breaking changes) and
+  `nnnn` is a short description of the work (e.g. `v2.1.0-perfil-editable`).
 - Every change must add an entry under `## [Sin publicar]` in `CHANGELOG.md`
   (Keep a Changelog format, written in Spanish: Agregado / Cambiado / Corregido / Eliminado / Seguridad).
-- When releasing, rename `[Sin publicar]` to the new version with its date and tag the merge commit.
+- When releasing, rename `[Sin publicar]` to the new version with its date, set the same
+  number in `config/app.php` (`version`, shown in the panel top bar) and tag the merge commit.
 - Each phase of `docs/plan-sistema-admin.md` is a MINOR release; the Laravel 13 upgrade is a MAJOR release.
 
 ## Build/Lint/Test Commands

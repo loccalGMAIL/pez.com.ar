@@ -18,7 +18,7 @@ class ExternalRepairsTable
             ->defaultSort('sent_on', 'desc')
             ->columns([
                 TextColumn::make('workOrder.number')
-                    ->label('Trabajo')
+                    ->label('Orden de trabajo')
                     ->formatStateUsing(fn ($record) => $record->workOrder->code)
                     ->description(fn ($record) => $record->workOrder->client->business_name)
                     ->url(fn ($record) => WorkOrderResource::getUrl('view', ['record' => $record->work_order_id])),

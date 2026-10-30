@@ -49,7 +49,7 @@ class ChargeInfolist
                             ->label('Origen')
                             ->state(fn (Charge $record) => match (true) {
                                 $record->quote_id !== null => "Presupuesto {$record->quote?->code}",
-                                $record->work_order_id !== null => "Trabajo {$record->workOrder?->code}",
+                                $record->work_order_id !== null => "Orden de trabajo {$record->workOrder?->code}",
                                 $record->subscription_id !== null => "Abono {$record->subscription?->concept}",
                                 default => 'Manual',
                             })
