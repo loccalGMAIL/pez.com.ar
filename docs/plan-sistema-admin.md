@@ -122,7 +122,7 @@ Estados:
    abonos, dashboard.
 6. ✅ **Backups e ingreso con Google:** `laravel-backup` nocturno con página de
    descarga, y login con Google vía Socialite (en lugar de la verificación en dos pasos).
-7. **Actualización y herramientas:** ver sección siguiente.
+7. ✅ **Actualización y herramientas:** ver sección siguiente.
 8. **Futuro:** facturación electrónica, links de pago MercadoPago, portal de clientes.
 
 Cada fase incluye migraciones con `down()`, factories, tests (`php artisan test`), Pint
@@ -134,7 +134,7 @@ y su entrada en `CHANGELOG.md`.
 - `1.0.0` es la landing publicada. Cada fase del sistema se publica como versión menor
   (`1.1.0` = fase 1, `1.2.0` = fase 2, …). La actualización a Laravel 13 será `2.0.0`.
 
-## Fase 7: Laravel 13, Boost y Larastan
+## Fase 7: Laravel 13, Boost y Larastan ✅
 
 Se encara al terminar las fases funcionales, con todos los tests en verde.
 

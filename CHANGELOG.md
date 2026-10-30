@@ -80,6 +80,9 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
   verlos, descargarlos, borrarlos o hacer uno en el momento.
 - Análisis estático con Larastan en nivel 6 (`composer analyse`, también en CI), sin
   baseline: los hallazgos se corrigieron en el código.
+- Laravel Boost 2 (solo desarrollo): guías para agentes de IA en `AGENTS.md`, skills en
+  `.claude/skills` y servidor MCP (`.mcp.json`) con consultas a la base, esquema, logs,
+  último error y búsqueda en la documentación según las versiones instaladas.
 - Plan del sistema en `docs/plan-sistema-admin.md`, `.env.example` y tests de todas las
   funciones.
 
