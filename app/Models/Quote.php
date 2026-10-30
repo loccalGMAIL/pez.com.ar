@@ -5,13 +5,14 @@ namespace App\Models;
 use App\Casts\Money;
 use App\Enums\QuoteStatus;
 use App\Mail\QuoteMail;
+use App\Models\Concerns\HasSequentialNumber;
 use App\Support\QuotePdf;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -20,7 +21,11 @@ use Illuminate\Support\Facades\URL;
 class Quote extends Model
 {
     /** @use HasFactory<\Database\Factories\QuoteFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, HasSequentialNumber, SoftDeletes;
+
+    public const NUMBER_PREFIX = 'P';
+
+    public const NUMBER_CONFIG = 'pez.quotes.first_number';
 
     protected $fillable = [
         'client_id',
@@ -54,30 +59,11 @@ class Quote extends Model
 
     protected static function booted(): void
     {
-        static::creating(function (Quote $quote) {
-            $quote->number ??= static::nextNumber();
-        });
-
         static::saving(function (Quote $quote) {
             if ($quote->isDirty('discount')) {
                 $quote->total = max(0, $quote->subtotal - $quote->discount);
             }
         });
-    }
-
-    public static function nextNumber(): int
-    {
-        $last = static::withTrashed()->max('number');
-
-        return max((int) $last + 1, config('pez.quotes.first_number'));
-    }
-
-    /**
-     * Number as printed on documents: P-00100.
-     */
-    protected function code(): Attribute
-    {
-        return Attribute::get(fn () => 'P-'.str_pad((string) $this->number, 5, '0', STR_PAD_LEFT));
     }
 
     public function recalculateTotals(): void
@@ -147,6 +133,23 @@ class Quote extends Model
     }
 
     /**
+     * Opens the job for an accepted quote, or returns the one already opened.
+     */
+    public function convertToWorkOrder(): WorkOrder
+    {
+        if ($existing = $this->workOrder()->first()) {
+            return $existing;
+        }
+
+        return $this->workOrder()->create([
+            'client_id' => $this->client_id,
+            'title' => "Presupuesto {$this->code}",
+            'description' => $this->items->map(fn (QuoteItem $item) => '- '.rtrim(QuotePdf::quantity($item->quantity).' '.$item->unit).": {$item->description}")->join("\n"),
+            'opened_on' => today(),
+        ]);
+    }
+
+    /**
      * New draft with the same client and items, dated today.
      */
     public function duplicate(): self
@@ -186,6 +189,14 @@ class Quote extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class)->withTrashed();
+    }
+
+    /**
+     * @return HasOne<WorkOrder, $this>
+     */
+    public function workOrder(): HasOne
+    {
+        return $this->hasOne(WorkOrder::class);
     }
 
     /**

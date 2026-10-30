@@ -15,6 +15,17 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
 
 ### Agregado
 
+- Equipos de cada cliente (tipo, identificación, marca, modelo, número de serie, notas)
+  con historial de trabajos y envíos a service.
+- Trabajos numerados desde `T-00001`: cliente, equipos, presupuesto de origen, pedido,
+  diagnóstico, horas, fechas de ingreso y compromiso, adjuntos privados (fotos, informes)
+  y estados pendiente → en curso → esperando service externo → terminado → entregado,
+  con fecha de terminado y entregado automática.
+- "Convertir en trabajo" en los presupuestos aceptados (uno por presupuesto).
+- Proveedores de service y envíos a service externo: equipo, falla, número de orden del
+  proveedor, fechas, costo y precio al cliente. Al enviar un equipo el trabajo pasa a
+  "esperando service externo" y vuelve a "en curso" cuando no queda nada afuera.
+- Menú agrupado en Ventas y Taller, con contadores de trabajos abiertos y equipos afuera.
 - Presupuestos: numeración correlativa desde `P-00100` (sin reutilizar números), ítems
   cargados del catálogo o a mano, cantidades con decimales, descuento y totales como
   precio final (sin IVA discriminado), observaciones y condiciones.
@@ -46,7 +57,8 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
 
 ### Cambiado
 
-- URLs del panel en español: `/clientes`, `/catalogo`, `/presupuestos`.
+- URLs del panel en español: `/clientes`, `/equipos`, `/catalogo`, `/presupuestos`,
+  `/trabajos`, `/service-externo`, `/proveedores`.
 - Las rutas públicas (landing, contacto, gracias) solo responden en `APP_DOMAIN`;
   `www.pez.com.ar` debe redirigir a `pez.com.ar`.
 - Idioma por defecto español y zona horaria `America/Argentina/Buenos_Aires`.

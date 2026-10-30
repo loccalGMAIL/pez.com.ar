@@ -66,6 +66,22 @@ class Client extends Model
     }
 
     /**
+     * @return HasMany<Device, $this>
+     */
+    public function devices(): HasMany
+    {
+        return $this->hasMany(Device::class);
+    }
+
+    /**
+     * @return HasMany<WorkOrder, $this>
+     */
+    public function workOrders(): HasMany
+    {
+        return $this->hasMany(WorkOrder::class);
+    }
+
+    /**
      * @return HasOne<ClientContact, $this>
      */
     public function primaryContact(): HasOne

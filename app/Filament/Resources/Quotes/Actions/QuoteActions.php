@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Quotes\Actions;
 
 use App\Enums\QuoteStatus;
 use App\Filament\Resources\Quotes\QuoteResource;
+use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use App\Models\Quote;
 use App\Support\QuotePdf;
 use Filament\Actions\Action;
@@ -123,6 +124,20 @@ class QuoteActions
             ->modalDescription('El presupuesto queda cerrado y ya no se puede editar.')
             ->action(fn (Quote $record) => $record->reject())
             ->successNotificationTitle('Presupuesto rechazado');
+    }
+
+    public static function convertToWorkOrder(): Action
+    {
+        return Action::make('convertToWorkOrder')
+            ->label(fn (Quote $record) => $record->workOrder()->exists() ? 'Ver trabajo' : 'Convertir en trabajo')
+            ->icon(Heroicon::OutlinedWrenchScrewdriver)
+            ->color('primary')
+            ->visible(fn (Quote $record) => $record->status === QuoteStatus::Accepted)
+            ->action(function (Quote $record, Action $action) {
+                $order = $record->convertToWorkOrder();
+
+                $action->redirect(WorkOrderResource::getUrl('view', ['record' => $order]));
+            });
     }
 
     public static function duplicate(): Action

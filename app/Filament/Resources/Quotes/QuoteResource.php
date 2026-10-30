@@ -19,6 +19,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use UnitEnum;
 
 class QuoteResource extends Resource
 {
@@ -32,7 +33,9 @@ class QuoteResource extends Resource
 
     protected static ?string $pluralModelLabel = 'presupuestos';
 
-    protected static ?int $navigationSort = 3;
+    protected static string|UnitEnum|null $navigationGroup = 'Ventas';
+
+    protected static ?int $navigationSort = 2;
 
     protected static ?string $recordTitleAttribute = 'code';
 

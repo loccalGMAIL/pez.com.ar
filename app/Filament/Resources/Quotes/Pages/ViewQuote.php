@@ -20,6 +20,7 @@ class ViewQuote extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            QuoteActions::convertToWorkOrder(),
             QuoteActions::accept(),
             QuoteActions::reject(),
             QuoteActions::shareOnWhatsApp(),

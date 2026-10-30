@@ -32,4 +32,14 @@ return [
         'default_terms' => env('QUOTES_DEFAULT_TERMS', "Precios finales en pesos argentinos.\nForma de pago: a convenir."),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Work Orders
+    |--------------------------------------------------------------------------
+    */
+
+    'work_orders' => [
+        'first_number' => (int) env('WORK_ORDERS_FIRST_NUMBER', 1),
+    ],
+
 ];
