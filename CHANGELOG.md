@@ -13,6 +13,8 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+## [2.0.0] - 2026-10-30
+
 ### Agregado
 
 - Panel de gestión con Filament 5 en `sistema.pez.com.ar` (configurable con
