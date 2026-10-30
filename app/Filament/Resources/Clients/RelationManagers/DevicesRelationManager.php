@@ -33,6 +33,8 @@ class DevicesRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return DevicesTable::configure($table)
+            // The client column is hidden here, so it can't be the sort.
+            ->defaultSort('type')
             ->filters([])
             ->headerActions([
                 CreateAction::make(),

@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class Client extends Model
 {
@@ -63,6 +64,75 @@ class Client extends Model
     public function quotes(): HasMany
     {
         return $this->hasMany(Quote::class);
+    }
+
+    /**
+     * Uses unallocated payments to settle open charges, oldest first.
+     */
+    public function applyCredit(): void
+    {
+        DB::transaction(function () {
+            $charges = $this->charges()->open()->orderBy('due_on')->orderBy('id')->get();
+
+            if ($charges->isEmpty()) {
+                return;
+            }
+
+            $this->payments()->orderBy('paid_on')->orderBy('id')->get()
+                ->filter(fn (Payment $payment) => $payment->unallocated() > 0)
+                ->each(fn (Payment $payment) => $payment->allocateTo($charges));
+        });
+    }
+
+    /**
+     * Owed on open charges, in pesos.
+     */
+    public function outstanding(): float
+    {
+        return $this->charges()->outstandingTotal();
+    }
+
+    /**
+     * Payments not yet applied to any charge, in pesos.
+     */
+    public function credit(): float
+    {
+        $paid = $this->payments()->sum('amount');
+        $allocated = PaymentAllocation::whereIn('payment_id', $this->payments()->select('id'))->sum('amount');
+
+        return round(($paid - $allocated) / 100, 2);
+    }
+
+    /**
+     * Positive when the client owes money, negative when it has credit.
+     */
+    public function balance(): float
+    {
+        return round($this->outstanding() - $this->credit(), 2);
+    }
+
+    /**
+     * @return HasMany<Subscription, $this>
+     */
+    public function subscriptions(): HasMany
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    /**
+     * @return HasMany<Charge, $this>
+     */
+    public function charges(): HasMany
+    {
+        return $this->hasMany(Charge::class);
+    }
+
+    /**
+     * @return HasMany<Payment, $this>
+     */
+    public function payments(): HasMany
+    {
+        return $this->hasMany(Payment::class);
     }
 
     /**

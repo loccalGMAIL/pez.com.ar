@@ -4,9 +4,11 @@ namespace App\Filament\Resources\Quotes\Tables;
 
 use App\Enums\QuoteStatus;
 use App\Filament\Resources\Quotes\Actions\QuoteActions;
+use App\Models\Client;
 use Filament\Actions\ActionGroup;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
@@ -26,6 +28,8 @@ class QuotesTable
                     ->searchable(query: fn (Builder $query, string $search) => $query->where('number', (int) preg_replace('/\D/', '', $search))),
                 TextColumn::make('client.business_name')
                     ->label('Cliente')
+                    // Implied inside the client's own page.
+                    ->hidden(fn ($livewire) => $livewire instanceof RelationManager && $livewire->getOwnerRecord() instanceof Client)
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('issue_date')

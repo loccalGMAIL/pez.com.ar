@@ -91,6 +91,22 @@ class WorkOrder extends Model
     }
 
     /**
+     * What external services cost the client, as a starting amount to charge.
+     */
+    public function externalRepairsPrice(): float
+    {
+        return $this->externalRepairs()->sum('price') / 100;
+    }
+
+    /**
+     * @return HasMany<Charge, $this>
+     */
+    public function charges(): HasMany
+    {
+        return $this->hasMany(Charge::class);
+    }
+
+    /**
      * @return BelongsTo<Client, $this>
      */
     public function client(): BelongsTo

@@ -38,6 +38,11 @@ return [
         ],
     ],
 
+    'billing' => [
+        // Days the client has to pay a charge from the day it is issued.
+        'due_days' => 10,
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Work Orders

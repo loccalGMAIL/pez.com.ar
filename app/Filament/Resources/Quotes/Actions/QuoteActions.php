@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Quotes\Actions;
 
 use App\Enums\QuoteStatus;
+use App\Filament\Resources\Charges\ChargeResource;
 use App\Filament\Resources\Quotes\QuoteResource;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use App\Models\Quote;
@@ -137,6 +138,22 @@ class QuoteActions
                 $order = $record->convertToWorkOrder();
 
                 $action->redirect(WorkOrderResource::getUrl('view', ['record' => $order]));
+            });
+    }
+
+    public static function charge(): Action
+    {
+        return Action::make('charge')
+            ->label(fn (Quote $record) => $record->charges()->exists() ? 'Ver cargo' : 'Generar cargo')
+            ->icon(Heroicon::OutlinedReceiptPercent)
+            ->color('gray')
+            ->visible(fn (Quote $record) => $record->status === QuoteStatus::Accepted)
+            ->requiresConfirmation(fn (Quote $record) => ! $record->charges()->exists())
+            ->modalDescription(fn (Quote $record) => 'Se carga '.QuotePdf::money($record->total).' en la cuenta corriente del cliente.')
+            ->action(function (Quote $record, Action $action) {
+                $charge = $record->charge();
+
+                $action->redirect(ChargeResource::getUrl('view', ['record' => $charge]));
             });
     }
 

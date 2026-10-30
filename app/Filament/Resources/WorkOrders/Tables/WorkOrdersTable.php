@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\WorkOrders\Tables;
 
 use App\Enums\WorkOrderStatus;
+use App\Models\Client;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
+use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -29,6 +31,8 @@ class WorkOrdersTable
                     ->limit(50),
                 TextColumn::make('client.business_name')
                     ->label('Cliente')
+                    // Implied inside the client's own page.
+                    ->hidden(fn ($livewire) => $livewire instanceof RelationManager && $livewire->getOwnerRecord() instanceof Client)
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('opened_on')

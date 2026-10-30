@@ -3,12 +3,14 @@
 namespace App\Filament\Resources\Devices\Tables;
 
 use App\Enums\DeviceType;
+use App\Models\Client;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -25,6 +27,8 @@ class DevicesTable
             ->columns([
                 TextColumn::make('client.business_name')
                     ->label('Cliente')
+                    // Implied inside the client's own page.
+                    ->hidden(fn ($livewire) => $livewire instanceof RelationManager && $livewire->getOwnerRecord() instanceof Client)
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('type')

@@ -44,6 +44,7 @@ class Settings extends Page
         'quotes.default_delivery_time',
         'quotes.default_terms',
         'quotes.installments',
+        'billing.due_days',
     ];
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
@@ -136,6 +137,16 @@ class Settings extends Page
                                     ->required(),
                             ]),
                     ]),
+                Section::make('Cobranza')
+                    ->schema([
+                        TextInput::make('billing_due_days')
+                            ->label('Plazo de pago de los cargos')
+                            ->helperText('Días desde que se genera un cargo (abonos, presupuestos, trabajos) hasta su vencimiento.')
+                            ->integer()
+                            ->minValue(0)
+                            ->suffix('días')
+                            ->required(),
+                    ]),
                 Section::make('Presupuestos')
                     ->description('Valores con los que arranca cada presupuesto nuevo.')
                     ->columns(2)
@@ -189,6 +200,7 @@ class Settings extends Page
             ->values()
             ->all();
         $data['quotes_valid_days'] = (int) $data['quotes_valid_days'];
+        $data['billing_due_days'] = (int) $data['billing_due_days'];
 
         AppSettings::set(
             collect(self::KEYS)->mapWithKeys(fn (string $key) => [$key => $data[self::field($key)] ?? null])->all(),

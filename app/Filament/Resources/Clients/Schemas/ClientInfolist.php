@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Clients\Schemas;
 
+use App\Models\Client;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -13,6 +14,30 @@ class ClientInfolist
     {
         return $schema
             ->components([
+                Section::make('Cuenta corriente')
+                    ->columns(3)
+                    ->schema([
+                        TextEntry::make('balance')
+                            ->label('Saldo')
+                            ->state(fn (Client $record) => $record->balance())
+                            ->money('ARS', locale: 'es_AR')
+                            ->color(fn (float $state) => $state > 0 ? 'danger' : 'success')
+                            ->helperText(fn (float $state) => match (true) {
+                                $state > 0 => 'Debe',
+                                $state < 0 => 'A favor del cliente',
+                                default => 'Al día',
+                            })
+                            ->size('lg')
+                            ->weight('bold'),
+                        TextEntry::make('overdue')
+                            ->label('Vencido')
+                            ->state(fn (Client $record) => $record->charges()->overdue()->get()->sum(fn ($charge) => $charge->outstanding()))
+                            ->money('ARS', locale: 'es_AR')
+                            ->color(fn (float $state) => $state > 0 ? 'danger' : null),
+                        TextEntry::make('active_subscriptions')
+                            ->label('Abonos activos')
+                            ->state(fn (Client $record) => $record->subscriptions()->where('is_active', true)->count()),
+                    ]),
                 Section::make('Datos fiscales')
                     ->columns(2)
                     ->schema([

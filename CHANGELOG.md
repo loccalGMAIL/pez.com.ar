@@ -63,6 +63,7 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
 
 ### Corregido
 
+- En las pestañas de la ficha del cliente ya no se repite la columna "Cliente".
 - Teléfonos de las factories con formato fijo: algunos tests fallaban al azar.
 
 ### Cambiado

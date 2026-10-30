@@ -228,6 +228,22 @@ class Quote extends Model
     }
 
     /**
+     * Charges the accepted quote to the client's account, once.
+     */
+    public function charge(): Charge
+    {
+        if ($existing = $this->charges()->first()) {
+            return $existing;
+        }
+
+        return $this->charges()->create([
+            'client_id' => $this->client_id,
+            'concept' => trim("Presupuesto {$this->code} ".($this->title ? "— {$this->title}" : '')),
+            'amount' => $this->total,
+        ]);
+    }
+
+    /**
      * New draft with the same client and items, dated today.
      */
     public function duplicate(): self
@@ -272,6 +288,14 @@ class Quote extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class)->withTrashed();
+    }
+
+    /**
+     * @return HasMany<Charge, $this>
+     */
+    public function charges(): HasMany
+    {
+        return $this->hasMany(Charge::class);
     }
 
     /**

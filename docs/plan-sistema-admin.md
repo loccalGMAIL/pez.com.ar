@@ -47,7 +47,8 @@ desde un subdominio con un panel de Filament.
 
 ### Tareas programadas y colas
 
-- Cron de hPanel cada minuto: `php artisan schedule:run`.
+- Cron de hPanel cada minuto: `php artisan schedule:run`. Corre `quotes:expire` (00:10)
+  y `subscriptions:bill` (06:15); sin el cron no se generan los cargos de los abonos.
 - Sin supervisor: `QUEUE_CONNECTION=database` y el scheduler corre
   `queue:work --stop-when-empty` cada minuto (para mails y PDFs).
 
@@ -117,7 +118,7 @@ Estados:
 2. ✅ **Clientes y catálogo:** modelos, migraciones, factories, recursos y tests.
 3. ✅ **Presupuestos:** ítems, numeración, totales, estados, PDF archivado y envío por mail.
 4. ✅ **Trabajos y service de terceros:** proveedores, seguimiento de equipos, adjuntos.
-5. **Cobranza y abonos:** cargos, pagos con imputación, cuenta corriente, comando de
+5. ✅ **Cobranza y abonos:** cargos, pagos con imputación, cuenta corriente, comando de
    abonos, dashboard.
 6. **Backups y endurecimiento:** `laravel-backup`, 2FA de Filament, revisión de seguridad.
 7. **Actualización y herramientas:** ver sección siguiente.

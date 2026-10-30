@@ -21,6 +21,7 @@ class ViewQuote extends ViewRecord
     {
         return [
             QuoteActions::convertToWorkOrder(),
+            QuoteActions::charge(),
             QuoteActions::accept(),
             QuoteActions::reject(),
             QuoteActions::shareOnWhatsApp(),
