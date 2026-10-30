@@ -37,7 +37,7 @@ return [
     'background_color' => '#092E35',
 
     'shortcuts' => [
-        ['name' => 'Ingreso de equipo', 'short_name' => 'Ingreso', 'url' => '/trabajos/create'],
+        ['name' => 'Crear orden de trabajo', 'short_name' => 'Nueva orden', 'url' => '/trabajos/create'],
         ['name' => 'Órdenes de trabajo', 'short_name' => 'Órdenes', 'url' => '/trabajos'],
         ['name' => 'Presupuestos', 'short_name' => 'Presupuestos', 'url' => '/presupuestos'],
     ],
