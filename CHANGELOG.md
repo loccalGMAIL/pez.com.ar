@@ -25,6 +25,12 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 - Pantalla "Sin conexión" cuando no hay red. Las páginas y los datos del panel nunca se
   guardan en el dispositivo: solo se guardan los archivos estáticos (estilos, scripts e íconos).
 
+### Cambiado
+
+- En la lista de cargos, la columna Concepto se acorta: los abonos muestran "Abono — mes año"
+  y los de órdenes de trabajo "OT número", y el nombre del cliente se recorta (completo al
+  pasar el mouse). El texto completo sigue en el detalle del cargo.
+
 ## [2.2.0] - 2026-10-30
 
 ### Agregado

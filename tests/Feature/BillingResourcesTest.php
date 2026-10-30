@@ -126,6 +126,27 @@ class BillingResourcesTest extends TestCase
         $this->assertSame(600.0, $charge->outstanding());
     }
 
+    public function test_charges_list_shortens_the_concept_of_subscriptions_and_work_orders(): void
+    {
+        $subscription = Subscription::factory()->create(['concept' => 'Sistema VERIFICADOR PRO']);
+        $subscriptionCharge = Charge::factory()->create([
+            'client_id' => $subscription->client_id,
+            'subscription_id' => $subscription->id,
+            'period' => '2026-10-01',
+            'concept' => 'Abono Sistema VERIFICADOR PRO — Octubre 2026',
+        ]);
+        $workOrder = WorkOrder::factory()->create();
+        $workOrderCharge = Charge::factory()->create([
+            'client_id' => $workOrder->client_id,
+            'work_order_id' => $workOrder->id,
+            'concept' => "Orden de trabajo {$workOrder->code} — Reparación larga",
+        ]);
+
+        Livewire::test(ListCharges::class)
+            ->assertTableColumnStateSet('concept', 'Abono — Octubre 2026', $subscriptionCharge)
+            ->assertTableColumnStateSet('concept', 'OT '.str_pad((string) $workOrder->number, 5, '0', STR_PAD_LEFT), $workOrderCharge);
+    }
+
     public function test_confirms_a_variable_subscription_draft_with_another_amount(): void
     {
         $charge = Charge::factory()->create(['amount' => 1000, 'status' => ChargeStatus::Draft]);
