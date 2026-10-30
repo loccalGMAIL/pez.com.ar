@@ -13,6 +13,8 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+## [2.3.0] - 2026-10-30
+
 ### Agregado
 
 - El panel se puede instalar como aplicación (PWA) en la computadora o el celular, con
@@ -24,6 +26,13 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
   publicación.
 - Pantalla "Sin conexión" cuando no hay red. Las páginas y los datos del panel nunca se
   guardan en el dispositivo: solo se guardan los archivos estáticos (estilos, scripts e íconos).
+
+### Cambiado
+
+- En la lista de cargos, la columna Concepto se acorta: los abonos muestran "Abono — mes año"
+  y los de órdenes de trabajo "OT número", y el nombre del cliente se recorta (completo al
+  pasar el mouse). El texto completo sigue en el detalle del cargo.
+- El botón "Ingreso de equipo" del Escritorio ahora se llama "Crear orden de trabajo".
 
 ## [2.2.0] - 2026-10-30
 

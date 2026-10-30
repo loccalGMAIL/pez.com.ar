@@ -17,19 +17,35 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ChargesTable
 {
+    /**
+     * Compact concept for the list: the full text stays on the charge itself.
+     */
+    private static function shortConcept(Charge $charge): string
+    {
+        return match (true) {
+            $charge->subscription_id !== null && $charge->period !== null => 'Abono — '.ucfirst($charge->period->translatedFormat('F Y')),
+            $charge->workOrder !== null => 'OT '.str_pad((string) $charge->workOrder->number, 5, '0', STR_PAD_LEFT),
+            default => $charge->concept,
+        };
+    }
+
     public static function configure(Table $table): Table
     {
         return $table
             ->defaultSort('due_on')
+            ->modifyQueryUsing(fn (Builder $query) => $query->with('workOrder'))
             ->columns([
                 TextColumn::make('client.business_name')
                     ->label('Cliente')
                     // Implied inside the client's own page.
                     ->hidden(fn ($livewire) => $livewire instanceof RelationManager && $livewire->getOwnerRecord() instanceof Client)
+                    ->limit(22)
+                    ->tooltip(fn (TextColumn $column) => strlen((string) $column->getState()) > 22 ? $column->getState() : null)
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('concept')
                     ->label('Concepto')
+                    ->state(fn (Charge $record) => self::shortConcept($record))
                     ->searchable()
                     ->wrap(),
                 TextColumn::make('issued_on')

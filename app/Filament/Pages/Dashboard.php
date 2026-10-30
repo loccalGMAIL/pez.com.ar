@@ -16,7 +16,7 @@ class Dashboard extends BaseDashboard
     {
         return [
             Action::make('deviceIntake')
-                ->label('Ingreso de equipo')
+                ->label('Crear orden de trabajo')
                 ->icon(Heroicon::OutlinedWrenchScrewdriver)
                 ->url(WorkOrderResource::getUrl('create')),
         ];
