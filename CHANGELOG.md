@@ -34,6 +34,12 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
 
 - Workflow `update-changelog` del esqueleto de Laravel (el changelog se mantiene a mano).
 
+### Seguridad
+
+- Dependencias actualizadas dentro de Laravel 12 (`laravel/framework` 12.70, Symfony 7.4,
+  Guzzle 7.16, CommonMark 2.10, entre otras): `composer audit` pasa de 48 avisos (uno
+  crítico) a ninguno.
+
 ## [1.0.0] - 2026-03-08
 
 ### Agregado
