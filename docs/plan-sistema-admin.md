@@ -110,7 +110,7 @@ Estados:
 
 1. ✅ **Base:** instalar Filament, panel en subdominio, separación de rutas por dominio,
    usuario admin (`make:filament-user`), configuración de deploy/cron, tests de dominios.
-2. **Clientes y catálogo:** modelos, migraciones, factories, recursos y tests.
+2. ✅ **Clientes y catálogo:** modelos, migraciones, factories, recursos y tests.
 3. **Presupuestos:** ítems, numeración, totales, estados, PDF archivado y envío por mail.
 4. **Trabajos y service de terceros:** proveedores, seguimiento de equipos, adjuntos.
 5. **Cobranza y abonos:** cargos, pagos con imputación, cuenta corriente, comando de

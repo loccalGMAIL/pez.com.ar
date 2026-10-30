@@ -15,6 +15,12 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
 
 ### Agregado
 
+- Clientes: razón social, nombre de fantasía, CUIT validado (dígito verificador, sin
+  duplicados), condición frente al IVA, datos de contacto, notas y estado activo.
+  Las bajas son lógicas (se pueden restaurar).
+- Contactos por cliente, con un único contacto principal.
+- Catálogo de servicios con unidad (hora, unidad, mes, servicio) y precio base en ARS.
+- Montos guardados en centavos (`App\Casts\Money`) para evitar errores de redondeo.
 - Panel de gestión con Filament 5 en `sistema.pez.com.ar` (configurable con `ADMIN_DOMAIN`).
 - Acceso al panel para usuarios creados con `php artisan make:filament-user` (sin registro público).
 - Librería `barryvdh/laravel-dompdf` para los PDF de presupuestos.
