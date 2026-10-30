@@ -37,7 +37,7 @@
             </tbody>
         </table>
 
-        <div class="section-title">PEDIDO</div>
+        <div class="section-title">PEDIDO / FALLA</div>
         <table class="items">
             <tbody>
                 <tr class="last-row">

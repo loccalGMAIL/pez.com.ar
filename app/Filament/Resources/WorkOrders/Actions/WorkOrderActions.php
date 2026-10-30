@@ -51,7 +51,7 @@ class WorkOrderActions
             $lines[] = 'Equipos: '.$devices->join(', ').'.';
         }
 
-        $lines[] = "Pedido: {$order->title}.";
+        $lines[] = "Pedido / Falla: {$order->title}.";
 
         $lines[] = 'Comprobante:';
         $lines[] = $order->publicPdfUrl();

@@ -13,6 +13,8 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+## [2.2.0] - 2026-10-30
+
 ### Agregado
 
 - Edición del perfil desde el menú del usuario: nombre, email y contraseña.
