@@ -21,6 +21,24 @@ class BackupsTest extends TestCase
         $this->assertNotEmpty(config('backup.backup.source.databases'));
     }
 
+    public function test_failure_mails_always_have_a_valid_recipient(): void
+    {
+        // laravel-backup validates this address while the app boots (also during
+        // composer install, before any .env exists), so it can never be empty.
+        foreach (['', 'avisos@pez.com.ar'] as $configured) {
+            putenv("BACKUP_NOTIFICATION_EMAIL={$configured}");
+            $_ENV['BACKUP_NOTIFICATION_EMAIL'] = $_SERVER['BACKUP_NOTIFICATION_EMAIL'] = $configured;
+
+            $to = (require config_path('backup.php'))['notifications']['mail']['to'];
+
+            $this->assertNotFalse(filter_var($to, FILTER_VALIDATE_EMAIL));
+            $configured === '' || $this->assertSame($configured, $to);
+        }
+
+        putenv('BACKUP_NOTIFICATION_EMAIL');
+        unset($_ENV['BACKUP_NOTIFICATION_EMAIL'], $_SERVER['BACKUP_NOTIFICATION_EMAIL']);
+    }
+
     public function test_backups_run_every_night_and_are_monitored(): void
     {
         $commands = collect(app(Schedule::class)->events())->map(fn ($event) => $event->command)->join("\n");
