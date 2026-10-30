@@ -61,6 +61,8 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
+            ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('filament.pwa.head'))
+            ->renderHook(PanelsRenderHook::TOPBAR_END, fn () => view('filament.pwa.install-button'))
             ->renderHook(PanelsRenderHook::TOPBAR_END, fn () => view('filament.version'))
             ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn () => view('filament.auth.google-button'))
             ->routes(function () {

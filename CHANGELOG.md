@@ -13,6 +13,12 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+### Agregado
+
+- El panel se puede instalar como aplicación (PWA) en la computadora o el celular:
+  manifest con nombre e íconos de PEZ, botón "Instalar app" en la barra superior
+  (aparece cuando el navegador lo permite) y una página "Sin conexión" cuando no hay red.
+
 ## [2.2.0] - 2026-10-30
 
 ### Agregado
