@@ -7,6 +7,7 @@ use App\Enums\QuoteStatus;
 use App\Mail\QuoteMail;
 use App\Models\Concerns\HasSequentialNumber;
 use App\Support\QuotePdf;
+use App\Support\Settings;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -70,6 +71,8 @@ class Quote extends Model
             if ($quote->isDirty('discount')) {
                 $quote->total = max(0, $quote->subtotal - $quote->discount);
             }
+
+            $quote->priceInstallments();
         });
     }
 
@@ -77,26 +80,26 @@ class Quote extends Model
     {
         $this->subtotal = $this->items()->get()->sum('subtotal');
         $this->total = max(0, $this->subtotal - $this->discount);
+        $this->priceInstallments();
         $this->saveQuietly();
     }
 
     /**
-     * Plans from config, for the form's defaults: "3:0,6:10" → [['count' => 3, 'surcharge' => 0], …].
+     * Plans proposed for new quotes, from the settings page.
      *
      * @return array<int, array{count: int, surcharge: float}>
      */
     public static function defaultInstallmentPlans(): array
     {
-        return collect(explode(',', (string) config('pez.quotes.default_installments')))
-            ->map(fn (string $plan) => explode(':', trim($plan)) + [1 => 0])
-            ->filter(fn (array $plan) => (int) $plan[0] > 1)
-            ->map(fn (array $plan) => ['count' => (int) $plan[0], 'surcharge' => (float) $plan[1]])
-            ->values()
+        return collect(Settings::get('quotes.installments') ?? [])
+            ->map(fn (array $plan) => ['count' => (int) $plan['count'], 'surcharge' => (float) $plan['surcharge']])
             ->all();
     }
 
     /**
-     * Installment options with their amounts, cheapest first.
+     * Installment options with their amounts, fewest installments first. The
+     * amounts are stored with the quote, so they stay as they were offered
+     * even if the default surcharges change later.
      *
      * @return Collection<int, array{count: int, surcharge: float, total: float, amount: float}>
      */
@@ -104,8 +107,28 @@ class Quote extends Model
     {
         return collect($this->installment_plans ?? [])
             ->filter(fn (array $plan) => (int) ($plan['count'] ?? 0) > 1)
+            ->map(fn (array $plan) => [
+                'count' => (int) $plan['count'],
+                'surcharge' => (float) ($plan['surcharge'] ?? 0),
+                'total' => (float) ($plan['total'] ?? 0),
+                'amount' => (float) ($plan['amount'] ?? 0),
+            ])
+            ->sortBy('count')
+            ->values();
+    }
+
+    /**
+     * Stores each plan's financed total and installment amount for the current total.
+     */
+    private function priceInstallments(): void
+    {
+        if (blank($this->installment_plans)) {
+            return;
+        }
+
+        $this->installment_plans = collect($this->installment_plans)
             ->map(function (array $plan) {
-                $count = (int) $plan['count'];
+                $count = max(1, (int) ($plan['count'] ?? 1));
                 $surcharge = (float) ($plan['surcharge'] ?? 0);
                 $total = round($this->total * (1 + $surcharge / 100), 2);
 
@@ -116,8 +139,8 @@ class Quote extends Model
                     'amount' => round($total / $count, 2),
                 ];
             })
-            ->sortBy('count')
-            ->values();
+            ->values()
+            ->all();
     }
 
     /**
@@ -213,7 +236,7 @@ class Quote extends Model
             $copy = static::create([
                 'client_id' => $this->client_id,
                 'issue_date' => today(),
-                'valid_until' => today()->addDays(config('pez.quotes.valid_days')),
+                'valid_until' => today()->addDays((int) Settings::get('quotes.valid_days')),
                 'discount' => $this->discount,
                 'title' => $this->title,
                 'notes' => $this->notes,

@@ -17,7 +17,7 @@ class ClientContactFactory extends Factory
             'name' => fake()->name(),
             'position' => fake()->optional()->jobTitle(),
             'email' => fake()->safeEmail(),
-            'phone' => fake()->phoneNumber(),
+            'phone' => fake()->numerify('11 ####-####'),
             'is_primary' => false,
         ];
     }

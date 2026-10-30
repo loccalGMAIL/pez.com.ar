@@ -31,7 +31,7 @@ class AdminPanelProvider extends PanelProvider
             ->path('')
             ->login()
             ->brandName('PEZ Sistema')
-            ->navigationGroups(['Ventas', 'Taller'])
+            ->navigationGroups(['Ventas', 'Taller', 'Sistema'])
             ->colors([
                 'primary' => Color::Emerald,
             ])

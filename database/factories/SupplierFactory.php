@@ -15,7 +15,7 @@ class SupplierFactory extends Factory
             'name' => fake()->company(),
             'specialty' => fake()->randomElement(['Impresoras', 'Fuentes y placas', 'Notebooks', 'Celulares']),
             'contact_name' => fake()->name(),
-            'phone' => fake()->phoneNumber(),
+            'phone' => fake()->numerify('11 ####-####'),
             'email' => fake()->companyEmail(),
         ];
     }

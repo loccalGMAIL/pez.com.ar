@@ -18,7 +18,7 @@ class ClientFactory extends Factory
             'cuit' => null,
             'tax_condition' => fake()->randomElement(TaxCondition::cases()),
             'email' => fake()->companyEmail(),
-            'phone' => fake()->phoneNumber(),
+            'phone' => fake()->numerify('11 ####-####'),
             'address' => fake()->streetAddress(),
             'city' => fake()->city(),
             'province' => 'Buenos Aires',

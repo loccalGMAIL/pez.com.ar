@@ -7,6 +7,7 @@ use App\Filament\Resources\Quotes\Pages\EditQuote;
 use App\Models\Client;
 use App\Models\Quote;
 use App\Models\User;
+use App\Support\Settings;
 use Filament\Forms\Components\Repeater;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -47,15 +48,26 @@ class QuoteInstallmentsTest extends TestCase
         $this->assertTrue($this->quoteTotaling(1000, [])->installments()->isEmpty());
     }
 
-    public function test_default_plans_come_from_config(): void
+    public function test_amounts_are_stored_with_the_quote(): void
     {
-        config(['pez.quotes.default_installments' => '3:0, 6:10.5,12:20,1:0']);
+        $quote = $this->quoteTotaling(1000, [['count' => 4, 'surcharge' => 20]]);
 
-        $this->assertSame([
-            ['count' => 3, 'surcharge' => 0.0],
-            ['count' => 6, 'surcharge' => 10.5],
-            ['count' => 12, 'surcharge' => 20.0],
-        ], Quote::defaultInstallmentPlans());
+        $this->assertEquals([['count' => 4, 'surcharge' => 20, 'total' => 1200, 'amount' => 300]], $quote->installment_plans);
+
+        // Editing the items re-prices the plans while the quote is open.
+        $quote->items()->create(['description' => 'Otro', 'quantity' => 1, 'unit_price' => 1000]);
+        $this->assertSame(600.0, $quote->refresh()->installments()->first()['amount']);
+    }
+
+    public function test_changing_the_settings_does_not_touch_existing_quotes(): void
+    {
+        Settings::set(['quotes.installments' => [['count' => 3, 'surcharge' => 10]]]);
+        $quote = $this->quoteTotaling(3000, Quote::defaultInstallmentPlans());
+
+        Settings::set(['quotes.installments' => [['count' => 3, 'surcharge' => 50]]]);
+
+        $this->assertSame(1100.0, $quote->refresh()->installments()->first()['amount']);
+        $this->assertSame(50.0, Quote::defaultInstallmentPlans()[0]['surcharge']);
     }
 
     public function test_pdf_lists_installments_only_when_offered(): void

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Quotes\Schemas;
 use App\Models\Quote;
 use App\Models\ServiceItem;
 use App\Support\QuotePdf;
+use App\Support\Settings;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -53,7 +54,7 @@ class QuoteForm
                             ->label('Válido hasta')
                             ->native(false)
                             ->displayFormat('d/m/Y')
-                            ->default(today()->addDays(config('pez.quotes.valid_days')))
+                            ->default(today()->addDays((int) Settings::get('quotes.valid_days')))
                             ->afterOrEqual('issue_date')
                             ->required(),
                     ]),
@@ -128,22 +129,22 @@ class QuoteForm
                             ->schema([
                                 TextInput::make('warranty')
                                     ->label('Garantía')
-                                    ->default(config('pez.quotes.default_warranty'))
+                                    ->default(Settings::get('quotes.default_warranty'))
                                     ->maxLength(255),
                                 TextInput::make('payment_terms')
                                     ->label('Forma de pago')
-                                    ->default(config('pez.quotes.default_payment_terms'))
+                                    ->default(Settings::get('quotes.default_payment_terms'))
                                     ->maxLength(255),
                                 TextInput::make('delivery_time')
                                     ->label('Plazo de entrega')
-                                    ->default(config('pez.quotes.default_delivery_time'))
+                                    ->default(Settings::get('quotes.default_delivery_time'))
                                     ->maxLength(255),
                                 Textarea::make('notes')
                                     ->label('Observaciones')
                                     ->rows(2),
                                 Textarea::make('terms')
                                     ->label('Nota al pie')
-                                    ->default(config('pez.quotes.default_terms'))
+                                    ->default(Settings::get('quotes.default_terms'))
                                     ->rows(2),
                             ]),
                         Section::make('Totales')
