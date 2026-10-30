@@ -2,12 +2,13 @@
 
 namespace Database\Factories;
 
+use App\Models\ExternalRepair;
 use App\Models\Supplier;
 use App\Models\WorkOrder;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\ExternalRepair>
+ * @extends Factory<ExternalRepair>
  */
 class ExternalRepairFactory extends Factory
 {

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\DeviceType;
+use App\Filament\Resources\Devices\DeviceResource;
 use App\Filament\Resources\Devices\Pages\CreateDevice;
 use App\Filament\Resources\WorkOrders\Pages\CreateWorkOrder;
 use App\Filament\Resources\WorkOrders\Pages\ViewWorkOrder;
@@ -51,7 +52,7 @@ class DeviceReceptionTest extends TestCase
             Storage::disk('local')->assertExists($path);
         }
 
-        $this->get(\App\Filament\Resources\Devices\DeviceResource::getUrl('view', ['record' => $device]))->assertOk();
+        $this->get(DeviceResource::getUrl('view', ['record' => $device]))->assertOk();
     }
 
     public function test_photos_are_optional(): void
@@ -91,7 +92,7 @@ class DeviceReceptionTest extends TestCase
             ->assertSee('serial-scanner.js?v=');
 
         // Not loaded on every panel page: only fetched when the button is used.
-        $this->get(\App\Filament\Resources\Devices\DeviceResource::getUrl('index'))
+        $this->get(DeviceResource::getUrl('index'))
             ->assertDontSee('<script src="'.$src, escape: false);
     }
 

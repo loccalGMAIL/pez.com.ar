@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Models\Client;
+use App\Models\ClientContact;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\ClientContact>
+ * @extends Factory<ClientContact>
  */
 class ClientContactFactory extends Factory
 {

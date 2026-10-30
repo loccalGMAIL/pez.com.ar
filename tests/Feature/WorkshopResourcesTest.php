@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\DeviceType;
 use App\Enums\QuoteStatus;
 use App\Enums\WorkOrderStatus;
+use App\Filament\Resources\Clients\ClientResource;
 use App\Filament\Resources\Clients\Pages\EditClient;
 use App\Filament\Resources\Clients\RelationManagers\DevicesRelationManager;
 use App\Filament\Resources\Devices\DeviceResource;
@@ -164,7 +165,7 @@ class WorkshopResourcesTest extends TestCase
             DeviceResource::getUrl('view', ['record' => $device]),
             ExternalRepairResource::getUrl('index'),
             SupplierResource::getUrl('index'),
-            \App\Filament\Resources\Clients\ClientResource::getUrl('view', ['record' => $order->client]),
+            ClientResource::getUrl('view', ['record' => $order->client]),
         ] as $url) {
             $this->get($url)->assertOk();
         }

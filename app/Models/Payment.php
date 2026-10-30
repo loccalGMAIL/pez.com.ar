@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Casts\Money;
 use App\Enums\PaymentMethod;
 use App\Models\Concerns\HasSequentialNumber;
+use Database\Factories\PaymentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\URL;
 
 class Payment extends Model
 {
-    /** @use HasFactory<\Database\Factories\PaymentFactory> */
+    /** @use HasFactory<PaymentFactory> */
     use HasFactory, HasSequentialNumber;
 
     public const NUMBER_PREFIX = 'R';

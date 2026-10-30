@@ -3,13 +3,14 @@
 namespace App\Models;
 
 use App\Casts\Money;
+use Database\Factories\QuoteItemFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class QuoteItem extends Model
 {
-    /** @use HasFactory<\Database\Factories\QuoteItemFactory> */
+    /** @use HasFactory<QuoteItemFactory> */
     use HasFactory;
 
     protected $fillable = [

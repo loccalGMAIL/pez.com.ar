@@ -2,11 +2,12 @@
 
 namespace Database\Factories;
 
+use App\Models\Charge;
 use App\Models\Client;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\Charge>
+ * @extends Factory<Charge>
  */
 class ChargeFactory extends Factory
 {

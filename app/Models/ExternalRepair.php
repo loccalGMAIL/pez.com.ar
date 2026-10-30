@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\Money;
 use App\Enums\ExternalRepairStatus;
+use Database\Factories\ExternalRepairFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class ExternalRepair extends Model
 {
-    /** @use HasFactory<\Database\Factories\ExternalRepairFactory> */
+    /** @use HasFactory<ExternalRepairFactory> */
     use HasFactory;
 
     protected $fillable = [

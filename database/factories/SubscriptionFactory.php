@@ -4,10 +4,11 @@ namespace Database\Factories;
 
 use App\Enums\SubscriptionType;
 use App\Models\Client;
+use App\Models\Subscription;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\Subscription>
+ * @extends Factory<Subscription>
  */
 class SubscriptionFactory extends Factory
 {

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\TaxCondition;
 use App\Rules\Cuit;
+use Database\Factories\ClientFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 class Client extends Model
 {
-    /** @use HasFactory<\Database\Factories\ClientFactory> */
+    /** @use HasFactory<ClientFactory> */
     use HasFactory, SoftDeletes;
 
     protected $fillable = [

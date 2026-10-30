@@ -4,10 +4,11 @@ namespace Database\Factories;
 
 use App\Enums\DeviceType;
 use App\Models\Client;
+use App\Models\Device;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\Device>
+ * @extends Factory<Device>
  */
 class DeviceFactory extends Factory
 {

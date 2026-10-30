@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\Settings as SettingsPage;
 use App\Filament\Resources\Quotes\Pages\CreateQuote;
+use App\Mail\QuoteMail;
 use App\Models\Quote;
+use App\Models\Setting;
 use App\Models\User;
 use App\Support\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -75,7 +77,7 @@ class SettingsPageTest extends TestCase
             ->call('save')
             ->assertHasFormErrors();
 
-        $this->assertSame(0, \App\Models\Setting::count());
+        $this->assertSame(0, Setting::count());
     }
 
     public function test_new_quotes_start_from_the_saved_settings(): void
@@ -119,7 +121,7 @@ class SettingsPageTest extends TestCase
         $this->assertStringContainsString('03541-549674', $html);
         $this->assertStringContainsString('loccal@hotmail.com', $html);
 
-        $mail = new \App\Mail\QuoteMail($quote, 'Hola');
+        $mail = new QuoteMail($quote, 'Hola');
         $this->assertTrue($mail->hasReplyTo('loccal@hotmail.com'));
     }
 

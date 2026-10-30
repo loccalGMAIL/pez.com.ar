@@ -9,6 +9,7 @@ use App\Models\QuoteItem;
 use App\Support\QuotePdf;
 use App\Support\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -85,7 +86,7 @@ class QuoteTest extends TestCase
         Mail::assertSent(QuoteMail::class, function (QuoteMail $mail) {
             return $mail->hasTo('cliente@example.com')
                 && $mail->hasAttachment(
-                    \Illuminate\Mail\Mailables\Attachment::fromStorageDisk(QuotePdf::DISK, 'quotes/P-00100.pdf')
+                    Attachment::fromStorageDisk(QuotePdf::DISK, 'quotes/P-00100.pdf')
                         ->as('Presupuesto-P-00100.pdf')
                         ->withMime('application/pdf')
                 );

@@ -8,6 +8,7 @@ use App\Mail\QuoteMail;
 use App\Models\Concerns\HasSequentialNumber;
 use App\Support\QuotePdf;
 use App\Support\Settings;
+use Database\Factories\QuoteFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -22,7 +23,7 @@ use Illuminate\Support\Facades\URL;
 
 class Quote extends Model
 {
-    /** @use HasFactory<\Database\Factories\QuoteFactory> */
+    /** @use HasFactory<QuoteFactory> */
     use HasFactory, HasSequentialNumber, SoftDeletes;
 
     public const NUMBER_PREFIX = 'P';

@@ -4,13 +4,14 @@ namespace App\Filament\Resources\Suppliers\Schemas;
 
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
 
 class SupplierForm
 {
     /**
      * Shared with the quick-create option of the external repair form.
      *
-     * @return array<\Filament\Schemas\Components\Component>
+     * @return array<Component>
      */
     public static function components(): array
     {

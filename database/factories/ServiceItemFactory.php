@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Enums\ServiceUnit;
+use App\Models\ServiceItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\ServiceItem>
+ * @extends Factory<ServiceItem>
  */
 class ServiceItemFactory extends Factory
 {

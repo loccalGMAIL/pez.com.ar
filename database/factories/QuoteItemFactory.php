@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Models\Quote;
+use App\Models\QuoteItem;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\QuoteItem>
+ * @extends Factory<QuoteItem>
  */
 class QuoteItemFactory extends Factory
 {

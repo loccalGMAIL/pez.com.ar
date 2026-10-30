@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\WorkOrderStatus;
 use App\Models\Concerns\HasSequentialNumber;
+use Database\Factories\WorkOrderFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WorkOrder extends Model
 {
-    /** @use HasFactory<\Database\Factories\WorkOrderFactory> */
+    /** @use HasFactory<WorkOrderFactory> */
     use HasFactory, HasSequentialNumber, SoftDeletes;
 
     public const NUMBER_PREFIX = 'T';

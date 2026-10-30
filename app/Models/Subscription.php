@@ -6,6 +6,7 @@ use App\Casts\Money;
 use App\Enums\ChargeStatus;
 use App\Enums\SubscriptionType;
 use App\Enums\WorkOrderStatus;
+use Database\Factories\SubscriptionFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,7 @@ use Illuminate\Support\Carbon;
 
 class Subscription extends Model
 {
-    /** @use HasFactory<\Database\Factories\SubscriptionFactory> */
+    /** @use HasFactory<SubscriptionFactory> */
     use HasFactory;
 
     protected $fillable = [

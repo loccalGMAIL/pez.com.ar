@@ -3,10 +3,11 @@
 namespace Database\Factories;
 
 use App\Enums\TaxCondition;
+use App\Models\Client;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<\App\Models\Client>
+ * @extends Factory<Client>
  */
 class ClientFactory extends Factory
 {

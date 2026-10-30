@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Casts\Money;
 use App\Enums\ChargeStatus;
 use App\Support\Settings;
+use Database\Factories\ChargeFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 class Charge extends Model
 {
-    /** @use HasFactory<\Database\Factories\ChargeFactory> */
+    /** @use HasFactory<ChargeFactory> */
     use HasFactory;
 
     protected $fillable = [

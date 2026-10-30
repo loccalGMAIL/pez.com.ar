@@ -4,12 +4,13 @@ namespace App\Models;
 
 use App\Casts\Money;
 use App\Enums\ServiceUnit;
+use Database\Factories\ServiceItemFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ServiceItem extends Model
 {
-    /** @use HasFactory<\Database\Factories\ServiceItemFactory> */
+    /** @use HasFactory<ServiceItemFactory> */
     use HasFactory;
 
     protected $fillable = [
