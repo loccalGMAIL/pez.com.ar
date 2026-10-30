@@ -8,6 +8,7 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -33,7 +34,10 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->profile(isSimple: false)
             ->brandName('PEZ Sistema')
-            ->navigationGroups(['Ventas', 'Taller', 'Cobranza', 'Sistema'])
+            ->navigationGroups(array_map(
+                fn (string $label) => NavigationGroup::make($label)->collapsed(),
+                ['Ventas', 'Taller', 'Cobranza', 'Sistema'],
+            ))
             ->colors([
                 'primary' => Color::Emerald,
             ])
@@ -57,6 +61,7 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
+            ->renderHook(PanelsRenderHook::TOPBAR_END, fn () => view('filament.version'))
             ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn () => view('filament.auth.google-button'))
             ->routes(function () {
                 Route::get('auth/google/redirect', [GoogleLoginController::class, 'redirect'])->name('auth.google.redirect');

@@ -16,6 +16,12 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 ### Agregado
 
 - Edición del perfil desde el menú del usuario: nombre, email y contraseña.
+- Número de versión, en pequeño, en la esquina derecha de la barra superior del panel.
+
+### Cambiado
+
+- Los grupos del menú lateral del panel arrancan comprimidos (se abre solo el que
+  contiene la página actual).
 
 ### Eliminado
 
