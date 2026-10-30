@@ -1,0 +1,77 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Filament\Pages\Backups;
+use App\Models\User;
+use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
+use Livewire\Livewire;
+use Tests\TestCase;
+
+class BackupsTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_backups_cover_the_database_and_uploaded_files(): void
+    {
+        $this->assertSame([storage_path('app/private')], config('backup.backup.source.files.include'));
+        $this->assertSame(['backups'], config('backup.backup.destination.disks'));
+        $this->assertNotEmpty(config('backup.backup.source.databases'));
+    }
+
+    public function test_backups_run_every_night_and_are_monitored(): void
+    {
+        $commands = collect(app(Schedule::class)->events())->map(fn ($event) => $event->command)->join("\n");
+
+        $this->assertStringContainsString('backup:clean', $commands);
+        $this->assertStringContainsString('backup:run', $commands);
+        $this->assertStringContainsString('backup:monitor', $commands);
+    }
+
+    public function test_lists_and_downloads_backups(): void
+    {
+        $this->actingAs(User::factory()->create());
+        Storage::fake('backups');
+        Storage::disk('backups')->put('pez-sistema/2026-10-29-01-30-00.zip', str_repeat('x', 2048));
+        Storage::disk('backups')->put('pez-sistema/2026-10-30-01-30-00.zip', 'zip');
+
+        $this->assertEqualsCanonicalizing(
+            ['pez-sistema/2026-10-30-01-30-00.zip', 'pez-sistema/2026-10-29-01-30-00.zip'],
+            array_keys(Backups::backups()),
+        );
+
+        Livewire::test(Backups::class)
+            ->assertSee('2026-10-29-01-30-00.zip')
+            ->assertSee('2.0 KB')
+            ->callTableAction('download', 'pez-sistema/2026-10-30-01-30-00.zip')
+            ->assertFileDownloaded('2026-10-30-01-30-00.zip');
+    }
+
+    public function test_deletes_a_backup(): void
+    {
+        $this->actingAs(User::factory()->create());
+        Storage::fake('backups');
+        Storage::disk('backups')->put('pez-sistema/old.zip', 'zip');
+
+        Livewire::test(Backups::class)
+            ->callTableAction('delete', 'pez-sistema/old.zip');
+
+        Storage::disk('backups')->assertMissing('pez-sistema/old.zip');
+    }
+
+    public function test_makes_a_files_backup_from_the_panel_and_reports_failures(): void
+    {
+        $this->actingAs(User::factory()->create());
+        Storage::fake('backups');
+
+        // The in-memory test database can't be dumped, so a full run fails and says so.
+        Livewire::test(Backups::class)
+            ->callAction('backupNow')
+            ->assertNotified('No se pudo hacer el backup');
+
+        $this->artisan('backup:run', ['--only-files' => true, '--disable-notifications' => true])->assertSuccessful();
+        $this->assertCount(1, Backups::backups());
+    }
+}

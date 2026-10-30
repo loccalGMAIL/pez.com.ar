@@ -120,7 +120,8 @@ Estados:
 4. ✅ **Trabajos y service de terceros:** proveedores, seguimiento de equipos, adjuntos.
 5. ✅ **Cobranza y abonos:** cargos, pagos con imputación, cuenta corriente, comando de
    abonos, dashboard.
-6. **Backups y endurecimiento:** `laravel-backup`, 2FA de Filament, revisión de seguridad.
+6. ✅ **Backups e ingreso con Google:** `laravel-backup` nocturno con página de
+   descarga, y login con Google vía Socialite (en lugar de la verificación en dos pasos).
 7. **Actualización y herramientas:** ver sección siguiente.
 8. **Futuro:** facturación electrónica, links de pago MercadoPago, portal de clientes.
 
@@ -161,7 +162,11 @@ Se encara al terminar las fases funcionales, con todos los tests en verde.
    ADMIN_DOMAIN=sistema.pez.com.ar
    SESSION_DOMAIN=null
    ```
-3. Por SSH, en la carpeta del proyecto:
+3. Para ingresar con Google: en Google Cloud Console crear un "ID de cliente OAuth"
+   (aplicación web) con la URI de redirección
+   `https://sistema.pez.com.ar/auth/google/callback`, y cargar `GOOGLE_CLIENT_ID` y
+   `GOOGLE_CLIENT_SECRET` en el `.env`. El usuario debe existir con el mismo email.
+4. Por SSH, en la carpeta del proyecto:
    ```
    git pull
    composer install --no-dev -o   # también publica los assets de Filament
@@ -169,7 +174,9 @@ Se encara al terminar las fases funcionales, con todos los tests en verde.
    php artisan make:filament-user   # solo la primera vez
    php artisan optimize
    ```
-4. Entrar a `https://sistema.pez.com.ar` (SSL del subdominio activado en hPanel) y
+5. Probar el backup una vez: `php artisan backup:run` (usa `mysqldump`; si Hostinger lo
+   tiene en otra ruta, se configura en `config/database.php` → `dump.dump_binary_path`).
+6. Entrar a `https://sistema.pez.com.ar` (SSL del subdominio activado en hPanel) y
    completar los datos de la empresa en Sistema → Configuración.
 
 Si se usa `www.pez.com.ar`, debe redirigir a `pez.com.ar`: las rutas públicas solo
