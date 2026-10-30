@@ -15,58 +15,71 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
 
 ### Agregado
 
-- Fotos opcionales de los equipos y fotos de recepción en los trabajos (estado en que
-  llega el equipo). Se achican en el navegador antes de subir y se guardan en privado;
-  desde el celular se pueden sacar con la cámara.
-- Lectura del número de serie con la cámara (códigos de barras Code 128/39/93, EAN, UPC,
-  ITF, QR y DataMatrix). El lector se descarga solo al usarlo y requiere HTTPS.
-- Alta de un equipo nuevo desde el mismo formulario del trabajo, al recibirlo.
-- Equipos de cada cliente (tipo, identificación, marca, modelo, número de serie, notas)
-  con historial de trabajos y envíos a service.
-- Trabajos numerados desde `T-00001`: cliente, equipos, presupuesto de origen, pedido,
-  diagnóstico, horas, fechas de ingreso y compromiso, adjuntos privados (fotos, informes)
-  y estados pendiente → en curso → esperando service externo → terminado → entregado,
-  con fecha de terminado y entregado automática.
-- "Convertir en trabajo" en los presupuestos aceptados (uno por presupuesto).
-- Proveedores de service y envíos a service externo: equipo, falla, número de orden del
-  proveedor, fechas, costo y precio al cliente. Al enviar un equipo el trabajo pasa a
-  "esperando service externo" y vuelve a "en curso" cuando no queda nada afuera.
-- Menú agrupado en Ventas y Taller, con contadores de trabajos abiertos y equipos afuera.
-- Presupuestos: numeración correlativa desde `P-00100` (sin reutilizar números), ítems
-  cargados del catálogo o a mano, cantidades con decimales, descuento y totales como
-  precio final (sin IVA discriminado), observaciones y condiciones.
-- Estados de presupuesto: borrador, enviado, aceptado, rechazado y vencido. Los
-  aceptados, rechazados y vencidos quedan cerrados; para cambiarlos se duplican.
-- PDF del presupuesto con los datos de la empresa, descarga
-  desde el panel y archivo del PDF tal como se envió.
-- Compartir el presupuesto por WhatsApp: abre WhatsApp con el mensaje escrito (número,
-  total, validez) y un link firmado al PDF, que el cliente abre sin usuario. El número
-  se toma del cliente o de su contacto principal; si no se puede interpretar, WhatsApp
-  pide elegir el contacto.
-- Envío alternativo por mail con el PDF adjunto, o "Marcar como enviado" para los que
-  se entregan por otro medio.
-- Comando `quotes:expire`, programado a diario, que marca como vencidos los presupuestos
-  enviados cuya validez pasó (requiere el cron de `schedule:run`).
-- Presupuestos del cliente en su ficha y contador de enviados sin respuesta en el menú.
+- Panel de gestión con Filament 5 en `sistema.pez.com.ar` (configurable con
+  `ADMIN_DOMAIN`), en la misma app que la landing. Acceso solo para usuarios creados con
+  `php artisan make:filament-user` (sin registro público).
+- Ingreso al panel con Google (Laravel Socialite): solo entran las cuentas de Google con
+  el mismo email que un usuario existente y verificado por Google; la foto de perfil
+  se usa como avatar. El ingreso con contraseña sigue disponible.
 - Clientes: razón social, nombre de fantasía, CUIT validado (dígito verificador, sin
-  duplicados), condición frente al IVA, datos de contacto, notas y estado activo.
-  Las bajas son lógicas (se pueden restaurar).
-- Contactos por cliente, con un único contacto principal.
+  duplicados), condición frente al IVA, contacto, notas y estado activo. Las bajas son
+  lógicas (se pueden restaurar). Contactos por cliente con un único contacto principal.
 - Catálogo de servicios con unidad (hora, unidad, mes, servicio) y precio base en ARS.
-- Montos guardados en centavos (`App\Casts\Money`) para evitar errores de redondeo.
-- Panel de gestión con Filament 5 en `sistema.pez.com.ar` (configurable con `ADMIN_DOMAIN`).
-- Acceso al panel para usuarios creados con `php artisan make:filament-user` (sin registro público).
-- Librería `barryvdh/laravel-dompdf` para los PDF de presupuestos.
-- Plan del sistema de gestión en `docs/plan-sistema-admin.md`.
-- `.env.example` con la configuración de dominios, idioma y zona horaria.
-- Tests de separación de dominios entre el sitio público y el panel.
-
-### Corregido
-
-- Las cuotas de presupuestos guardados sin importes se calculan con el total actual en
-  lugar de mostrarse en $0.
-- En las pestañas de la ficha del cliente ya no se repite la columna "Cliente".
-- Teléfonos de las factories con formato fijo: algunos tests fallaban al azar.
+  Montos guardados en centavos (`App\Casts\Money`) para evitar errores de redondeo.
+- Presupuestos numerados desde `P-00100` (sin reutilizar números) con título, ítems con
+  concepto y detalle (del catálogo o a mano, cantidades con decimales), ítems en $0
+  como "SIN CARGO", descuento, total como precio final (sin IVA discriminado),
+  condiciones (garantía, forma de pago, plazo de entrega, observaciones) y nota al pie.
+- Estados de presupuesto: borrador, enviado, aceptado, rechazado y vencido. Los
+  aceptados, rechazados y vencidos quedan cerrados; para cambiarlos se duplican. El
+  comando diario `quotes:expire` marca como vencidos los enviados cuya validez pasó.
+- Cuotas opcionales en los presupuestos: al activar "Ofrecer cuotas" se proponen los
+  planes de la configuración, editables en cada presupuesto. Cada presupuesto guarda el
+  total financiado y el importe de cada cuota, así un cambio posterior de recargos no
+  altera los ya hechos.
+- PDF del presupuesto con el diseño de PEZ (logo, tipografía Lato embebida con
+  licencia OFL en `resources/fonts/lato`, cuotas junto al total, pie con frase,
+  responsable y contacto), descarga desde el panel y archivo del PDF tal como se envió.
+- Compartir el presupuesto por WhatsApp con el mensaje escrito y un link firmado al PDF
+  que el cliente abre sin usuario. Envío alternativo por mail con el PDF adjunto, o
+  "Marcar como enviado" para los que se entregan por otro medio.
+- Equipos de cada cliente (tipo, identificación, marca, modelo, número de serie, notas,
+  fotos opcionales) con historial de trabajos y envíos a service. Lectura del número de
+  serie con la cámara (códigos de barras y QR; requiere HTTPS).
+- Trabajos numerados desde `T-00001`: cliente, equipos (se pueden dar de alta al
+  recibirlos), presupuesto de origen, pedido, diagnóstico, horas, fechas, fotos de
+  recepción, adjuntos y estados pendiente → en curso → esperando service externo →
+  terminado → entregado. "Convertir en trabajo" en los presupuestos aceptados.
+- Proveedores y envíos a service externo (equipo, falla, número de orden del proveedor,
+  fechas, costo y precio al cliente). Al enviar un equipo el trabajo pasa a "esperando
+  service externo" y vuelve a "en curso" cuando no queda nada afuera.
+- Cobranza: cuenta corriente por cliente con cargos (manuales, de presupuestos aceptados,
+  de trabajos y de abonos) y pagos con medio, referencia y comprobante. Los pagos se
+  imputan a los cargos elegidos o a los más antiguos; los parciales dejan el cargo en
+  "pago parcial" y lo que sobra queda como saldo a favor para el próximo cargo. Anular
+  un cargo devuelve sus pagos como saldo a favor y borrar un pago reabre sus cargos.
+  Vencimiento según el plazo de pago configurado; los vencidos se marcan en rojo.
+- Abonos mensuales fijos y variables con día de facturación y vigencia. El comando
+  diario `subscriptions:bill` genera el cargo del mes: los fijos quedan pendientes y los
+  variables como borrador con los trabajos terminados el mes anterior, para ajustar el
+  monto y confirmarlo.
+- Recibo de pago en PDF numerado desde `R-00001`, con los cargos que cancela, el saldo
+  a cuenta, el medio de pago y el monto en letras. Se descarga o se envía por WhatsApp
+  con un link firmado; al registrar un pago, el aviso ofrece enviarlo.
+- Ficha del cliente con saldo (debe / a favor), vencido, "Registrar pago" y pestañas de
+  contactos, equipos, presupuestos, trabajos, cuenta corriente, pagos y abonos.
+- Escritorio con por cobrar, vencido, cobrado en el mes, abonos a confirmar,
+  presupuestos sin respuesta, trabajos abiertos, equipos en service externo y la lista
+  de cargos vencidos.
+- Página Sistema → Configuración con los datos de la empresa, los planes de cuotas y su
+  recargo, el plazo de pago de los cargos y los valores con que arranca cada
+  presupuesto (estos datos no se leen del `.env`).
+- Backups automáticos (`spatie/laravel-backup`): todas las noches la base de datos y los
+  archivos subidos en `storage/app/backups`, con limpieza escalonada (máximo 2 GB) y aviso
+  por mail si un backup falla o tiene más de un día. Página Sistema → Backups para
+  verlos, descargarlos, borrarlos o hacer uno en el momento.
+- Plan del sistema en `docs/plan-sistema-admin.md`, `.env.example` y tests de todas las
+  funciones.
 
 ### Cambiado
 
@@ -74,32 +87,10 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
   superior** (elegirlo en hPanel antes de desplegar). El panel usa el middleware
   `PreventRequestForgery`, que reemplaza a `VerifyCsrfToken`, y el caché ya no
   deserializa objetos (`serializable_classes` en `false`).
-- El workflow de tests corre en PHP 8.3 y 8.4.
-- Encabezado, pie, estilos y bloque del cliente de los PDF compartidos entre
-  presupuesto y recibo (`resources/views/pdf/layout.blade.php`).
-- PDF del presupuesto rediseñado según el modelo de PEZ: encabezado con logo, título,
-  número, fecha y validez en días; datos del cliente; ítems con concepto y detalle; ítems
-  en $0 destacados como "SIN CARGO"; total destacado; condiciones (garantía, forma de
-  pago, plazo de entrega, observaciones) y pie con frase, responsable y contacto.
-  Tipografía Lato embebida (licencia OFL en `resources/fonts/lato`).
-- Página de Configuración en el panel (Sistema → Configuración) con los datos de la
-  empresa (nombre, responsable, CUIT, teléfono, email, web, dirección, frase), los
-  planes de cuotas y su recargo, y los valores con que arranca cada presupuesto
-  (validez, garantía, forma de pago, plazo de entrega, nota al pie). Estos datos ya no
-  se leen del `.env`.
-- Cuotas opcionales en los presupuestos: al activar "Ofrecer cuotas" se proponen los
-  planes de la configuración, editables en cada presupuesto. Cada presupuesto guarda
-  el total financiado y el importe de cada cuota, así un cambio posterior de recargos
-  no altera los presupuestos ya hechos. El PDF lista los planes junto al total.
-- Presupuestos con título, concepto por ítem (se completa desde el catálogo) y
-  condiciones con valores por defecto configurables. Validez por
-  defecto: 7 días.
-- URLs del panel en español: `/clientes`, `/equipos`, `/catalogo`, `/presupuestos`,
-  `/trabajos`, `/service-externo`, `/proveedores`.
 - Las rutas públicas (landing, contacto, gracias) solo responden en `APP_DOMAIN`;
   `www.pez.com.ar` debe redirigir a `pez.com.ar`.
 - Idioma por defecto español y zona horaria `America/Argentina/Buenos_Aires`.
-- El workflow de tests corre en los push a `main`.
+- El workflow de tests corre en los push a `main`, en PHP 8.3 y 8.4.
 - Este changelog reemplaza al del esqueleto de Laravel.
 
 ### Eliminado
@@ -108,9 +99,8 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
 
 ### Seguridad
 
-- Dependencias actualizadas dentro de Laravel 12 (`laravel/framework` 12.70, Symfony 7.4,
-  Guzzle 7.16, CommonMark 2.10, entre otras): `composer audit` pasa de 48 avisos (uno
-  crítico) a ninguno.
+- Dependencias actualizadas (`composer audit` pasaba de 48 avisos, uno crítico, a
+  ninguno) antes de la actualización a Laravel 13.
 
 ## [1.0.0] - 2026-03-08
 
