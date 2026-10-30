@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\Payments\Tables;
 
 use App\Enums\PaymentMethod;
+use App\Filament\Resources\Payments\Actions\PaymentActions;
 use App\Models\Client;
 use App\Models\Payment;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
@@ -20,6 +22,10 @@ class PaymentsTable
         return $table
             ->defaultSort('paid_on', 'desc')
             ->columns([
+                TextColumn::make('code')
+                    ->label('Recibo')
+                    ->sortable(query: fn (Builder $query, string $direction) => $query->orderBy('number', $direction))
+                    ->searchable(query: fn (Builder $query, string $search) => $query->where('number', (int) preg_replace('/\D/', '', $search))),
                 TextColumn::make('paid_on')
                     ->label('Fecha')
                     ->date('d/m/Y')
@@ -62,6 +68,10 @@ class PaymentsTable
             ])
             ->recordActions([
                 ViewAction::make(),
+                ActionGroup::make([
+                    PaymentActions::shareReceiptOnWhatsApp(),
+                    PaymentActions::downloadReceipt(),
+                ]),
             ]);
     }
 }

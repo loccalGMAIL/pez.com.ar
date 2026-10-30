@@ -35,9 +35,10 @@ class ViewClient extends ViewRecord
                     $chargeIds = $data['charge_ids'] ?? [];
                     unset($data['charge_ids']);
 
-                    Payment::register([...$data, 'client_id' => $record->getKey()], $chargeIds);
-                })
-                ->successNotificationTitle('Pago registrado'),
+                    PaymentForm::notifyRegistered(
+                        Payment::register([...$data, 'client_id' => $record->getKey()], $chargeIds),
+                    );
+                }),
             EditAction::make(),
         ];
     }

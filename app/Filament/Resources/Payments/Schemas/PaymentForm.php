@@ -3,15 +3,20 @@
 namespace App\Filament\Resources\Payments\Schemas;
 
 use App\Enums\PaymentMethod;
+use App\Filament\Resources\Payments\Actions\PaymentActions;
+use App\Filament\Resources\Payments\PaymentResource;
 use App\Models\Charge;
 use App\Models\Client;
+use App\Models\Payment;
 use App\Support\QuotePdf;
+use Filament\Actions\Action;
 use Filament\Forms\Components\CheckboxList;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
@@ -90,6 +95,25 @@ class PaymentForm
                 ->label('Notas')
                 ->rows(2),
         ];
+    }
+
+    /**
+     * Confirmation with shortcuts to the receipt, shown wherever a payment is registered.
+     */
+    public static function notifyRegistered(Payment $payment): void
+    {
+        Notification::make()
+            ->title("Pago registrado — recibo {$payment->code}")
+            ->success()
+            ->actions([
+                Action::make('shareReceipt')
+                    ->label('Enviar por WhatsApp')
+                    ->url(PaymentActions::shareReceiptOnWhatsApp()->record($payment)->getUrl(), shouldOpenInNewTab: true),
+                Action::make('viewPayment')
+                    ->label('Ver pago')
+                    ->url(PaymentResource::getUrl('view', ['record' => $payment])),
+            ])
+            ->send();
     }
 
     /**

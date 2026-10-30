@@ -59,6 +59,14 @@ class QuoteInstallmentsTest extends TestCase
         $this->assertSame(600.0, $quote->refresh()->installments()->first()['amount']);
     }
 
+    public function test_plans_saved_without_amounts_are_priced_on_the_fly(): void
+    {
+        $quote = $this->quoteTotaling(1200);
+        $quote->forceFill(['installment_plans' => [['count' => 3, 'surcharge' => 0]]])->saveQuietly();
+
+        $this->assertSame(400.0, $quote->refresh()->installments()->first()['amount']);
+    }
+
     public function test_changing_the_settings_does_not_touch_existing_quotes(): void
     {
         Settings::set(['quotes.installments' => [['count' => 3, 'surcharge' => 10]]]);

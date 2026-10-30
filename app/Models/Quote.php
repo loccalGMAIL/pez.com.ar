@@ -107,11 +107,13 @@ class Quote extends Model
     {
         return collect($this->installment_plans ?? [])
             ->filter(fn (array $plan) => (int) ($plan['count'] ?? 0) > 1)
+            // Plans saved without amounts are priced with the current total.
+            ->map(fn (array $plan) => isset($plan['amount']) ? $plan : $this->pricePlan($plan))
             ->map(fn (array $plan) => [
                 'count' => (int) $plan['count'],
-                'surcharge' => (float) ($plan['surcharge'] ?? 0),
-                'total' => (float) ($plan['total'] ?? 0),
-                'amount' => (float) ($plan['amount'] ?? 0),
+                'surcharge' => (float) $plan['surcharge'],
+                'total' => (float) $plan['total'],
+                'amount' => (float) $plan['amount'],
             ])
             ->sortBy('count')
             ->values();
@@ -127,20 +129,27 @@ class Quote extends Model
         }
 
         $this->installment_plans = collect($this->installment_plans)
-            ->map(function (array $plan) {
-                $count = max(1, (int) ($plan['count'] ?? 1));
-                $surcharge = (float) ($plan['surcharge'] ?? 0);
-                $total = round($this->total * (1 + $surcharge / 100), 2);
-
-                return [
-                    'count' => $count,
-                    'surcharge' => $surcharge,
-                    'total' => $total,
-                    'amount' => round($total / $count, 2),
-                ];
-            })
+            ->map(fn (array $plan) => $this->pricePlan($plan))
             ->values()
             ->all();
+    }
+
+    /**
+     * @param  array{count?: mixed, surcharge?: mixed}  $plan
+     * @return array{count: int, surcharge: float, total: float, amount: float}
+     */
+    private function pricePlan(array $plan): array
+    {
+        $count = max(1, (int) ($plan['count'] ?? 1));
+        $surcharge = (float) ($plan['surcharge'] ?? 0);
+        $total = round($this->total * (1 + $surcharge / 100), 2);
+
+        return [
+            'count' => $count,
+            'surcharge' => $surcharge,
+            'total' => $total,
+            'amount' => round($total / $count, 2),
+        ];
     }
 
     /**

@@ -38,6 +38,11 @@ return [
         ],
     ],
 
+    'payments' => [
+        // First receipt number (R-00001).
+        'first_number' => (int) env('RECEIPTS_FIRST_NUMBER', 1),
+    ],
+
     'billing' => [
         // Days the client has to pay a charge from the day it is issued.
         'due_days' => 10,

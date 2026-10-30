@@ -4,16 +4,22 @@ namespace App\Models;
 
 use App\Casts\Money;
 use App\Enums\PaymentMethod;
+use App\Models\Concerns\HasSequentialNumber;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 
 class Payment extends Model
 {
     /** @use HasFactory<\Database\Factories\PaymentFactory> */
-    use HasFactory;
+    use HasFactory, HasSequentialNumber;
+
+    public const NUMBER_PREFIX = 'R';
+
+    public const NUMBER_CONFIG = 'pez.payments.first_number';
 
     protected $fillable = [
         'client_id',
@@ -59,6 +65,14 @@ class Payment extends Model
 
             return $payment;
         });
+    }
+
+    /**
+     * Link the client can open without logging in; the signature prevents guessing other receipts.
+     */
+    public function publicReceiptUrl(): string
+    {
+        return URL::signedRoute('receipts.pdf', $this);
     }
 
     public function unallocated(): float

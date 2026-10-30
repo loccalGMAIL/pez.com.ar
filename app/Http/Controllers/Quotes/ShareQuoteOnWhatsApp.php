@@ -21,14 +21,11 @@ class ShareQuoteOnWhatsApp extends Controller
 
         $quote->markAsSent();
 
-        $client = $quote->client;
-        $phone = $client->phone ?: $client->primaryContact?->phone;
-
         $text = "Hola! Te comparto el presupuesto {$quote->code} de ".Settings::get('company.name')
             .' por '.QuotePdf::money($quote->total)
             .", válido hasta el {$quote->valid_until->format('d/m/Y')}:\n"
             .$quote->publicPdfUrl();
 
-        return redirect()->away(WhatsApp::url($phone, $text));
+        return redirect()->away(WhatsApp::url($quote->client->whatsappPhone(), $text));
     }
 }

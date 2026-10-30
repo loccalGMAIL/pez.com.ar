@@ -67,6 +67,14 @@ class Client extends Model
     }
 
     /**
+     * Number to reach the client on WhatsApp: its own or its main contact's.
+     */
+    public function whatsappPhone(): ?string
+    {
+        return $this->phone ?: $this->primaryContact?->phone;
+    }
+
+    /**
      * Uses unallocated payments to settle open charges, oldest first.
      */
     public function applyCredit(): void

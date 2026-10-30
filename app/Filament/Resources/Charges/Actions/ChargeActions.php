@@ -43,8 +43,9 @@ class ChargeActions
             ->visible(fn (Charge $record) => $record->status->isOpen())
             ->fillForm(fn (Charge $record) => ['amount' => $record->outstanding(), 'paid_on' => today()])
             ->schema(PaymentForm::fields())
-            ->action(fn (Charge $record, array $data) => Payment::register([...$data, 'client_id' => $record->client_id], [$record->id]))
-            ->successNotificationTitle('Pago registrado');
+            ->action(fn (Charge $record, array $data) => PaymentForm::notifyRegistered(
+                Payment::register([...$data, 'client_id' => $record->client_id], [$record->id]),
+            ));
     }
 
     public static function cancel(): Action

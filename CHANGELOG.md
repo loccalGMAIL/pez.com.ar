@@ -63,11 +63,15 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
 
 ### Corregido
 
+- Las cuotas de presupuestos guardados sin importes se calculan con el total actual en
+  lugar de mostrarse en $0.
 - En las pestañas de la ficha del cliente ya no se repite la columna "Cliente".
 - Teléfonos de las factories con formato fijo: algunos tests fallaban al azar.
 
 ### Cambiado
 
+- Encabezado, pie, estilos y bloque del cliente de los PDF compartidos entre
+  presupuesto y recibo (`resources/views/pdf/layout.blade.php`).
 - PDF del presupuesto rediseñado según el modelo de PEZ: encabezado con logo, título,
   número, fecha y validez en días; datos del cliente; ítems con concepto y detalle; ítems
   en $0 destacados como "SIN CARGO"; total destacado; condiciones (garantía, forma de
