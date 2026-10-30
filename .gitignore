@@ -18,6 +18,7 @@
 /storage/*.key
 /storage/pail
 /vendor
+/vendor-backup-20261019-072156
 Homestead.json
 Homestead.yaml
 Thumbs.db

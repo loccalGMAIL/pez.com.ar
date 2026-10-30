@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        php: [8.2, 8.3, 8.4]
+        php: [8.3, 8.4]
 
     name: PHP ${{ matrix.php }}
 
@@ -45,3 +45,6 @@ jobs:
 
       - name: Execute tests
         run: php artisan test
+
+      - name: Static analysis
+        run: composer analyse
