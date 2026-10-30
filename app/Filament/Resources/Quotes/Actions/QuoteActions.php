@@ -130,7 +130,7 @@ class QuoteActions
     public static function convertToWorkOrder(): Action
     {
         return Action::make('convertToWorkOrder')
-            ->label(fn (Quote $record) => $record->workOrder()->exists() ? 'Ver trabajo' : 'Convertir en trabajo')
+            ->label(fn (Quote $record) => $record->workOrder()->exists() ? 'Ver orden de trabajo' : 'Convertir en orden de trabajo')
             ->icon(Heroicon::OutlinedWrenchScrewdriver)
             ->color('primary')
             ->visible(fn (Quote $record) => $record->status === QuoteStatus::Accepted)

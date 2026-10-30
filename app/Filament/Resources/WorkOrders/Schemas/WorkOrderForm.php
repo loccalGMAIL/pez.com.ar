@@ -5,6 +5,7 @@ namespace App\Filament\Resources\WorkOrders\Schemas;
 use App\Enums\QuoteStatus;
 use App\Enums\WorkOrderStatus;
 use App\Filament\Forms\PhotosUpload;
+use App\Filament\Resources\Clients\Schemas\ClientForm;
 use App\Filament\Resources\Devices\Schemas\DeviceForm;
 use App\Models\Device;
 use App\Models\WorkOrder;
@@ -38,6 +39,8 @@ class WorkOrderForm
                             ))
                             ->searchable(['business_name', 'trade_name'])
                             ->preload()
+                            ->createOptionForm(fn (Schema $schema) => ClientForm::configure($schema))
+                            ->createOptionModalHeading('Nuevo cliente')
                             ->default(fn () => request()->query('client'))
                             ->required()
                             ->live()
@@ -50,7 +53,8 @@ class WorkOrderForm
                             ->label('Estado')
                             ->options(WorkOrderStatus::class)
                             ->default(WorkOrderStatus::Pending)
-                            ->required(),
+                            ->required()
+                            ->hiddenOn('create'),
                         TextInput::make('title')
                             ->label('Título')
                             ->placeholder('No enciende, configurar WiFi…')
@@ -91,19 +95,14 @@ class WorkOrderForm
                             ->columnSpanFull(),
                     ]),
                 Section::make('Resolución')
+                    ->hiddenOn('create')
                     ->columns(3)
                     ->schema([
                         DatePicker::make('opened_on')
                             ->label('Fecha de ingreso')
                             ->native(false)
                             ->displayFormat('d/m/Y')
-                            ->default(today())
                             ->required(),
-                        DatePicker::make('due_on')
-                            ->label('Comprometido para')
-                            ->native(false)
-                            ->displayFormat('d/m/Y')
-                            ->afterOrEqual('opened_on'),
                         TextInput::make('hours')
                             ->label('Horas trabajadas')
                             ->numeric()

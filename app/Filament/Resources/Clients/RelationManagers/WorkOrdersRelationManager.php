@@ -13,7 +13,7 @@ class WorkOrdersRelationManager extends RelationManager
 {
     protected static string $relationship = 'workOrders';
 
-    protected static ?string $title = 'Trabajos';
+    protected static ?string $title = 'Órdenes de trabajo';
 
     public function table(Table $table): Table
     {

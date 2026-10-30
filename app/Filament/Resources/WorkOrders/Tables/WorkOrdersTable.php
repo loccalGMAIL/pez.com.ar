@@ -39,12 +39,6 @@ class WorkOrdersTable
                     ->label('Ingreso')
                     ->date('d/m/Y')
                     ->sortable(),
-                TextColumn::make('due_on')
-                    ->label('Comprometido')
-                    ->date('d/m/Y')
-                    ->sortable()
-                    ->placeholder('—')
-                    ->color(fn ($record) => $record->due_on?->isPast() && $record->status->isOpen() ? 'danger' : null),
                 TextColumn::make('status')
                     ->label('Estado')
                     ->badge(),

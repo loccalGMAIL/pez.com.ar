@@ -17,9 +17,17 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 - Edición del perfil desde el menú del usuario: nombre, email y contraseña.
 - Número de versión, en pequeño, en la esquina derecha de la barra superior del panel.
+- Botón "Ingreso de equipo" en el Escritorio, que abre el alta de una orden de trabajo.
+- Alta de cliente en un modal desde el formulario de la orden de trabajo.
+- Comprobante de ingreso de la orden de trabajo en PDF (descarga y link público firmado) y
+  acción para compartirlo con el resumen por WhatsApp.
 
 ### Cambiado
 
+- Equipos pasa al grupo "Taller" del menú lateral.
+- "Trabajo" se llama ahora "Orden de trabajo" en todo el panel (la URL `/trabajos` no cambia).
+- El alta de una orden de trabajo ya no pide estado ni datos de resolución (horas,
+  diagnóstico, adjuntos); la fecha de ingreso es la del día en que se crea.
 - Los grupos del menú lateral del panel arrancan comprimidos (se abre solo el que
   contiene la página actual).
 
@@ -27,6 +35,7 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 - Widget de cuenta (con el botón de salir) del Escritorio; se sigue pudiendo cerrar
   sesión desde el menú del usuario.
+- Campo "Comprometido para" de la orden de trabajo (formulario, ficha y listado).
 
 ## [2.0.0] - 2026-10-30
 

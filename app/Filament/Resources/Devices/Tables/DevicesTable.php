@@ -47,7 +47,7 @@ class DevicesTable
                     ->searchable()
                     ->copyable(),
                 TextColumn::make('work_orders_count')
-                    ->label('Trabajos')
+                    ->label('Órdenes de trabajo')
                     ->counts('workOrders')
                     ->sortable(),
                 IconColumn::make('is_active')

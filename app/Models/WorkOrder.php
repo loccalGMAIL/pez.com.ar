@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\URL;
 
 class WorkOrder extends Model
 {
@@ -55,6 +56,10 @@ class WorkOrder extends Model
 
     protected static function booted(): void
     {
+        static::creating(function (WorkOrder $order) {
+            $order->opened_on ??= today();
+        });
+
         static::saving(function (WorkOrder $order) {
             if (! $order->isDirty('status')) {
                 return;
@@ -97,6 +102,14 @@ class WorkOrder extends Model
     public function externalRepairsPrice(): float
     {
         return $this->externalRepairs()->sum('price') / 100;
+    }
+
+    /**
+     * Link the client can open without logging in; the signature prevents guessing other orders.
+     */
+    public function publicPdfUrl(): string
+    {
+        return URL::signedRoute('work-orders.pdf', $this);
     }
 
     /**

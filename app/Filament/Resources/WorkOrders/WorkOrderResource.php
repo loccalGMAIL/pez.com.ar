@@ -29,9 +29,9 @@ class WorkOrderResource extends Resource
 
     protected static ?string $slug = 'trabajos';
 
-    protected static ?string $modelLabel = 'trabajo';
+    protected static ?string $modelLabel = 'orden de trabajo';
 
-    protected static ?string $pluralModelLabel = 'trabajos';
+    protected static ?string $pluralModelLabel = 'órdenes de trabajo';
 
     protected static string|UnitEnum|null $navigationGroup = 'Taller';
 
@@ -70,7 +70,7 @@ class WorkOrderResource extends Resource
 
     public static function getNavigationBadgeTooltip(): ?string
     {
-        return 'Trabajos abiertos';
+        return 'Órdenes de trabajo abiertas';
     }
 
     public static function getPages(): array

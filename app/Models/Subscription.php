@@ -91,7 +91,7 @@ class Subscription extends Model
             ->orderBy('finished_at')
             ->get();
 
-        $title = 'Trabajos terminados en '.$from->translatedFormat('F Y').':';
+        $title = 'Órdenes de trabajo terminadas en '.$from->translatedFormat('F Y').':';
 
         return $orders->isEmpty()
             ? "{$title} ninguno."
