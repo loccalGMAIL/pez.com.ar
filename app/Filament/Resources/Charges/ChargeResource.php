@@ -64,7 +64,8 @@ class ChargeResource extends Resource
      */
     public static function canEdit(Model $record): bool
     {
-        return in_array($record->status, [ChargeStatus::Draft, ChargeStatus::Pending], true)
+        return $record instanceof Charge
+            && in_array($record->status, [ChargeStatus::Draft, ChargeStatus::Pending], true)
             && $record->paid == 0
             && parent::canEdit($record);
     }

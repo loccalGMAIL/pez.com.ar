@@ -14,7 +14,8 @@ class ViewQuote extends ViewRecord
 
     public function getTitle(): string
     {
-        return "Presupuesto {$this->getRecord()->code}";
+        // The resource's record title is its number (P-00100, T-00001, R-00001).
+        return "Presupuesto {$this->getRecordTitle()}";
     }
 
     protected function getHeaderActions(): array

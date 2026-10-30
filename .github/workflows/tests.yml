@@ -43,5 +43,8 @@ jobs:
       - name: Generate app key
         run: php artisan key:generate
 
+      - name: Static analysis
+        run: composer analyse -- --no-progress
+
       - name: Execute tests
         run: php artisan test

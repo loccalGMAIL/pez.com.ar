@@ -135,13 +135,13 @@ class Charge extends Model
     }
 
     /**
-     * Sum still owed, in pesos.
+     * Sum still owed on open charges, in pesos; all charges or those of $query.
      *
-     * @param  Builder<Charge>  $query
+     * @param  Builder<Charge>|null  $query
      */
-    public function scopeOutstandingTotal(Builder $query): float
+    public static function totalOutstanding(?Builder $query = null): float
     {
-        return (float) $query->open()->sum(DB::raw('amount - paid')) / 100;
+        return (float) ($query ?? static::query())->open()->sum(DB::raw('amount - paid')) / 100;
     }
 
     /**

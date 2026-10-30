@@ -4,6 +4,7 @@ namespace App\Filament\Resources\WorkOrders\Schemas;
 
 use App\Filament\Resources\Clients\ClientResource;
 use App\Filament\Resources\Quotes\QuoteResource;
+use App\Models\WorkOrder;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
@@ -73,7 +74,7 @@ class WorkOrderInfolist
                             ->columnSpanFull(),
                         TextEntry::make('attachments')
                             ->label('Adjuntos')
-                            ->state(fn ($record) => collect($record->attachments ?? [])->map(fn ($path) => basename($path))->all())
+                            ->state(fn (WorkOrder $record) => collect($record->attachments ?? [])->map(fn (string $path) => basename($path))->all())
                             ->listWithLineBreaks()
                             ->placeholder('—')
                             ->columnSpanFull(),

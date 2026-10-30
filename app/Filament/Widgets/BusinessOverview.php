@@ -33,7 +33,7 @@ class BusinessOverview extends StatsOverviewWidget
         $pendingQuotes = Quote::where('status', QuoteStatus::Sent);
 
         return [
-            Stat::make('Por cobrar', QuotePdf::money(Charge::query()->outstandingTotal()))
+            Stat::make('Por cobrar', QuotePdf::money(Charge::totalOutstanding()))
                 ->description($overdue > 0 ? 'Vencido: '.QuotePdf::money($overdue) : 'Nada vencido')
                 ->color($overdue > 0 ? 'danger' : 'success')
                 ->url(ChargeResource::getUrl('index')),

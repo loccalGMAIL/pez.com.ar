@@ -26,6 +26,9 @@ trait HasSequentialNumber
         return max((int) $last + 1, (int) config(static::NUMBER_CONFIG));
     }
 
+    /**
+     * @return Attribute<non-falsy-string, never>
+     */
     protected function code(): Attribute
     {
         return Attribute::get(fn () => static::NUMBER_PREFIX.'-'.str_pad((string) $this->number, 5, '0', STR_PAD_LEFT));

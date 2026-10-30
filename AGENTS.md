@@ -42,6 +42,9 @@ php vendor/bin/phpunit --testsuite=Feature
 
 # Run Pint with dirty mode (only changed files)
 ./vendor/bin/pint --dirty
+
+# Static analysis (Larastan, level in phpstan.neon; fix findings, don't baseline them)
+composer analyse
 ```
 
 ### Node/npm Commands
@@ -79,6 +82,7 @@ composer dev
 composer install --prefer-dist --no-interaction --no-progress
 cp .env.example .env
 php artisan key:generate
+composer analyse -- --no-progress
 php artisan test
 ```
 

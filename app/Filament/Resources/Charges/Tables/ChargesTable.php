@@ -63,7 +63,7 @@ class ChargesTable
                     ->default(),
                 Filter::make('overdue')
                     ->label('Vencidos')
-                    ->query(fn (Builder $query) => $query->overdue()),
+                    ->query(fn (Builder $query) => $query->scopes('overdue')),
                 SelectFilter::make('status')
                     ->label('Estado')
                     ->options(ChargeStatus::class),

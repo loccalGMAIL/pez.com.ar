@@ -79,7 +79,7 @@ class Quote extends Model
 
     public function recalculateTotals(): void
     {
-        $this->subtotal = $this->items()->get()->sum('subtotal');
+        $this->subtotal = $this->items()->sum('subtotal') / 100;
         $this->total = max(0, $this->subtotal - $this->discount);
         $this->priceInstallments();
         $this->saveQuietly();
@@ -92,7 +92,9 @@ class Quote extends Model
      */
     public static function defaultInstallmentPlans(): array
     {
-        return collect(Settings::get('quotes.installments') ?? [])
+        $plans = Settings::get('quotes.installments');
+
+        return collect(is_array($plans) ? $plans : [])
             ->map(fn (array $plan) => ['count' => (int) $plan['count'], 'surcharge' => (float) $plan['surcharge']])
             ->all();
     }

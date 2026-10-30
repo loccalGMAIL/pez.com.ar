@@ -78,6 +78,8 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
   archivos subidos en `storage/app/backups`, con limpieza escalonada (máximo 2 GB) y aviso
   por mail si un backup falla o tiene más de un día. Página Sistema → Backups para
   verlos, descargarlos, borrarlos o hacer uno en el momento.
+- Análisis estático con Larastan en nivel 6 (`composer analyse`, también en CI), sin
+  baseline: los hallazgos se corrigieron en el código.
 - Plan del sistema en `docs/plan-sistema-admin.md`, `.env.example` y tests de todas las
   funciones.
 

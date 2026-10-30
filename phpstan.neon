@@ -1,0 +1,18 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    paths:
+        - app
+        - config
+        - database
+        - routes
+
+    # Raised one level at a time, fixing the findings instead of baselining them.
+    level: 6
+
+    tmpDir: storage/phpstan
+
+    # Models declare casts in a casts() method; read it so enums, dates and
+    # App\Casts\Money are typed instead of the raw column types.
+    parseModelCastsMethod: true

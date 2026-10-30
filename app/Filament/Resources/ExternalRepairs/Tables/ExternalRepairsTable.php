@@ -58,7 +58,7 @@ class ExternalRepairsTable
             ->filters([
                 Filter::make('out')
                     ->label('Solo los que están afuera')
-                    ->query(fn (Builder $query) => $query->out())
+                    ->query(fn (Builder $query) => $query->scopes('out'))
                     ->default(),
                 SelectFilter::make('status')
                     ->label('Estado')

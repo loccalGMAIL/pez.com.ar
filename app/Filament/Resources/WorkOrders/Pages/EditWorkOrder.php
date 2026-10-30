@@ -15,7 +15,8 @@ class EditWorkOrder extends EditRecord
 
     public function getTitle(): string
     {
-        return "Editar trabajo {$this->getRecord()->code}";
+        // The resource's record title is its number (P-00100, T-00001, R-00001).
+        return "Editar trabajo {$this->getRecordTitle()}";
     }
 
     protected function getRedirectUrl(): string

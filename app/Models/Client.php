@@ -42,6 +42,8 @@ class Client extends Model
 
     /**
      * Stored as 11 digits, shown as XX-XXXXXXXX-X.
+     *
+     * @return Attribute<?string, ?string>
      */
     protected function cuit(): Attribute
     {
@@ -98,7 +100,7 @@ class Client extends Model
      */
     public function outstanding(): float
     {
-        return $this->charges()->outstandingTotal();
+        return Charge::totalOutstanding($this->charges()->getQuery());
     }
 
     /**

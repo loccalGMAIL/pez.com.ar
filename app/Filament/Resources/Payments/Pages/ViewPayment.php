@@ -14,7 +14,8 @@ class ViewPayment extends ViewRecord
 
     public function getTitle(): string
     {
-        return "Pago {$this->getRecord()->code}";
+        // The resource's record title is its number (P-00100, T-00001, R-00001).
+        return "Pago {$this->getRecordTitle()}";
     }
 
     protected function getHeaderActions(): array

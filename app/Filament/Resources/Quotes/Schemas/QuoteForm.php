@@ -205,6 +205,9 @@ class QuoteForm
             ]);
     }
 
+    /**
+     * @param  array<array-key, array<string, mixed>>|null  $items
+     */
     private static function installmentPreview(mixed $count, mixed $surcharge, ?array $items, mixed $discount): string
     {
         if ((int) $count < 2) {
@@ -223,6 +226,8 @@ class QuoteForm
 
     /**
      * Live preview only; the stored totals are computed by the models on save.
+     *
+     * @param  array<array-key, array<string, mixed>>|null  $items
      */
     private static function subtotal(?array $items): float
     {

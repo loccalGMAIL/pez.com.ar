@@ -40,6 +40,8 @@ class Device extends Model
 
     /**
      * "PC Recepción — Dell OptiPlex 3080 (S/N ABC123)".
+     *
+     * @return Attribute<string, never>
      */
     protected function label(): Attribute
     {

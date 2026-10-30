@@ -71,12 +71,12 @@ class QuoteResource extends Resource
 
     public static function canEdit(Model $record): bool
     {
-        return $record->isEditable() && parent::canEdit($record);
+        return $record instanceof Quote && $record->isEditable() && parent::canEdit($record);
     }
 
     public static function canDelete(Model $record): bool
     {
-        return $record->status === QuoteStatus::Draft && parent::canDelete($record);
+        return $record instanceof Quote && $record->status === QuoteStatus::Draft && parent::canDelete($record);
     }
 
     public static function getPages(): array

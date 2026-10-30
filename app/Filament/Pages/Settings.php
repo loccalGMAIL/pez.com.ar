@@ -23,6 +23,8 @@ use UnitEnum;
  * Company data printed on documents and defaults proposed for new quotes.
  * Quotes keep their own copy of conditions and installment amounts, so
  * changing these never alters quotes already made.
+ *
+ * @property-read Schema $form
  */
 class Settings extends Page
 {
@@ -194,7 +196,9 @@ class Settings extends Page
     {
         $data = $this->form->getState();
 
-        $data['quotes_installments'] = collect($data['quotes_installments'] ?? [])
+        $plans = $data['quotes_installments'] ?? [];
+
+        $data['quotes_installments'] = collect(is_array($plans) ? $plans : [])
             ->map(fn (array $plan) => ['count' => (int) $plan['count'], 'surcharge' => (float) $plan['surcharge']])
             ->sortBy('count')
             ->values()

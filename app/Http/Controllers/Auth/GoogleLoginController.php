@@ -9,6 +9,9 @@ use Filament\Notifications\Notification;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\GoogleProvider;
+use Laravel\Socialite\Two\User as GoogleUser;
+use LogicException;
 use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse;
 use Throwable;
 
@@ -27,8 +30,7 @@ class GoogleLoginController extends Controller
     {
         abort_unless(self::isConfigured(), 404);
 
-        return Socialite::driver('google')
-            ->redirectUrl(route('filament.admin.auth.google.callback'))
+        return $this->google()
             ->with(['prompt' => 'select_account'])
             ->redirect();
     }
@@ -38,9 +40,7 @@ class GoogleLoginController extends Controller
         abort_unless(self::isConfigured(), 404);
 
         try {
-            $google = Socialite::driver('google')
-                ->redirectUrl(route('filament.admin.auth.google.callback'))
-                ->user();
+            $google = $this->google()->user();
         } catch (Throwable $e) {
             Log::warning('Google login failed', ['error' => $e->getMessage()]);
 
@@ -50,7 +50,9 @@ class GoogleLoginController extends Controller
         $email = mb_strtolower((string) $google->getEmail());
         $user = User::whereRaw('lower(email) = ?', [$email])->first();
 
-        if (! $user || ! ($google->getRaw()['email_verified'] ?? false)) {
+        $verified = $google instanceof GoogleUser && ($google->getRaw()['email_verified'] ?? false);
+
+        if (! $user || ! $verified) {
             return $this->backToLogin("La cuenta {$email} no tiene acceso al sistema.");
         }
 
@@ -63,6 +65,20 @@ class GoogleLoginController extends Controller
         session()->regenerate();
 
         return redirect()->intended(Filament::getUrl());
+    }
+
+    /**
+     * The callback lives on the panel's own domain, so it's built per request.
+     */
+    private function google(): GoogleProvider
+    {
+        $provider = Socialite::driver('google');
+
+        if (! $provider instanceof GoogleProvider) {
+            throw new LogicException('The "google" Socialite driver must be the Google OAuth 2 provider.');
+        }
+
+        return $provider->redirectUrl(route('filament.admin.auth.google.callback'));
     }
 
     private function backToLogin(string $message): RedirectResponse
