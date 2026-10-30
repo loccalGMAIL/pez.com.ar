@@ -20,6 +20,8 @@ class ServiceItemResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedWrench;
 
+    protected static ?string $slug = 'catalogo';
+
     protected static ?string $modelLabel = 'servicio';
 
     protected static ?string $pluralModelLabel = 'catálogo de servicios';

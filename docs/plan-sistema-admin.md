@@ -12,6 +12,7 @@ desde un subdominio con un panel de Filament.
 | Ubicación | Misma app, panel en subdominio (`sistema.pez.com.ar`, configurable por `.env`) |
 | Usuarios | Un solo usuario administrador (sin roles/permisos por ahora) |
 | Moneda | Solo ARS (montos guardados como enteros en centavos) |
+| Presupuestos | Numeración desde `P-00100`, precios finales sin IVA discriminado |
 | Facturación electrónica (ARCA/AFIP) | Más adelante; por ahora cobranza interna |
 | Abonos mensuales | Sí, con montos fijos y variables |
 | Hosting | Hostinger compartido: SSH + Composer, **sin npm** |
@@ -111,7 +112,7 @@ Estados:
 1. ✅ **Base:** instalar Filament, panel en subdominio, separación de rutas por dominio,
    usuario admin (`make:filament-user`), configuración de deploy/cron, tests de dominios.
 2. ✅ **Clientes y catálogo:** modelos, migraciones, factories, recursos y tests.
-3. **Presupuestos:** ítems, numeración, totales, estados, PDF archivado y envío por mail.
+3. ✅ **Presupuestos:** ítems, numeración, totales, estados, PDF archivado y envío por mail.
 4. **Trabajos y service de terceros:** proveedores, seguimiento de equipos, adjuntos.
 5. **Cobranza y abonos:** cargos, pagos con imputación, cuenta corriente, comando de
    abonos, dashboard.

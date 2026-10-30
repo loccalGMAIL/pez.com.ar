@@ -58,6 +58,14 @@ class Client extends Model
     }
 
     /**
+     * @return HasMany<Quote, $this>
+     */
+    public function quotes(): HasMany
+    {
+        return $this->hasMany(Quote::class);
+    }
+
+    /**
      * @return HasOne<ClientContact, $this>
      */
     public function primaryContact(): HasOne

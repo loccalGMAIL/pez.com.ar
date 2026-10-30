@@ -15,6 +15,18 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
 
 ### Agregado
 
+- Presupuestos: numeración correlativa desde `P-00100` (sin reutilizar números), ítems
+  cargados del catálogo o a mano, cantidades con decimales, descuento y totales como
+  precio final (sin IVA discriminado), observaciones y condiciones.
+- Estados de presupuesto: borrador, enviado, aceptado, rechazado y vencido. Los
+  aceptados, rechazados y vencidos quedan cerrados; para cambiarlos se duplican.
+- PDF del presupuesto con los datos de la empresa (`COMPANY_*` en `.env`), descarga
+  desde el panel y archivo del PDF tal como se envió.
+- Envío del presupuesto por mail con el PDF adjunto, o "Marcar como enviado" para los
+  que se entregan por otro medio.
+- Comando `quotes:expire`, programado a diario, que marca como vencidos los presupuestos
+  enviados cuya validez pasó (requiere el cron de `schedule:run`).
+- Presupuestos del cliente en su ficha y contador de enviados sin respuesta en el menú.
 - Clientes: razón social, nombre de fantasía, CUIT validado (dígito verificador, sin
   duplicados), condición frente al IVA, datos de contacto, notas y estado activo.
   Las bajas son lógicas (se pueden restaurar).
@@ -30,6 +42,7 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
 
 ### Cambiado
 
+- URLs del panel en español: `/clientes`, `/catalogo`, `/presupuestos`.
 - Las rutas públicas (landing, contacto, gracias) solo responden en `APP_DOMAIN`;
   `www.pez.com.ar` debe redirigir a `pez.com.ar`.
 - Idioma por defecto español y zona horaria `America/Argentina/Buenos_Aires`.

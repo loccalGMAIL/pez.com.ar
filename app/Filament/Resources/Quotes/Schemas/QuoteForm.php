@@ -1,0 +1,159 @@
+<?php
+
+namespace App\Filament\Resources\Quotes\Schemas;
+
+use App\Models\Quote;
+use App\Models\ServiceItem;
+use App\Support\QuotePdf;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
+use Filament\Schemas\Schema;
+
+class QuoteForm
+{
+    public static function configure(Schema $schema): Schema
+    {
+        return $schema
+            ->columns(1)
+            ->components([
+                Section::make()
+                    ->columns(3)
+                    ->schema([
+                        Select::make('client_id')
+                            ->label('Cliente')
+                            // Inactive clients are hidden, except the one an existing quote already has.
+                            ->relationship('client', 'business_name', fn ($query, ?Quote $record) => $query->where(
+                                fn ($query) => $query->where('is_active', true)->when($record, fn ($query) => $query->orWhere('id', $record->client_id)),
+                            ))
+                            ->default(fn () => request()->query('client'))
+                            ->searchable(['business_name', 'trade_name'])
+                            ->preload()
+                            ->required(),
+                        DatePicker::make('issue_date')
+                            ->label('Fecha')
+                            ->native(false)
+                            ->displayFormat('d/m/Y')
+                            ->default(today())
+                            ->required(),
+                        DatePicker::make('valid_until')
+                            ->label('Válido hasta')
+                            ->native(false)
+                            ->displayFormat('d/m/Y')
+                            ->default(today()->addDays(config('pez.quotes.valid_days')))
+                            ->afterOrEqual('issue_date')
+                            ->required(),
+                    ]),
+                Section::make('Ítems')
+                    ->schema([
+                        Repeater::make('items')
+                            ->hiddenLabel()
+                            ->relationship()
+                            ->orderColumn('sort')
+                            ->addActionLabel('Agregar ítem')
+                            ->minItems(1)
+                            ->defaultItems(1)
+                            ->columns(12)
+                            ->live()
+                            ->schema([
+                                Select::make('service_item_id')
+                                    ->label('Del catálogo')
+                                    ->options(fn () => ServiceItem::where('is_active', true)->orderBy('name')->pluck('name', 'id'))
+                                    ->searchable()
+                                    ->live()
+                                    ->afterStateUpdated(function (?string $state, Set $set) {
+                                        $item = $state ? ServiceItem::find($state) : null;
+
+                                        if ($item) {
+                                            $set('description', $item->description ?: $item->name);
+                                            $set('unit', $item->unit->value);
+                                            $set('unit_price', $item->price);
+                                        }
+                                    })
+                                    ->columnSpan(12),
+                                Textarea::make('description')
+                                    ->label('Descripción')
+                                    ->rows(2)
+                                    ->required()
+                                    ->columnSpan(12),
+                                TextInput::make('quantity')
+                                    ->label('Cantidad')
+                                    ->numeric()
+                                    ->minValue(0.01)
+                                    ->default(1)
+                                    ->required()
+                                    ->live(onBlur: true)
+                                    ->columnSpan(3),
+                                TextInput::make('unit')
+                                    ->label('Unidad')
+                                    ->maxLength(50)
+                                    ->columnSpan(3),
+                                TextInput::make('unit_price')
+                                    ->label('Precio unitario')
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->prefix('$')
+                                    ->required()
+                                    ->live(onBlur: true)
+                                    ->columnSpan(3),
+                                TextEntry::make('line_total')
+                                    ->label('Importe')
+                                    ->state(fn (Get $get) => QuotePdf::money(self::lineTotal($get('quantity'), $get('unit_price'))))
+                                    ->columnSpan(3),
+                            ]),
+                    ]),
+                Grid::make(2)
+                    ->schema([
+                        Section::make()
+                            ->schema([
+                                Textarea::make('notes')
+                                    ->label('Observaciones')
+                                    ->helperText('Se imprimen en el PDF.')
+                                    ->rows(3),
+                                Textarea::make('terms')
+                                    ->label('Condiciones')
+                                    ->default(config('pez.quotes.default_terms'))
+                                    ->rows(3),
+                            ]),
+                        Section::make('Totales')
+                            ->schema([
+                                TextInput::make('discount')
+                                    ->label('Descuento')
+                                    ->numeric()
+                                    ->minValue(0)
+                                    ->default(0)
+                                    ->prefix('$')
+                                    ->live(onBlur: true),
+                                TextEntry::make('subtotal_preview')
+                                    ->label('Subtotal')
+                                    ->state(fn (Get $get) => QuotePdf::money(self::subtotal($get('items')))),
+                                TextEntry::make('total_preview')
+                                    ->label('Total (precio final)')
+                                    ->size('lg')
+                                    ->weight('bold')
+                                    ->state(fn (Get $get) => QuotePdf::money(max(0, self::subtotal($get('items')) - (float) $get('discount')))),
+                            ]),
+                    ]),
+            ]);
+    }
+
+    private static function lineTotal(mixed $quantity, mixed $unitPrice): float
+    {
+        return round((float) $quantity * (float) $unitPrice, 2);
+    }
+
+    /**
+     * Live preview only; the stored totals are computed by the models on save.
+     */
+    private static function subtotal(?array $items): float
+    {
+        return collect($items ?? [])->sum(fn (array $item) => self::lineTotal($item['quantity'] ?? 0, $item['unit_price'] ?? 0));
+    }
+}
