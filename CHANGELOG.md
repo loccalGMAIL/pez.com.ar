@@ -13,6 +13,15 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+### Agregado
+
+- Edición del perfil desde el menú del usuario: nombre, email y contraseña.
+
+### Eliminado
+
+- Widget de cuenta (con el botón de salir) del Escritorio; se sigue pudiendo cerrar
+  sesión desde el menú del usuario.
+
 ## [2.0.0] - 2026-10-30
 
 ### Agregado
