@@ -21,7 +21,7 @@ class QuotePdf
 
         return Pdf::loadView('pdf.quote', [
             'quote' => $quote,
-            'company' => config('pez.company'),
+            'company' => Settings::company(),
         ])->setPaper('a4')->output();
     }
 

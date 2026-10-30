@@ -168,7 +168,8 @@ Se encara al terminar las fases funcionales, con todos los tests en verde.
    php artisan make:filament-user   # solo la primera vez
    php artisan optimize
    ```
-4. Entrar a `https://sistema.pez.com.ar` (SSL del subdominio activado en hPanel).
+4. Entrar a `https://sistema.pez.com.ar` (SSL del subdominio activado en hPanel) y
+   completar los datos de la empresa en Sistema → Configuración.
 
 Si se usa `www.pez.com.ar`, debe redirigir a `pez.com.ar`: las rutas públicas solo
 responden en `APP_DOMAIN`.

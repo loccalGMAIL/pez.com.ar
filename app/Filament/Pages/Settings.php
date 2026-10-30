@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Rules\Cuit;
 use App\Support\Settings as AppSettings;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -19,8 +20,9 @@ use Filament\Support\Icons\Heroicon;
 use UnitEnum;
 
 /**
- * Defaults proposed for new quotes. Quotes keep their own copy, so changing
- * these never alters quotes already made.
+ * Company data printed on documents and defaults proposed for new quotes.
+ * Quotes keep their own copy of conditions and installment amounts, so
+ * changing these never alters quotes already made.
  */
 class Settings extends Page
 {
@@ -28,6 +30,14 @@ class Settings extends Page
      * Keys stored by this page, as in config/pez.php.
      */
     private const KEYS = [
+        'company.name',
+        'company.owner',
+        'company.cuit',
+        'company.phone',
+        'company.email',
+        'company.website',
+        'company.address',
+        'company.slogan',
         'quotes.valid_days',
         'quotes.default_warranty',
         'quotes.default_payment_terms',
@@ -65,6 +75,41 @@ class Settings extends Page
         return $schema
             ->statePath('data')
             ->components([
+                Section::make('Empresa')
+                    ->description('Datos que salen en el encabezado y el pie de los presupuestos, y en los mensajes a clientes.')
+                    ->columns(2)
+                    ->schema([
+                        TextInput::make('company_name')
+                            ->label('Nombre')
+                            ->required()
+                            ->maxLength(255),
+                        TextInput::make('company_owner')
+                            ->label('Responsable')
+                            ->helperText('Se imprime en el pie del PDF.')
+                            ->maxLength(255),
+                        TextInput::make('company_cuit')
+                            ->label('CUIT')
+                            ->mask('99-99999999-9')
+                            ->rule(new Cuit),
+                        TextInput::make('company_phone')
+                            ->label('Teléfono')
+                            ->tel()
+                            ->maxLength(255),
+                        TextInput::make('company_email')
+                            ->label('Email')
+                            ->helperText('Las respuestas a los mails de presupuestos llegan acá.')
+                            ->email()
+                            ->maxLength(255),
+                        TextInput::make('company_website')
+                            ->label('Sitio web')
+                            ->maxLength(255),
+                        TextInput::make('company_address')
+                            ->label('Dirección')
+                            ->maxLength(255),
+                        TextInput::make('company_slogan')
+                            ->label('Frase')
+                            ->maxLength(255),
+                    ]),
                 Section::make('Cuotas')
                     ->description('Planes que se proponen al activar "Ofrecer cuotas" en un presupuesto. Cada presupuesto guarda sus importes: cambiar estos recargos no modifica los ya hechos.')
                     ->schema([

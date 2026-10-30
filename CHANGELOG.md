@@ -37,7 +37,7 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
   precio final (sin IVA discriminado), observaciones y condiciones.
 - Estados de presupuesto: borrador, enviado, aceptado, rechazado y vencido. Los
   aceptados, rechazados y vencidos quedan cerrados; para cambiarlos se duplican.
-- PDF del presupuesto con los datos de la empresa (`COMPANY_*` en `.env`), descarga
+- PDF del presupuesto con los datos de la empresa, descarga
   desde el panel y archivo del PDF tal como se envió.
 - Compartir el presupuesto por WhatsApp: abre WhatsApp con el mensaje escrito (número,
   total, validez) y un link firmado al PDF, que el cliente abre sin usuario. El número
@@ -72,16 +72,17 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
   en $0 destacados como "SIN CARGO"; total destacado; condiciones (garantía, forma de
   pago, plazo de entrega, observaciones) y pie con frase, responsable y contacto.
   Tipografía Lato embebida (licencia OFL en `resources/fonts/lato`).
-- Página de Configuración en el panel (Sistema → Configuración) con los planes de
-  cuotas y su recargo, y los valores con que arranca cada presupuesto (validez,
-  garantía, forma de pago, plazo de entrega, nota al pie). Lo guardado ahí reemplaza a
-  los valores del `.env`.
+- Página de Configuración en el panel (Sistema → Configuración) con los datos de la
+  empresa (nombre, responsable, CUIT, teléfono, email, web, dirección, frase), los
+  planes de cuotas y su recargo, y los valores con que arranca cada presupuesto
+  (validez, garantía, forma de pago, plazo de entrega, nota al pie). Estos datos ya no
+  se leen del `.env`.
 - Cuotas opcionales en los presupuestos: al activar "Ofrecer cuotas" se proponen los
   planes de la configuración, editables en cada presupuesto. Cada presupuesto guarda
   el total financiado y el importe de cada cuota, así un cambio posterior de recargos
   no altera los presupuestos ya hechos. El PDF lista los planes junto al total.
 - Presupuestos con título, concepto por ítem (se completa desde el catálogo) y
-  condiciones con valores por defecto configurables (`QUOTES_DEFAULT_*`). Validez por
+  condiciones con valores por defecto configurables. Validez por
   defecto: 7 días.
 - URLs del panel en español: `/clientes`, `/equipos`, `/catalogo`, `/presupuestos`,
   `/trabajos`, `/service-externo`, `/proveedores`.

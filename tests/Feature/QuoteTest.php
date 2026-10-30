@@ -7,6 +7,7 @@ use App\Mail\QuoteMail;
 use App\Models\Quote;
 use App\Models\QuoteItem;
 use App\Support\QuotePdf;
+use App\Support\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -148,7 +149,7 @@ class QuoteTest extends TestCase
         $quote->items()->create(['title' => 'Procesador', 'description' => 'AMD Ryzen 3 3200G', 'quantity' => 1, 'unit_price' => 155150]);
         $quote->items()->create(['title' => 'De regalo', 'description' => 'Teclado, mouse y parlantes', 'quantity' => 1, 'unit_price' => 0]);
 
-        $html = view('pdf.quote', ['quote' => $quote->fresh(), 'company' => config('pez.company')])->render();
+        $html = view('pdf.quote', ['quote' => $quote->fresh(), 'company' => Settings::company()])->render();
 
         $this->assertStringContainsString('Equipo de escritorio', $html);
         $this->assertStringContainsString('7 días', $html);

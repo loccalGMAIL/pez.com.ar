@@ -4,6 +4,7 @@ namespace App\Mail;
 
 use App\Models\Quote;
 use App\Support\QuotePdf;
+use App\Support\Settings;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
@@ -23,8 +24,8 @@ class QuoteMail extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: "Presupuesto {$this->quote->code} — ".config('pez.company.name'),
-            replyTo: [config('pez.company.email')],
+            subject: "Presupuesto {$this->quote->code} — ".Settings::get('company.name'),
+            replyTo: array_filter([Settings::get('company.email')]),
         );
     }
 
@@ -34,7 +35,7 @@ class QuoteMail extends Mailable
             markdown: 'emails.quote',
             with: [
                 'body' => $this->body,
-                'company' => config('pez.company'),
+                'company' => Settings::company(),
             ],
         );
     }

@@ -72,7 +72,7 @@ class QuoteInstallmentsTest extends TestCase
 
     public function test_pdf_lists_installments_only_when_offered(): void
     {
-        $render = fn (Quote $quote) => view('pdf.quote', ['quote' => $quote, 'company' => config('pez.company')])->render();
+        $render = fn (Quote $quote) => view('pdf.quote', ['quote' => $quote, 'company' => Settings::company()])->render();
 
         $this->assertStringNotContainsString('EN CUOTAS', $render($this->quoteTotaling(1000)));
 

@@ -98,4 +98,45 @@ class SettingsPageTest extends TestCase
                     : 'unexpected',
             ]);
     }
+
+    public function test_company_data_is_edited_in_the_panel_and_printed_on_quotes(): void
+    {
+        Livewire::test(SettingsPage::class)
+            ->fillForm([
+                'company_name' => 'PEZ Servicios IT',
+                'company_owner' => 'Claudio López',
+                'company_phone' => '03541-549674',
+                'company_email' => 'loccal@hotmail.com',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame('Claudio López', Settings::company()['owner']);
+
+        $quote = Quote::factory()->create();
+        $html = view('pdf.quote', ['quote' => $quote, 'company' => Settings::company()])->render();
+        $this->assertStringContainsString('CLAUDIO LÓPEZ', $html);
+        $this->assertStringContainsString('03541-549674', $html);
+        $this->assertStringContainsString('loccal@hotmail.com', $html);
+
+        $mail = new \App\Mail\QuoteMail($quote, 'Hola');
+        $this->assertTrue($mail->hasReplyTo('loccal@hotmail.com'));
+    }
+
+    public function test_company_name_is_required_and_cuit_is_validated(): void
+    {
+        Livewire::test(SettingsPage::class)
+            ->fillForm(['company_name' => '', 'company_cuit' => '20-12345678-5'])
+            ->call('save')
+            ->assertHasFormErrors(['company_name' => 'required', 'company_cuit']);
+    }
+
+    public function test_company_data_does_not_come_from_env(): void
+    {
+        putenv('COMPANY_NAME=Otra empresa');
+
+        $this->assertSame('PEZ Servicios IT', Settings::get('company.name'));
+
+        putenv('COMPANY_NAME');
+    }
 }

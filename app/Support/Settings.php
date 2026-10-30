@@ -21,6 +21,18 @@ class Settings
     }
 
     /**
+     * Company data printed on quotes and mails.
+     *
+     * @return array{name: ?string, cuit: ?string, email: ?string, phone: ?string, address: ?string, website: ?string, owner: ?string, slogan: ?string}
+     */
+    public static function company(): array
+    {
+        return collect(array_keys(config('pez.company')))
+            ->mapWithKeys(fn (string $field) => [$field => self::get("company.{$field}")])
+            ->all();
+    }
+
+    /**
      * @param  array<string, mixed>  $values
      */
     public static function set(array $values): void
