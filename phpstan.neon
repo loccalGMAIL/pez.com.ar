@@ -3,7 +3,17 @@ includes:
     - vendor/nesbot/carbon/extension.neon
 
 parameters:
-    level: 5
     paths:
-        - app/
+        - app
+        - config
+        - database
+        - routes
+
+    # Raised one level at a time, fixing the findings instead of baselining them.
+    level: 6
+
     tmpDir: storage/framework/cache/phpstan
+
+    # Models declare casts in a casts() method; read it so enums, dates and
+    # App\Casts\Money are typed instead of the raw column types.
+    parseModelCastsMethod: true

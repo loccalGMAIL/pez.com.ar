@@ -38,6 +38,14 @@ return [
             'report' => false,
         ],
 
+        // Zips made by spatie/laravel-backup; outside the backed up directory.
+        'backups' => [
+            'driver' => 'local',
+            'root' => storage_path('app/backups'),
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

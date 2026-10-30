@@ -11,10 +11,10 @@
 
 - Requiere PHP 8.3 o superior y Laravel 13.
 - `composer test`: ejecuta las pruebas.
-- `composer analyse`: ejecuta Larastan sobre `app/` en nivel 5.
+- `composer analyse`: ejecuta Larastan (nivel 6) sobre `app/`, `config/`, `database/` y `routes/`.
 - `npm run build`: compila los recursos del frontend.
 - Laravel Boost y Larastan son dependencias de desarrollo; no se instalan con `composer install --no-dev`.
-- El servidor MCP de Boost está configurado para OpenCode en `opencode.json` y se inicia con `php artisan boost:mcp`.
+- El servidor MCP de Boost está configurado para OpenCode (`opencode.json`) y Claude Code (`.mcp.json`) y se inicia con `php artisan boost:mcp`.
 - `php artisan boost:install --guidelines --no-interaction`: actualiza las instrucciones de Boost conservando el contenido personalizado de `AGENTS.md`.
 
 ## About Laravel

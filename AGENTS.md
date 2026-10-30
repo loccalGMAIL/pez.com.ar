@@ -4,7 +4,15 @@ This document provides guidance for AI agents working in this codebase.
 
 ## Project Overview
 
-This is a Laravel 13 application with Vite/Tailwind frontend. It follows Laravel conventions and uses PHP 8.3+.
+This is a Laravel 13 application with a Filament 5 admin panel and a Vite/Tailwind landing. It follows Laravel conventions and uses PHP 8.3+.
+
+## Versioning and Changelog
+
+- The project follows Semantic Versioning; releases are tagged `vX.Y.Z` on `master`.
+- Every change must add an entry under `## [Sin publicar]` in `CHANGELOG.md`
+  (Keep a Changelog format, written in Spanish: Agregado / Cambiado / Corregido / Eliminado / Seguridad).
+- When releasing, rename `[Sin publicar]` to the new version with its date and tag the merge commit.
+- Each phase of `docs/plan-sistema-admin.md` is a MINOR release; the Laravel 13 upgrade is a MAJOR release.
 
 ## Build/Lint/Test Commands
 
@@ -36,6 +44,9 @@ php vendor/bin/phpunit --testsuite=Feature
 
 # Run Pint with dirty mode (only changed files)
 ./vendor/bin/pint --dirty
+
+# Static analysis (Larastan, level in phpstan.neon; fix findings, don't baseline them)
+composer analyse
 ```
 
 ### Node/npm Commands
@@ -52,6 +63,9 @@ npm run build
 
 # Watch mode
 npm run dev -- --watch
+
+# Panel barcode scanner bundle (committed in resources/js/dist, not part of public/build)
+npm run build:scanner
 ```
 
 ### Full Development Setup
@@ -70,6 +84,7 @@ composer dev
 composer install --prefer-dist --no-interaction --no-progress
 cp .env.example .env
 php artisan key:generate
+composer analyse -- --no-progress
 php artisan test
 ```
 
@@ -78,7 +93,7 @@ php artisan test
 ### General Conventions
 
 - **PHP Version**: 8.3 minimum
-- **Framework**: Laravel 13
+- **Framework**: Laravel 13 (Filament 5 panel)
 - **Indent**: 4 spaces for PHP, 2 spaces for YAML
 - **Line endings**: LF (Unix)
 - **Charset**: UTF-8
@@ -299,6 +314,16 @@ Before relying on a package's API, confirm its installed version:
 # Deployment
 
 - Laravel can be deployed using [Laravel Cloud](https://cloud.laravel.com/), which is the fastest way to deploy and scale production Laravel applications.
+
+=== tests rules ===
+
+# Test Enforcement
+
+- Add or update tests for behavior and logic changes when a test provides meaningful regression coverage.
+- Pure copy, styling, and layout-only changes do not require new or updated tests.
+- When test coverage applies, run the affected tests and ensure they pass.
+- Test the changed behavior and its important failure modes, but do not add tests beyond them.
+- Read the `testing-best-practices` skill before writing tests.
 
 === laravel/core rules ===
 

@@ -35,4 +35,12 @@ return [
         ],
     ],
 
+    // Panel login with Google (Socialite). Credentials from Google Cloud Console;
+    // the authorized redirect URI is https://<ADMIN_DOMAIN>/auth/google/callback.
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => '/auth/google/callback',
+    ],
+
 ];
