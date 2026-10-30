@@ -19,8 +19,8 @@
 /public/storage
 /storage/*.key
 /storage/pail
-/storage/phpstan
 /vendor
+/vendor-backup-20261019-072156
 Homestead.json
 Homestead.yaml
 Thumbs.db

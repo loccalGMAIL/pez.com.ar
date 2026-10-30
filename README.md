@@ -7,6 +7,16 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
 </p>
 
+## Desarrollo del proyecto
+
+- Requiere PHP 8.3 o superior y Laravel 13.
+- `composer test`: ejecuta las pruebas.
+- `composer analyse`: ejecuta Larastan (nivel 6) sobre `app/`, `config/`, `database/` y `routes/`.
+- `npm run build`: compila los recursos del frontend.
+- Laravel Boost y Larastan son dependencias de desarrollo; no se instalan con `composer install --no-dev`.
+- El servidor MCP de Boost está configurado para OpenCode (`opencode.json`) y Claude Code (`.mcp.json`) y se inicia con `php artisan boost:mcp`.
+- `php artisan boost:install --guidelines --no-interaction`: actualiza las instrucciones de Boost conservando el contenido personalizado de `AGENTS.md`.
+
 ## About Laravel
 
 Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:

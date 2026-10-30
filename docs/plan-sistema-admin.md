@@ -130,7 +130,7 @@ y su entrada en `CHANGELOG.md`.
 
 ## Versionado
 
-- Versionado semántico con tags `vX.Y.Z` en `main`; detalle en `CHANGELOG.md`.
+- Versionado semántico con tags `vX.Y.Z` en `master`; detalle en `CHANGELOG.md`.
 - `1.0.0` es la landing publicada. Cada fase del sistema se publica como versión menor
   (`1.1.0` = fase 1, `1.2.0` = fase 2, …). La actualización a Laravel 13 será `2.0.0`.
 

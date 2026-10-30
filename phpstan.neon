@@ -1,5 +1,6 @@
 includes:
     - vendor/larastan/larastan/extension.neon
+    - vendor/nesbot/carbon/extension.neon
 
 parameters:
     paths:
@@ -11,7 +12,7 @@ parameters:
     # Raised one level at a time, fixing the findings instead of baselining them.
     level: 6
 
-    tmpDir: storage/phpstan
+    tmpDir: storage/framework/cache/phpstan
 
     # Models declare casts in a casts() method; read it so enums, dates and
     # App\Casts\Money are typed instead of the raw column types.

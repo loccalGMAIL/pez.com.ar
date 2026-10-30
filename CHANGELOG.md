@@ -9,7 +9,7 @@ proyecto usa [Versionado Semántico](https://semver.org/lang/es/):
 - **MENOR** (`1.1.0`): funcionalidades nuevas (cada fase del sistema de gestión).
 - **PARCHE** (`1.0.1`): correcciones sin funcionalidad nueva.
 
-Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
+Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
@@ -95,7 +95,7 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
 - Las rutas públicas (landing, contacto, gracias) solo responden en `APP_DOMAIN`;
   `www.pez.com.ar` debe redirigir a `pez.com.ar`.
 - Idioma por defecto español y zona horaria `America/Argentina/Buenos_Aires`.
-- El workflow de tests corre en los push a `main`, en PHP 8.3 y 8.4.
+- El workflow de tests corre en los push a `master`, en PHP 8.3 y 8.4.
 - Este changelog reemplaza al del esqueleto de Laravel.
 
 ### Eliminado

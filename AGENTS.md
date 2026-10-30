@@ -8,7 +8,7 @@ This is a Laravel 13 application with a Filament 5 admin panel and a Vite/Tailwi
 
 ## Versioning and Changelog
 
-- The project follows Semantic Versioning; releases are tagged `vX.Y.Z` on `main`.
+- The project follows Semantic Versioning; releases are tagged `vX.Y.Z` on `master`.
 - Every change must add an entry under `## [Sin publicar]` in `CHANGELOG.md`
   (Keep a Changelog format, written in Spanish: Agregado / Cambiado / Corregido / Eliminado / Seguridad).
 - When releasing, rename `[Sin publicar]` to the new version with its date and tag the merge commit.
@@ -21,6 +21,8 @@ This is a Laravel 13 application with a Filament 5 admin panel and a Vite/Tailwi
 ```bash
 # Run all tests
 composer test
+# Run static analysis (Larastan, level 5)
+composer analyse
 # or
 php artisan test
 
