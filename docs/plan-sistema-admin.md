@@ -116,9 +116,34 @@ Estados:
 5. **Cobranza y abonos:** cargos, pagos con imputación, cuenta corriente, comando de
    abonos, dashboard.
 6. **Backups y endurecimiento:** `laravel-backup`, 2FA de Filament, revisión de seguridad.
-7. **Futuro:** facturación electrónica, links de pago MercadoPago, portal de clientes.
+7. **Actualización y herramientas:** ver sección siguiente.
+8. **Futuro:** facturación electrónica, links de pago MercadoPago, portal de clientes.
 
-Cada fase incluye migraciones con `down()`, factories, tests (`php artisan test`) y Pint.
+Cada fase incluye migraciones con `down()`, factories, tests (`php artisan test`), Pint
+y su entrada en `CHANGELOG.md`.
+
+## Versionado
+
+- Versionado semántico con tags `vX.Y.Z` en `main`; detalle en `CHANGELOG.md`.
+- `1.0.0` es la landing publicada. Cada fase del sistema se publica como versión menor
+  (`1.1.0` = fase 1, `1.2.0` = fase 2, …). La actualización a Laravel 13 será `2.0.0`.
+
+## Fase 7: Laravel 13, Boost y Larastan
+
+Se encara al terminar las fases funcionales, con todos los tests en verde.
+
+1. **Previo:** confirmar en hPanel que el sitio corre con PHP 8.3 o superior (Laravel 13
+   lo exige) y subir el mínimo de `composer.json` y del workflow de tests a 8.3.
+2. **Laravel 13:** seguir la guía oficial de actualización 12 → 13, actualizar
+   `laravel/framework` y dependencias de desarrollo, revisar configuración publicada.
+   Filament 5 y dompdf ya declaran compatibilidad con Laravel 13.
+3. **Larastan** (`larastan/larastan`, dev): `phpstan.neon` empezando en nivel 5, con
+   baseline para lo existente, y subir de nivel progresivamente. Agregar
+   `composer analyse` y correrlo en el workflow de CI.
+4. **Laravel Boost** (`laravel/boost`, dev): `php artisan boost:install` para las guías
+   de Laravel/Filament para agentes y el servidor MCP (consultas a la base, rutas,
+   logs y documentación por versión). Solo en desarrollo, nunca en producción.
+5. Verificar en Hostinger y publicar como `2.0.0`.
 
 ## Puesta en marcha en Hostinger (fase 1)
 

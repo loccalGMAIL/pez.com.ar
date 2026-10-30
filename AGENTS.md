@@ -6,6 +6,14 @@ This document provides guidance for AI agents working in this codebase.
 
 This is a Laravel 12 application with Vite/Tailwind frontend. It follows Laravel conventions and uses PHP 8.2+.
 
+## Versioning and Changelog
+
+- The project follows Semantic Versioning; releases are tagged `vX.Y.Z` on `main`.
+- Every change must add an entry under `## [Sin publicar]` in `CHANGELOG.md`
+  (Keep a Changelog format, written in Spanish: Agregado / Cambiado / Corregido / Eliminado / Seguridad).
+- When releasing, rename `[Sin publicar]` to the new version with its date and tag the merge commit.
+- Each phase of `docs/plan-sistema-admin.md` is a MINOR release; the Laravel 13 upgrade is a MAJOR release.
+
 ## Build/Lint/Test Commands
 
 ### PHP/Laravel Commands
