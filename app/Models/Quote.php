@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\URL;
 
 class Quote extends Model
 {
@@ -111,6 +112,15 @@ class Quote extends Model
         $this->markAsSent();
 
         Mail::to($to)->send(new QuoteMail($this, $body));
+    }
+
+    /**
+     * Link the client can open without logging in. It has no expiry so it keeps
+     * working if the client answers late; the signature prevents guessing other quotes.
+     */
+    public function publicPdfUrl(): string
+    {
+        return URL::signedRoute('quotes.pdf', $this);
     }
 
     public function accept(): void

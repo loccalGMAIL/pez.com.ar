@@ -59,6 +59,7 @@ class QuotesTable
                 ViewAction::make(),
                 EditAction::make(),
                 ActionGroup::make([
+                    QuoteActions::shareOnWhatsApp(),
                     QuoteActions::downloadPdf(),
                     QuoteActions::duplicate(),
                 ]),

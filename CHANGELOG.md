@@ -22,8 +22,12 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
   aceptados, rechazados y vencidos quedan cerrados; para cambiarlos se duplican.
 - PDF del presupuesto con los datos de la empresa (`COMPANY_*` en `.env`), descarga
   desde el panel y archivo del PDF tal como se envió.
-- Envío del presupuesto por mail con el PDF adjunto, o "Marcar como enviado" para los
-  que se entregan por otro medio.
+- Compartir el presupuesto por WhatsApp: abre WhatsApp con el mensaje escrito (número,
+  total, validez) y un link firmado al PDF, que el cliente abre sin usuario. El número
+  se toma del cliente o de su contacto principal; si no se puede interpretar, WhatsApp
+  pide elegir el contacto.
+- Envío alternativo por mail con el PDF adjunto, o "Marcar como enviado" para los que
+  se entregan por otro medio.
 - Comando `quotes:expire`, programado a diario, que marca como vencidos los presupuestos
   enviados cuya validez pasó (requiere el cron de `schedule:run`).
 - Presupuestos del cliente en su ficha y contador de enviados sin respuesta en el menú.

@@ -22,9 +22,10 @@ class ViewQuote extends ViewRecord
         return [
             QuoteActions::accept(),
             QuoteActions::reject(),
-            QuoteActions::send(),
+            QuoteActions::shareOnWhatsApp(),
             EditAction::make(),
             ActionGroup::make([
+                QuoteActions::send(),
                 QuoteActions::downloadPdf(),
                 QuoteActions::downloadSentPdf(),
                 QuoteActions::markAsSent(),

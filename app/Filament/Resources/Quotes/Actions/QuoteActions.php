@@ -44,11 +44,22 @@ class QuoteActions
             ->action(fn (Quote $record) => Storage::disk(QuotePdf::DISK)->download($record->pdf_path, QuotePdf::filename($record)));
     }
 
+    public static function shareOnWhatsApp(): Action
+    {
+        return Action::make('shareOnWhatsApp')
+            ->label('Compartir por WhatsApp')
+            ->icon(Heroicon::OutlinedChatBubbleLeftRight)
+            ->color('success')
+            ->visible(fn (Quote $record) => $record->isEditable())
+            ->url(fn (Quote $record) => route('filament.admin.quotes.whatsapp', $record), shouldOpenInNewTab: true);
+    }
+
     public static function send(): Action
     {
         return Action::make('send')
-            ->label(fn (Quote $record) => $record->status === QuoteStatus::Draft ? 'Enviar por mail' : 'Reenviar por mail')
-            ->icon(Heroicon::OutlinedPaperAirplane)
+            ->label('Enviar por mail')
+            ->icon(Heroicon::OutlinedEnvelope)
+            ->color('gray')
             ->visible(fn (Quote $record) => $record->isEditable())
             ->modalHeading(fn (Quote $record) => "Enviar presupuesto {$record->code}")
             ->modalSubmitActionLabel('Enviar')
@@ -73,7 +84,7 @@ class QuoteActions
     }
 
     /**
-     * For quotes delivered by other means (WhatsApp, in person): archives the PDF without mailing it.
+     * For quotes delivered by other means (in person, another chat): archives the PDF without mailing it.
      */
     public static function markAsSent(): Action
     {
