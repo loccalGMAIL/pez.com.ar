@@ -10,6 +10,7 @@ use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
@@ -162,9 +163,56 @@ class QuoteForm
                                     ->size('lg')
                                     ->weight('bold')
                                     ->state(fn (Get $get) => QuotePdf::money(max(0, self::subtotal($get('items')) - (float) $get('discount')))),
+                                Toggle::make('offer_installments')
+                                    ->label('Ofrecer cuotas')
+                                    ->live()
+                                    ->dehydrated(false)
+                                    ->afterStateHydrated(fn (Toggle $component, ?Quote $record) => $component->state(filled($record?->installment_plans)))
+                                    ->afterStateUpdated(fn (bool $state, Set $set) => $set('installment_plans', $state ? Quote::defaultInstallmentPlans() : [])),
+                                Repeater::make('installment_plans')
+                                    ->hiddenLabel()
+                                    ->visible(fn (Get $get) => $get('offer_installments'))
+                                    // Turning the toggle off empties the plans; they must still be saved.
+                                    ->dehydratedWhenHidden()
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Agregar plan')
+                                    ->reorderable(false)
+                                    ->columns(3)
+                                    ->live()
+                                    ->schema([
+                                        TextInput::make('count')
+                                            ->label('Cuotas')
+                                            ->integer()
+                                            ->minValue(2)
+                                            ->maxValue(48)
+                                            ->required()
+                                            ->live(onBlur: true),
+                                        TextInput::make('surcharge')
+                                            ->label('Recargo')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->suffix('%')
+                                            ->default(0)
+                                            ->required()
+                                            ->live(onBlur: true),
+                                        TextEntry::make('installment_preview')
+                                            ->label('Cuota')
+                                            ->state(fn (Get $get) => self::installmentPreview($get('count'), $get('surcharge'), $get('../../items'), $get('../../discount'))),
+                                    ]),
                             ]),
                     ]),
             ]);
+    }
+
+    private static function installmentPreview(mixed $count, mixed $surcharge, ?array $items, mixed $discount): string
+    {
+        if ((int) $count < 2) {
+            return '—';
+        }
+
+        $total = max(0, self::subtotal($items) - (float) $discount) * (1 + (float) $surcharge / 100);
+
+        return (int) $count.' x '.QuotePdf::money(round($total / (int) $count, 2));
     }
 
     private static function lineTotal(mixed $quantity, mixed $unitPrice): float

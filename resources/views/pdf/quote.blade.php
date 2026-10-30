@@ -56,14 +56,22 @@
         .amount { text-align: right; width: 120px; font-weight: bold; font-size: 10.5px; white-space: nowrap; }
         .free-label { color: #1fa84f; font-weight: bold; }
 
-        .totals { width: 252px; margin-left: auto; margin-top: 4px; }
+        .totals { width: 100%; }
         .totals td { padding: 6px 0; color: #5b6f73; }
         .totals .num { text-align: right; }
-        .total-box { width: 252px; margin-left: auto; margin-top: 14px; background: #0a2e36; color: #fff; border-radius: 7px; }
+        .total-box { width: 100%; margin-top: 14px; background: #0a2e36; color: #fff; border-radius: 7px; }
         .total-box td { padding: 13px 16px; }
         .total-box .k { color: #27fb6b; font-weight: bold; font-size: 9px; }
         .total-box .v { text-align: right; font-weight: bold; font-size: 16px; }
 
+        .summary { width: 100%; margin-top: 4px; }
+        .summary td.summary-left { vertical-align: top; padding: 10px 24px 0 0; }
+        .summary td.summary-right { vertical-align: top; width: 252px; }
+        .installments { width: 100%; }
+        .installments td { padding: 3px 0; }
+        .installments .head { color: #1fa84f; font-weight: bold; font-size: 9px; padding-bottom: 5px; }
+        .installments .num { text-align: right; font-weight: bold; font-size: 10.5px; white-space: nowrap; padding-right: 12px; }
+        .installments .sub { color: #5b6f73; font-size: 8px; white-space: nowrap; }
         .conditions { width: 100%; margin-top: 4px; }
         .conditions td { padding: 5px 0 3px; vertical-align: top; }
         .bullet { width: 18px; color: #1fa84f; font-family: 'DejaVu Sans', sans-serif; font-size: 9px; }
@@ -156,23 +164,44 @@
             </tbody>
         </table>
 
-        <table class="totals">
+        @php($installments = $quote->installments())
+        <table class="summary">
             <tr>
-                <td>Subtotal</td>
-                <td class="num">{{ QuotePdf::money($quote->subtotal) }}</td>
-            </tr>
-            @if ($quote->discount > 0)
-                <tr>
-                    <td>Descuento</td>
-                    <td class="num">- {{ QuotePdf::money($quote->discount) }}</td>
-                </tr>
-            @endif
-        </table>
+                <td class="summary-left">
+                    @if ($installments->isNotEmpty())
+                        <table class="installments">
+                            <tr><td class="head" colspan="3">EN CUOTAS</td></tr>
+                            @foreach ($installments as $plan)
+                                <tr>
+                                    <td>{{ $plan['count'] }} cuotas de</td>
+                                    <td class="num">{{ QuotePdf::money($plan['amount']) }}</td>
+                                    <td class="sub">{{ $plan['surcharge'] > 0 ? 'total '.QuotePdf::money($plan['total']) : 'sin recargo' }}</td>
+                                </tr>
+                            @endforeach
+                        </table>
+                    @endif
+                </td>
+                <td class="summary-right">
+                    <table class="totals">
+                        <tr>
+                            <td>Subtotal</td>
+                            <td class="num">{{ QuotePdf::money($quote->subtotal) }}</td>
+                        </tr>
+                        @if ($quote->discount > 0)
+                            <tr>
+                                <td>Descuento</td>
+                                <td class="num">- {{ QuotePdf::money($quote->discount) }}</td>
+                            </tr>
+                        @endif
+                    </table>
 
-        <table class="total-box">
-            <tr>
-                <td class="k">TOTAL</td>
-                <td class="v">{{ QuotePdf::money($quote->total) }}</td>
+                    <table class="total-box">
+                        <tr>
+                            <td class="k">TOTAL</td>
+                            <td class="v">{{ QuotePdf::money($quote->total) }}</td>
+                        </tr>
+                    </table>
+                </td>
             </tr>
         </table>
 

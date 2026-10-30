@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
@@ -38,6 +39,7 @@ class Quote extends Model
         'payment_terms',
         'delivery_time',
         'terms',
+        'installment_plans',
     ];
 
     protected $attributes = [
@@ -56,6 +58,7 @@ class Quote extends Model
             'subtotal' => Money::class,
             'discount' => Money::class,
             'total' => Money::class,
+            'installment_plans' => 'array',
             'sent_at' => 'datetime',
             'decided_at' => 'datetime',
         ];
@@ -75,6 +78,46 @@ class Quote extends Model
         $this->subtotal = $this->items()->get()->sum('subtotal');
         $this->total = max(0, $this->subtotal - $this->discount);
         $this->saveQuietly();
+    }
+
+    /**
+     * Plans from config, for the form's defaults: "3:0,6:10" → [['count' => 3, 'surcharge' => 0], …].
+     *
+     * @return array<int, array{count: int, surcharge: float}>
+     */
+    public static function defaultInstallmentPlans(): array
+    {
+        return collect(explode(',', (string) config('pez.quotes.default_installments')))
+            ->map(fn (string $plan) => explode(':', trim($plan)) + [1 => 0])
+            ->filter(fn (array $plan) => (int) $plan[0] > 1)
+            ->map(fn (array $plan) => ['count' => (int) $plan[0], 'surcharge' => (float) $plan[1]])
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Installment options with their amounts, cheapest first.
+     *
+     * @return Collection<int, array{count: int, surcharge: float, total: float, amount: float}>
+     */
+    public function installments(): Collection
+    {
+        return collect($this->installment_plans ?? [])
+            ->filter(fn (array $plan) => (int) ($plan['count'] ?? 0) > 1)
+            ->map(function (array $plan) {
+                $count = (int) $plan['count'];
+                $surcharge = (float) ($plan['surcharge'] ?? 0);
+                $total = round($this->total * (1 + $surcharge / 100), 2);
+
+                return [
+                    'count' => $count,
+                    'surcharge' => $surcharge,
+                    'total' => $total,
+                    'amount' => round($total / $count, 2),
+                ];
+            })
+            ->sortBy('count')
+            ->values();
     }
 
     /**
@@ -178,6 +221,7 @@ class Quote extends Model
                 'payment_terms' => $this->payment_terms,
                 'delivery_time' => $this->delivery_time,
                 'terms' => $this->terms,
+                'installment_plans' => $this->installment_plans,
             ]);
 
             foreach ($this->items as $item) {

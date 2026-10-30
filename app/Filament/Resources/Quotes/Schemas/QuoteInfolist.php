@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Quotes\Schemas;
 
 use App\Filament\Resources\Clients\ClientResource;
+use App\Support\QuotePdf;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
@@ -102,6 +103,13 @@ class QuoteInfolist
                                     ->money('ARS', locale: 'es_AR')
                                     ->size('lg')
                                     ->weight('bold'),
+                                TextEntry::make('installments')
+                                    ->label('Cuotas')
+                                    ->state(fn ($record) => $record->installments()
+                                        ->map(fn (array $plan) => "{$plan['count']} cuotas de ".QuotePdf::money($plan['amount']).($plan['surcharge'] > 0 ? " (recargo {$plan['surcharge']} %)" : ' (sin recargo)'))
+                                        ->all())
+                                    ->listWithLineBreaks()
+                                    ->placeholder('Sin cuotas'),
                             ]),
                     ]),
             ]);

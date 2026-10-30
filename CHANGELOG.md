@@ -68,6 +68,10 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
   en $0 destacados como "SIN CARGO"; total destacado; condiciones (garantía, forma de
   pago, plazo de entrega, observaciones) y pie con frase, responsable y contacto.
   Tipografía Lato embebida (licencia OFL en `resources/fonts/lato`).
+- Cuotas opcionales en los presupuestos: al activar "Ofrecer cuotas" se proponen los
+  planes de `QUOTES_DEFAULT_INSTALLMENTS` (por defecto 3, 6 y 12 sin recargo), cada uno
+  con su recargo editable. El formulario muestra el valor de la cuota y el PDF lista
+  los planes junto al total.
 - Presupuestos con título, concepto por ítem (se completa desde el catálogo) y
   condiciones con valores por defecto configurables (`QUOTES_DEFAULT_*`). Validez por
   defecto: 7 días.
