@@ -15,9 +15,15 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ### Agregado
 
-- El panel se puede instalar como aplicación (PWA) en la computadora o el celular:
-  manifest con nombre e íconos de PEZ, botón "Instalar app" en la barra superior
-  (aparece cuando el navegador lo permite) y una página "Sin conexión" cuando no hay red.
+- El panel se puede instalar como aplicación (PWA) en la computadora o el celular, con
+  el nombre y el logo de PEZ, accesos directos (ingreso de equipo, órdenes de trabajo y
+  presupuestos) y pantallas de inicio para iPhone.
+- Aviso abajo de la pantalla para instalar la app (en iPhone explica cómo agregarla a
+  inicio) y opción "Instalar app" en el menú del usuario.
+- Aviso "Hay una versión nueva del sistema" con botón para actualizar después de cada
+  publicación.
+- Pantalla "Sin conexión" cuando no hay red. Las páginas y los datos del panel nunca se
+  guardan en el dispositivo: solo se guardan los archivos estáticos (estilos, scripts e íconos).
 
 ## [2.2.0] - 2026-10-30
 
