@@ -27,6 +27,11 @@ class QuoteForm
                 Section::make()
                     ->columns(3)
                     ->schema([
+                        TextInput::make('title')
+                            ->label('Título')
+                            ->placeholder('Equipo de escritorio, instalación de cámaras…')
+                            ->maxLength(255)
+                            ->columnSpanFull(),
                         Select::make('client_id')
                             ->label('Cliente')
                             // Inactive clients are hidden, except the one an existing quote already has.
@@ -72,11 +77,17 @@ class QuoteForm
                                         $item = $state ? ServiceItem::find($state) : null;
 
                                         if ($item) {
+                                            $set('title', $item->description ? $item->name : null);
                                             $set('description', $item->description ?: $item->name);
                                             $set('unit', $item->unit->value);
                                             $set('unit_price', $item->price);
                                         }
                                     })
+                                    ->columnSpan(12),
+                                TextInput::make('title')
+                                    ->label('Componente / concepto')
+                                    ->placeholder('Procesador, Servicio técnico, De regalo…')
+                                    ->maxLength(255)
                                     ->columnSpan(12),
                                 Textarea::make('description')
                                     ->label('Descripción')
@@ -97,6 +108,7 @@ class QuoteForm
                                     ->columnSpan(3),
                                 TextInput::make('unit_price')
                                     ->label('Precio unitario')
+                                    ->helperText('En 0 se imprime "SIN CARGO".')
                                     ->numeric()
                                     ->minValue(0)
                                     ->prefix('$')
@@ -111,16 +123,27 @@ class QuoteForm
                     ]),
                 Grid::make(2)
                     ->schema([
-                        Section::make()
+                        Section::make('Condiciones')
                             ->schema([
+                                TextInput::make('warranty')
+                                    ->label('Garantía')
+                                    ->default(config('pez.quotes.default_warranty'))
+                                    ->maxLength(255),
+                                TextInput::make('payment_terms')
+                                    ->label('Forma de pago')
+                                    ->default(config('pez.quotes.default_payment_terms'))
+                                    ->maxLength(255),
+                                TextInput::make('delivery_time')
+                                    ->label('Plazo de entrega')
+                                    ->default(config('pez.quotes.default_delivery_time'))
+                                    ->maxLength(255),
                                 Textarea::make('notes')
                                     ->label('Observaciones')
-                                    ->helperText('Se imprimen en el PDF.')
-                                    ->rows(3),
+                                    ->rows(2),
                                 Textarea::make('terms')
-                                    ->label('Condiciones')
+                                    ->label('Nota al pie')
                                     ->default(config('pez.quotes.default_terms'))
-                                    ->rows(3),
+                                    ->rows(2),
                             ]),
                         Section::make('Totales')
                             ->schema([

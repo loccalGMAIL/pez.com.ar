@@ -18,6 +18,8 @@ return [
         'phone' => env('COMPANY_PHONE'),
         'address' => env('COMPANY_ADDRESS'),
         'website' => env('COMPANY_WEBSITE', 'pez.com.ar'),
+        'owner' => env('COMPANY_OWNER'),
+        'slogan' => env('COMPANY_SLOGAN', 'Transformamos ideas en realidades digitales'),
     ],
 
     /*
@@ -28,8 +30,11 @@ return [
 
     'quotes' => [
         'first_number' => (int) env('QUOTES_FIRST_NUMBER', 100),
-        'valid_days' => (int) env('QUOTES_VALID_DAYS', 15),
-        'default_terms' => env('QUOTES_DEFAULT_TERMS', "Precios finales en pesos argentinos.\nForma de pago: a convenir."),
+        'valid_days' => (int) env('QUOTES_VALID_DAYS', 7),
+        'default_warranty' => env('QUOTES_DEFAULT_WARRANTY', '6 meses'),
+        'default_payment_terms' => env('QUOTES_DEFAULT_PAYMENT_TERMS', 'Efectivo o transferencia'),
+        'default_delivery_time' => env('QUOTES_DEFAULT_DELIVERY_TIME', '72 hs hábiles'),
+        'default_terms' => env('QUOTES_DEFAULT_TERMS', 'Precios sujetos a disponibilidad de stock y variaciones del mercado hasta la confirmación del pedido.'),
     ],
 
     /*

@@ -29,10 +29,14 @@ class Quote extends Model
 
     protected $fillable = [
         'client_id',
+        'title',
         'issue_date',
         'valid_until',
         'discount',
         'notes',
+        'warranty',
+        'payment_terms',
+        'delivery_time',
         'terms',
     ];
 
@@ -71,6 +75,14 @@ class Quote extends Model
         $this->subtotal = $this->items()->get()->sum('subtotal');
         $this->total = max(0, $this->subtotal - $this->discount);
         $this->saveQuietly();
+    }
+
+    /**
+     * Validity as printed on the PDF: "7 días".
+     */
+    public function validDays(): int
+    {
+        return (int) $this->issue_date->diffInDays($this->valid_until);
     }
 
     public function isEditable(): bool
@@ -143,8 +155,8 @@ class Quote extends Model
 
         return $this->workOrder()->create([
             'client_id' => $this->client_id,
-            'title' => "Presupuesto {$this->code}",
-            'description' => $this->items->map(fn (QuoteItem $item) => '- '.rtrim(QuotePdf::quantity($item->quantity).' '.$item->unit).": {$item->description}")->join("\n"),
+            'title' => $this->title ?: "Presupuesto {$this->code}",
+            'description' => $this->items->map(fn (QuoteItem $item) => '- '.rtrim(QuotePdf::quantity($item->quantity).' '.$item->unit).': '.$item->label())->join("\n"),
             'opened_on' => today(),
         ]);
     }
@@ -160,13 +172,17 @@ class Quote extends Model
                 'issue_date' => today(),
                 'valid_until' => today()->addDays(config('pez.quotes.valid_days')),
                 'discount' => $this->discount,
+                'title' => $this->title,
                 'notes' => $this->notes,
+                'warranty' => $this->warranty,
+                'payment_terms' => $this->payment_terms,
+                'delivery_time' => $this->delivery_time,
                 'terms' => $this->terms,
             ]);
 
             foreach ($this->items as $item) {
                 $copy->items()->create($item->only([
-                    'service_item_id', 'description', 'quantity', 'unit', 'unit_price', 'sort',
+                    'service_item_id', 'title', 'description', 'quantity', 'unit', 'unit_price', 'sort',
                 ]));
             }
 

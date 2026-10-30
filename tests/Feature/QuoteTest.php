@@ -135,4 +135,34 @@ class QuoteTest extends TestCase
 
         $this->assertSame(1500.0, $item->subtotal);
     }
+
+    public function test_pdf_layout_shows_title_conditions_and_free_items(): void
+    {
+        $quote = Quote::factory()->create([
+            'title' => 'Equipo de escritorio',
+            'valid_until' => today()->addDays(7),
+            'warranty' => '6 meses',
+            'payment_terms' => 'Efectivo o transferencia',
+            'delivery_time' => '72 hs hábiles',
+        ]);
+        $quote->items()->create(['title' => 'Procesador', 'description' => 'AMD Ryzen 3 3200G', 'quantity' => 1, 'unit_price' => 155150]);
+        $quote->items()->create(['title' => 'De regalo', 'description' => 'Teclado, mouse y parlantes', 'quantity' => 1, 'unit_price' => 0]);
+
+        $html = view('pdf.quote', ['quote' => $quote->fresh(), 'company' => config('pez.company')])->render();
+
+        $this->assertStringContainsString('Equipo de escritorio', $html);
+        $this->assertStringContainsString('7 días', $html);
+        $this->assertStringContainsString('Procesador', $html);
+        $this->assertStringContainsString('SIN CARGO', $html);
+        $this->assertStringContainsString('6 meses', $html);
+        $this->assertStringContainsString('72 hs hábiles', $html);
+        $this->assertStringContainsString('$ 155.150,00', $html);
+        $this->assertStringStartsWith('%PDF', QuotePdf::render($quote));
+    }
+
+    public function test_items_without_charge_are_free(): void
+    {
+        $this->assertTrue(QuoteItem::factory()->create(['unit_price' => 0])->isFree());
+        $this->assertFalse(QuoteItem::factory()->create(['unit_price' => 10])->isFree());
+    }
 }

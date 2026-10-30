@@ -83,15 +83,15 @@ class WorkshopTest extends TestCase
 
     public function test_an_accepted_quote_becomes_a_single_work_order(): void
     {
-        $quote = Quote::factory()->status(QuoteStatus::Accepted)->create();
-        $quote->items()->create(['description' => 'Instalar cámaras', 'quantity' => 4, 'unit' => 'unidad', 'unit_price' => 1000]);
+        $quote = Quote::factory()->status(QuoteStatus::Accepted)->create(['title' => 'Cámaras de seguridad']);
+        $quote->items()->create(['title' => 'Cámara', 'description' => 'Hikvision 2MP', 'quantity' => 4, 'unit' => 'unidad', 'unit_price' => 1000]);
 
         $order = $quote->refresh()->convertToWorkOrder();
 
         $this->assertSame($quote->client_id, $order->client_id);
         $this->assertSame($quote->id, $order->quote_id);
-        $this->assertSame('Presupuesto P-00100', $order->title);
-        $this->assertSame('- 4 unidad: Instalar cámaras', $order->description);
+        $this->assertSame('Cámaras de seguridad', $order->title);
+        $this->assertSame('- 4 unidad: Cámara — Hikvision 2MP', $order->description);
         $this->assertTrue($order->is($quote->convertToWorkOrder()));
         $this->assertSame(1, WorkOrder::count());
     }

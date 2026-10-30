@@ -14,6 +14,7 @@ class QuoteItem extends Model
 
     protected $fillable = [
         'service_item_id',
+        'title',
         'description',
         'quantity',
         'unit',
@@ -39,6 +40,19 @@ class QuoteItem extends Model
         // Query the quote again: a cached relation may hold a stale discount.
         static::saved(fn (QuoteItem $item) => $item->quote()->first()?->recalculateTotals());
         static::deleted(fn (QuoteItem $item) => $item->quote()->first()?->recalculateTotals());
+    }
+
+    /**
+     * Items without charge are printed as "SIN CARGO" (gifts, bonuses).
+     */
+    public function isFree(): bool
+    {
+        return (float) $this->subtotal === 0.0;
+    }
+
+    public function label(): string
+    {
+        return collect([$this->title, $this->description])->filter()->join(' — ');
     }
 
     /**

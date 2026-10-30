@@ -63,8 +63,14 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `main`.
 
 ### Cambiado
 
-- PDF del presupuesto con un estilo más sobrio, en blanco y negro, siguiendo el formato
-  de los presupuestos anteriores.
+- PDF del presupuesto rediseñado según el modelo de PEZ: encabezado con logo, título,
+  número, fecha y validez en días; datos del cliente; ítems con concepto y detalle; ítems
+  en $0 destacados como "SIN CARGO"; total destacado; condiciones (garantía, forma de
+  pago, plazo de entrega, observaciones) y pie con frase, responsable y contacto.
+  Tipografía Lato embebida (licencia OFL en `resources/fonts/lato`).
+- Presupuestos con título, concepto por ítem (se completa desde el catálogo) y
+  condiciones con valores por defecto configurables (`QUOTES_DEFAULT_*`). Validez por
+  defecto: 7 días.
 - URLs del panel en español: `/clientes`, `/equipos`, `/catalogo`, `/presupuestos`,
   `/trabajos`, `/service-externo`, `/proveedores`.
 - Las rutas públicas (landing, contacto, gracias) solo responden en `APP_DOMAIN`;

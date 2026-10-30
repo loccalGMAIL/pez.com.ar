@@ -53,6 +53,7 @@ class QuoteResourceTest extends TestCase
         Livewire::test(CreateQuote::class)
             ->fillForm([
                 'client_id' => $client->id,
+                'title' => 'Instalación de red',
                 'discount' => 10000,
                 'items' => [
                     ['service_item_id' => $service->id, 'description' => 'Soporte', 'quantity' => 2, 'unit' => 'hora', 'unit_price' => 30000],
@@ -70,6 +71,10 @@ class QuoteResourceTest extends TestCase
         $this->assertCount(2, $quote->items);
         $this->assertSame(61500.0, $quote->subtotal);
         $this->assertSame(51500.0, $quote->total);
+        $this->assertSame('Instalación de red', $quote->title);
+        $this->assertSame('6 meses', $quote->warranty);
+        $this->assertSame('Efectivo o transferencia', $quote->payment_terms);
+        $this->assertSame(7, $quote->validDays());
     }
 
     public function test_choosing_a_catalog_item_fills_the_line(): void
@@ -77,12 +82,16 @@ class QuoteResourceTest extends TestCase
         $undoRepeaterFake = Repeater::fake();
 
         $service = ServiceItem::factory()->create(['name' => 'Visita técnica', 'description' => null, 'price' => 45000]);
+        $detailed = ServiceItem::factory()->create(['name' => 'Servicio Técnico', 'description' => 'Instalación de sistema operativo', 'price' => 78000]);
 
         Livewire::test(CreateQuote::class)
-            ->fillForm(['items' => [['service_item_id' => $service->id]]])
+            ->fillForm(['items' => [['service_item_id' => $service->id], ['service_item_id' => $detailed->id]]])
             ->assertSchemaStateSet([
+                'items.0.title' => null,
                 'items.0.description' => 'Visita técnica',
                 'items.0.unit_price' => 45000,
+                'items.1.title' => 'Servicio Técnico',
+                'items.1.description' => 'Instalación de sistema operativo',
             ]);
 
         $undoRepeaterFake();

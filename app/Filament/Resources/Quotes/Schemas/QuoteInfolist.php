@@ -9,6 +9,7 @@ use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Number;
 
 class QuoteInfolist
 {
@@ -20,6 +21,10 @@ class QuoteInfolist
                 Section::make()
                     ->columns(4)
                     ->schema([
+                        TextEntry::make('title')
+                            ->label('Título')
+                            ->placeholder('—')
+                            ->columnSpanFull(),
                         TextEntry::make('client.business_name')
                             ->label('Cliente')
                             ->url(fn ($record) => ClientResource::getUrl('view', ['record' => $record->client_id])),
@@ -46,31 +51,43 @@ class QuoteInfolist
                         RepeatableEntry::make('items')
                             ->hiddenLabel()
                             ->table([
-                                TableColumn::make('Descripción'),
+                                TableColumn::make('Componente / descripción'),
                                 TableColumn::make('Cantidad'),
                                 TableColumn::make('Precio unitario'),
                                 TableColumn::make('Importe'),
                             ])
                             ->schema([
-                                TextEntry::make('description'),
+                                TextEntry::make('description')
+                                    ->formatStateUsing(fn ($record) => $record->label()),
                                 TextEntry::make('quantity')
                                     ->formatStateUsing(fn ($state, $record) => trim(rtrim(rtrim((string) $state, '0'), '.').' '.$record->unit)),
                                 TextEntry::make('unit_price')
                                     ->money('ARS', locale: 'es_AR'),
                                 TextEntry::make('subtotal')
-                                    ->money('ARS', locale: 'es_AR'),
+                                    ->formatStateUsing(fn ($state, $record) => $record->isFree() ? 'SIN CARGO' : Number::currency($state, 'ARS', 'es_AR')),
                             ]),
                     ]),
                 Grid::make(2)
                     ->schema([
-                        Section::make()
+                        Section::make('Condiciones')
+                            ->columns(2)
                             ->schema([
+                                TextEntry::make('warranty')
+                                    ->label('Garantía')
+                                    ->placeholder('—'),
+                                TextEntry::make('payment_terms')
+                                    ->label('Forma de pago')
+                                    ->placeholder('—'),
+                                TextEntry::make('delivery_time')
+                                    ->label('Plazo de entrega')
+                                    ->placeholder('—'),
                                 TextEntry::make('notes')
                                     ->label('Observaciones')
                                     ->placeholder('—'),
                                 TextEntry::make('terms')
-                                    ->label('Condiciones')
-                                    ->placeholder('—'),
+                                    ->label('Nota al pie')
+                                    ->placeholder('—')
+                                    ->columnSpanFull(),
                             ]),
                         Section::make('Totales')
                             ->schema([
