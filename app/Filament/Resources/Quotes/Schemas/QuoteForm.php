@@ -68,6 +68,10 @@ class QuoteForm
                             ->addActionLabel('Agregar ítem')
                             ->minItems(1)
                             ->defaultItems(1)
+                            // Saved quotes open with every line closed on one summary row; a new quote starts with its empty line open.
+                            ->collapsible()
+                            ->collapsed(fn (string $operation) => $operation === 'edit')
+                            ->itemLabel(fn (array $state) => self::lineSummary($state))
                             ->columns(['default' => 2, 'md' => 12])
                             ->live()
                             ->schema([
@@ -286,6 +290,24 @@ class QuoteForm
         $total = max(0, self::subtotal($items) - (float) $discount) * (1 + (float) $surcharge / 100);
 
         return (int) $count.' x '.QuotePdf::money(round($total / (int) $count, 2));
+    }
+
+    /**
+     * One-row summary of a line, shown while it is closed: "2 × Notebook HP — $ 130.000,00".
+     *
+     * @param  array<string, mixed>  $line
+     */
+    private static function lineSummary(array $line): string
+    {
+        $label = str(collect([$line['title'] ?? null, $line['description'] ?? null])->filter()->join(' — '))->squish()->limit(70)->toString();
+
+        if ($label === '') {
+            return 'Ítem nuevo';
+        }
+
+        $total = self::lineTotal($line['quantity'] ?? 0, $line['unit_price'] ?? 0);
+
+        return QuotePdf::quantity($line['quantity'] ?? 0)." × {$label} — ".($total > 0 ? QuotePdf::money($total) : 'SIN CARGO');
     }
 
     /**

@@ -267,6 +267,42 @@ class BillingResourcesTest extends TestCase
         $this->get('http://'.config('app.admin_domain').'/')->assertOk();
     }
 
+    public function test_the_dashboard_separates_what_was_collected_from_what_was_kept(): void
+    {
+        $client = Client::factory()->create();
+        $resale = Charge::factory()->for($client)->resale(4000)->create(['amount' => 6500]);
+        $service = Charge::factory()->for($client)->create(['amount' => 1000]);
+        Payment::register(['client_id' => $client->id, 'paid_on' => today(), 'amount' => 7500, 'method' => 'efectivo'], [$resale->id, $service->id]);
+
+        $this->assertSame(4000.0, Payment::costBetween(today()->startOfMonth(), today()->endOfMonth()));
+
+        Livewire::test(BusinessOverview::class)
+            ->assertSee('Cobrado este mes')
+            ->assertSee('$ 7.500,00')
+            ->assertSee('Percibido este mes')
+            ->assertSee('$ 3.500,00')
+            ->assertDontSee('Cobrado menos costos');
+    }
+
+    public function test_partial_payments_carry_a_proportional_part_of_the_cost(): void
+    {
+        $client = Client::factory()->create();
+        $charge = Charge::factory()->for($client)->resale(4000)->create(['amount' => 8000]);
+        Payment::register(['client_id' => $client->id, 'paid_on' => today(), 'amount' => 2000, 'method' => 'efectivo'], [$charge->id]);
+
+        $this->assertSame(1000.0, Payment::costBetween(today()->startOfMonth(), today()->endOfMonth()));
+    }
+
+    public function test_the_dashboard_warns_about_resales_without_cost(): void
+    {
+        $client = Client::factory()->create();
+        $charge = Charge::factory()->for($client)->resale()->create(['amount' => 6500]);
+        Payment::register(['client_id' => $client->id, 'paid_on' => today(), 'amount' => 6500, 'method' => 'efectivo'], [$charge->id]);
+
+        Livewire::test(BusinessOverview::class)
+            ->assertSee('1 venta sin costo cargado');
+    }
+
     public function test_pages_render(): void
     {
         $client = Client::factory()->create();

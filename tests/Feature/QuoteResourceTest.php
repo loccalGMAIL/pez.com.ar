@@ -90,6 +90,26 @@ class QuoteResourceTest extends TestCase
         }
     }
 
+    public function test_saved_lines_are_closed_accordions_with_a_summary(): void
+    {
+        $quote = Quote::factory()->create();
+        $quote->items()->create(['title' => 'Notebook', 'description' => 'HP Ryzen 5', 'quantity' => 2, 'unit_price' => 65000]);
+        $quote->items()->create(['description' => 'De regalo', 'quantity' => 1, 'unit_price' => 0]);
+
+        $repeater = fn ($page) => collect($page->instance()->getSchema('form')->getFlatComponents())
+            ->first(fn ($component) => $component instanceof Repeater && $component->getName() === 'items');
+
+        $edit = $repeater(Livewire::test(EditQuote::class, ['record' => $quote->getRouteKey()]));
+        $keys = array_keys($edit->getRawState());
+
+        $this->assertTrue($edit->isCollapsible());
+        $this->assertTrue($edit->isCollapsed());
+        $this->assertSame('2 × Notebook — HP Ryzen 5 — $ 130.000,00', (string) $edit->getItemLabel($keys[0]));
+        $this->assertSame('1 × De regalo — SIN CARGO', (string) $edit->getItemLabel($keys[1]));
+
+        $this->assertFalse($repeater(Livewire::test(CreateQuote::class))->isCollapsed());
+    }
+
     public function test_the_create_page_floats_create_and_cancel_without_create_another(): void
     {
         Livewire::test(CreateQuote::class)

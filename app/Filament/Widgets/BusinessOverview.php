@@ -3,17 +3,14 @@
 namespace App\Filament\Widgets;
 
 use App\Enums\ChargeStatus;
-use App\Enums\QuoteStatus;
 use App\Enums\WorkOrderStatus;
 use App\Filament\Resources\Charges\ChargeResource;
 use App\Filament\Resources\ExternalRepairs\ExternalRepairResource;
 use App\Filament\Resources\Payments\PaymentResource;
-use App\Filament\Resources\Quotes\QuoteResource;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use App\Models\Charge;
 use App\Models\ExternalRepair;
 use App\Models\Payment;
-use App\Models\Quote;
 use App\Models\WorkOrder;
 use App\Support\QuotePdf;
 use Filament\Widgets\StatsOverviewWidget;
@@ -29,8 +26,8 @@ class BusinessOverview extends StatsOverviewWidget
     {
         $overdue = Charge::overdue()->get()->sum(fn (Charge $charge) => $charge->outstanding());
         $collected = Payment::whereBetween('paid_on', [today()->startOfMonth(), today()->endOfMonth()])->sum('amount') / 100;
+        $costs = Payment::costBetween(today()->startOfMonth(), today()->endOfMonth());
         $drafts = Charge::where('status', ChargeStatus::Draft)->count();
-        $pendingQuotes = Quote::where('status', QuoteStatus::Sent);
         $costPending = Charge::costPending()->count();
 
         return [
@@ -40,6 +37,9 @@ class BusinessOverview extends StatsOverviewWidget
                 ->url(ChargeResource::getUrl('index')),
             Stat::make('Cobrado este mes', QuotePdf::money($collected))
                 ->url(PaymentResource::getUrl('index')),
+            Stat::make('Percibido este mes', QuotePdf::money($collected - $costs))
+                ->description($costPending > 0 ? "{$costPending} ".($costPending === 1 ? 'venta sin costo cargado' : 'ventas sin costo cargado') : null)
+                ->color($costPending > 0 ? 'warning' : 'success'),
             Stat::make('Abonos a confirmar', $drafts)
                 ->description($drafts > 0 ? 'Cargos variables en borrador' : 'Ninguno pendiente')
                 ->color($drafts > 0 ? 'warning' : 'gray')
@@ -50,9 +50,6 @@ class BusinessOverview extends StatsOverviewWidget
                     ->color('warning')
                     ->url(ChargeResource::getUrl('index', ['filters' => ['cost_pending' => ['isActive' => true]]])),
             ] : []),
-            Stat::make('Presupuestos sin respuesta', $pendingQuotes->count())
-                ->description(QuotePdf::money($pendingQuotes->sum('total') / 100).' en juego')
-                ->url(QuoteResource::getUrl('index')),
             Stat::make('Órdenes de trabajo abiertas', WorkOrder::whereIn('status', WorkOrderStatus::open())->count())
                 ->url(WorkOrderResource::getUrl('index')),
             Stat::make('Equipos en service externo', ExternalRepair::out()->count())

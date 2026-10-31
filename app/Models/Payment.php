@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Casts\Money;
 use App\Enums\PaymentMethod;
 use App\Models\Concerns\HasSequentialNumber;
+use Carbon\CarbonInterface;
 use Database\Factories\PaymentFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -115,5 +116,21 @@ class Payment extends Model
     public function allocations(): HasMany
     {
         return $this->hasMany(PaymentAllocation::class);
+    }
+
+    /**
+     * Purchase cost behind the payments of a period, in pesos. A payment that
+     * settles part of a resale charge carries that part of the charge's cost;
+     * charges without a loaded cost add nothing.
+     */
+    public static function costBetween(CarbonInterface $from, CarbonInterface $to): float
+    {
+        return round(PaymentAllocation::query()
+            ->whereHas('payment', fn ($query) => $query->whereBetween('paid_on', [$from, $to]))
+            ->with('charge')
+            ->get()
+            ->sum(fn (PaymentAllocation $allocation) => $allocation->charge?->cost !== null && $allocation->charge->amount > 0
+                ? $allocation->amount * $allocation->charge->cost / $allocation->charge->amount
+                : 0), 2);
     }
 }

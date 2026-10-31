@@ -101,7 +101,7 @@ Estados:
   Proveedores, Abonos, Cargos, Pagos.
 - **Acciones:** descargar/enviar PDF de presupuesto, duplicar presupuesto, convertir en
   trabajo, registrar pago desde la ficha del cliente, confirmar cargo variable.
-- **Dashboard:** total por cobrar, cargos vencidos, presupuestos enviados sin respuesta,
+- **Dashboard:** total por cobrar, cargos vencidos,
   trabajos abiertos, equipos en service externo, abonos variables por confirmar.
 
 ## Paquetes
