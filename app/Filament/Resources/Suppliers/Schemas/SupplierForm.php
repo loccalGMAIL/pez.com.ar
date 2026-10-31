@@ -2,9 +2,13 @@
 
 namespace App\Filament\Resources\Suppliers\Schemas;
 
+use App\Enums\PurchaseChannel;
+use App\Enums\SupplierKind;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Utilities\Get;
 
 class SupplierForm
 {
@@ -20,6 +24,18 @@ class SupplierForm
                 ->label('Nombre')
                 ->required()
                 ->maxLength(255),
+            Select::make('kind')
+                ->label('Tipo')
+                ->options(SupplierKind::class)
+                ->default(SupplierKind::Business)
+                ->live()
+                ->required()
+                ->native(false),
+            Select::make('channel')
+                ->label('Canal de compra')
+                ->options(PurchaseChannel::class)
+                ->visible(fn (Get $get) => in_array($get('kind'), [SupplierKind::Individual, SupplierKind::Individual->value], true))
+                ->native(false),
             TextInput::make('specialty')
                 ->label('Rubro')
                 ->placeholder('Impresoras, fuentes, notebooks…')

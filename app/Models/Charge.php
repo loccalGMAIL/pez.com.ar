@@ -23,10 +23,13 @@ class Charge extends Model
         'subscription_id',
         'quote_id',
         'work_order_id',
+        'supplier_id',
         'period',
         'concept',
         'notes',
         'amount',
+        'cost',
+        'is_resale',
         'issued_on',
         'due_on',
         'status',
@@ -42,6 +45,8 @@ class Charge extends Model
         return [
             'status' => ChargeStatus::class,
             'amount' => Money::class,
+            'cost' => Money::class,
+            'is_resale' => 'boolean',
             'paid' => Money::class,
             'period' => 'date',
             'issued_on' => 'date',
@@ -67,6 +72,14 @@ class Charge extends Model
     public function outstanding(): float
     {
         return max(0, round($this->amount - $this->paid, 2));
+    }
+
+    /**
+     * Sale price minus what it cost, or null while the cost is unknown.
+     */
+    public function margin(): ?float
+    {
+        return $this->cost === null ? null : round($this->amount - $this->cost, 2);
     }
 
     public function isOverdue(): bool
@@ -127,6 +140,16 @@ class Charge extends Model
     }
 
     /**
+     * Resale charges still missing what they cost.
+     *
+     * @param  Builder<Charge>  $query
+     */
+    public function scopeCostPending(Builder $query): void
+    {
+        $query->where('is_resale', true)->whereNull('cost')->where('status', '!=', ChargeStatus::Cancelled);
+    }
+
+    /**
      * @param  Builder<Charge>  $query
      */
     public function scopeOverdue(Builder $query): void
@@ -158,6 +181,14 @@ class Charge extends Model
     public function subscription(): BelongsTo
     {
         return $this->belongsTo(Subscription::class);
+    }
+
+    /**
+     * @return BelongsTo<Supplier, $this>
+     */
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
     }
 
     /**

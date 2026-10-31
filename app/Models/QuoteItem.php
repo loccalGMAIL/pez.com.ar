@@ -15,11 +15,13 @@ class QuoteItem extends Model
 
     protected $fillable = [
         'service_item_id',
+        'supplier_id',
         'title',
         'description',
         'quantity',
         'unit',
         'unit_price',
+        'unit_cost',
         'sort',
     ];
 
@@ -28,6 +30,7 @@ class QuoteItem extends Model
         return [
             'quantity' => 'decimal:2',
             'unit_price' => Money::class,
+            'unit_cost' => Money::class,
             'subtotal' => Money::class,
         ];
     }
@@ -51,6 +54,14 @@ class QuoteItem extends Model
         return (float) $this->subtotal === 0.0;
     }
 
+    /**
+     * What the item cost to buy (internal; never printed), or null while unknown.
+     */
+    public function costTotal(): ?float
+    {
+        return $this->unit_cost === null ? null : round((float) $this->quantity * $this->unit_cost, 2);
+    }
+
     public function label(): string
     {
         return collect([$this->title, $this->description])->filter()->join(' — ');
@@ -62,6 +73,14 @@ class QuoteItem extends Model
     public function quote(): BelongsTo
     {
         return $this->belongsTo(Quote::class);
+    }
+
+    /**
+     * @return BelongsTo<Supplier, $this>
+     */
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
     }
 
     /**

@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\Quote;
 use App\Models\QuoteItem;
+use App\Models\Supplier;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -21,5 +22,10 @@ class QuoteItemFactory extends Factory
             'unit_price' => fake()->randomFloat(2, 1000, 100000),
             'sort' => 0,
         ];
+    }
+
+    public function withCost(float $unitCost): static
+    {
+        return $this->state(fn () => ['unit_cost' => $unitCost, 'supplier_id' => Supplier::factory()]);
     }
 }

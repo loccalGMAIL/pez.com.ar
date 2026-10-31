@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Suppliers;
 
+use App\Enums\SupplierKind;
 use App\Filament\Resources\Suppliers\Pages\ManageSuppliers;
 use App\Filament\Resources\Suppliers\Schemas\SupplierForm;
 use App\Models\Supplier;
@@ -12,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use UnitEnum;
 
@@ -50,6 +52,10 @@ class SupplierResource extends Resource
                     ->description(fn ($record) => $record->specialty)
                     ->searchable(['name', 'specialty'])
                     ->sortable(),
+                TextColumn::make('kind')
+                    ->label('Tipo')
+                    ->badge()
+                    ->description(fn (Supplier $record) => $record->channel?->getLabel()),
                 TextColumn::make('contact_name')
                     ->label('Contacto')
                     ->placeholder('—'),
@@ -64,6 +70,11 @@ class SupplierResource extends Resource
                     ->label('Envíos')
                     ->counts('externalRepairs')
                     ->sortable(),
+            ])
+            ->filters([
+                SelectFilter::make('kind')
+                    ->label('Tipo')
+                    ->options(SupplierKind::class),
             ])
             ->recordActions([
                 EditAction::make(),

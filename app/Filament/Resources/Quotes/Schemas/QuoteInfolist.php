@@ -22,10 +22,6 @@ class QuoteInfolist
                 Section::make()
                     ->columns(4)
                     ->schema([
-                        TextEntry::make('title')
-                            ->label('Título')
-                            ->placeholder('—')
-                            ->columnSpanFull(),
                         TextEntry::make('client.business_name')
                             ->label('Cliente')
                             ->url(fn ($record) => ClientResource::getUrl('view', ['record' => $record->client_id])),
@@ -53,13 +49,20 @@ class QuoteInfolist
                             ->hiddenLabel()
                             ->table([
                                 TableColumn::make('Componente / descripción'),
-                                TableColumn::make('Cantidad'),
-                                TableColumn::make('Precio unitario'),
-                                TableColumn::make('Importe'),
+                                TableColumn::make('Cantidad')->width('11%')->alignEnd(),
+                                TableColumn::make('Precio unitario')->width('20%')->alignEnd(),
+                                TableColumn::make('Importe')->width('20%')->alignEnd(),
                             ])
                             ->schema([
                                 TextEntry::make('description')
-                                    ->formatStateUsing(fn ($record) => $record->label()),
+                                    ->state(fn ($record) => array_values(array_filter([
+                                        $record->label(),
+                                        // Internal: never printed, only shown here.
+                                        $record->supplier || $record->unit_cost !== null
+                                            ? 'Compra: '.collect([$record->supplier?->name, $record->unit_cost !== null ? 'costo '.QuotePdf::money($record->unit_cost) : null])->filter()->join(' · ')
+                                            : null,
+                                    ])))
+                                    ->listWithLineBreaks(),
                                 TextEntry::make('quantity')
                                     ->formatStateUsing(fn ($state, $record) => trim(rtrim(rtrim((string) $state, '0'), '.').' '.$record->unit)),
                                 TextEntry::make('unit_price')
@@ -103,6 +106,14 @@ class QuoteInfolist
                                     ->money('ARS', locale: 'es_AR')
                                     ->size('lg')
                                     ->weight('bold'),
+                                TextEntry::make('cost')
+                                    ->label('Costo y margen (interno)')
+                                    ->visible(fn ($record) => $record->items->contains(fn ($item) => $item->unit_cost !== null))
+                                    ->state(function ($record) {
+                                        $cost = $record->items->sum(fn ($item) => $item->costTotal() ?? 0);
+
+                                        return 'Costo '.QuotePdf::money($cost).' · Margen '.QuotePdf::money($record->total - $cost);
+                                    }),
                                 TextEntry::make('installments')
                                     ->label('Cuotas')
                                     ->state(fn ($record) => $record->installments()

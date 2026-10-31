@@ -27,6 +27,8 @@ return [
         // Numbering is set once when installing, so it stays out of the panel.
         'first_number' => (int) env('QUOTES_FIRST_NUMBER', 100),
         'valid_days' => 7,
+        // Surcharge over cost proposed for items bought to resell.
+        'default_markup' => 30,
         'default_warranty' => '6 meses',
         'default_payment_terms' => 'Efectivo o transferencia',
         'default_delivery_time' => '72 hs hábiles',

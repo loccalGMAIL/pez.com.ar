@@ -28,6 +28,7 @@ use App\Models\ExternalRepair;
 use App\Models\Payment;
 use App\Models\Quote;
 use App\Models\Subscription;
+use App\Models\Supplier;
 use App\Models\User;
 use App\Models\WorkOrder;
 use App\Support\Settings;
@@ -76,6 +77,38 @@ class BillingResourcesTest extends TestCase
         $charge = Charge::sole();
         $this->assertSame(ChargeStatus::Pending, $charge->status);
         $this->assertSame(today()->addDays(10)->toDateString(), $charge->due_on->toDateString());
+    }
+
+    public function test_a_resale_charge_without_cost_is_pending_until_the_cost_is_loaded(): void
+    {
+        $client = Client::factory()->create();
+        $supplier = Supplier::factory()->individual()->create();
+
+        Livewire::test(CreateCharge::class)
+            ->fillForm(['client_id' => $client->id, 'concept' => 'Notebook usada', 'amount' => 900000, 'is_resale' => true])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $charge = Charge::sole();
+        $this->assertNull($charge->cost);
+
+        Livewire::test(ListCharges::class)
+            ->filterTable('cost_pending')
+            ->assertCanSeeTableRecords([$charge]);
+
+        $charge->update(['cost' => 600000, 'supplier_id' => $supplier->id]);
+
+        $this->assertSame(300000.0, $charge->refresh()->margin());
+        Livewire::test(ListCharges::class)
+            ->filterTable('cost_pending')
+            ->assertCanNotSeeTableRecords([$charge]);
+    }
+
+    public function test_cancelled_charges_are_not_cost_pending(): void
+    {
+        $charge = Charge::factory()->resale()->create(['status' => ChargeStatus::Cancelled]);
+
+        $this->assertFalse(Charge::costPending()->whereKey($charge->id)->exists());
     }
 
     public function test_registers_a_payment_choosing_the_charges(): void

@@ -71,12 +71,23 @@ class ChargesTable
                 TextColumn::make('status')
                     ->label('Estado')
                     ->badge(),
+                TextColumn::make('cost')
+                    ->label('Costo')
+                    ->state(fn (Charge $record) => $record->is_resale ? $record->cost : null)
+                    ->money('ARS', locale: 'es_AR')
+                    ->placeholder(fn (Charge $record) => $record->is_resale ? 'Pendiente' : '—')
+                    ->description(fn (Charge $record) => $record->margin() !== null ? 'Margen $ '.number_format($record->margin(), 2, ',', '.') : null)
+                    ->color(fn (Charge $record) => $record->is_resale && $record->cost === null ? 'warning' : null)
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Filter::make('pending')
                     ->label('Por cobrar o a confirmar')
                     ->query(fn (Builder $query) => $query->whereIn('status', [ChargeStatus::Draft, ...ChargeStatus::open()]))
                     ->default(),
+                Filter::make('cost_pending')
+                    ->label('Costo pendiente')
+                    ->query(fn (Builder $query) => $query->scopes('costPending')),
                 Filter::make('overdue')
                     ->label('Vencidos')
                     ->query(fn (Builder $query) => $query->scopes('overdue')),

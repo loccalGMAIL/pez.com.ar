@@ -2,11 +2,15 @@
 
 namespace App\Filament\Resources\Charges\Schemas;
 
+use App\Filament\Resources\Suppliers\Schemas\SupplierForm;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 
 class ChargeForm
@@ -53,6 +57,31 @@ class ChargeForm
                     ->label('Detalle')
                     ->rows(3)
                     ->columnSpanFull(),
+                Toggle::make('is_resale')
+                    ->label('Reventa (equipo o insumo comprado para esta venta)')
+                    ->live()
+                    ->columnSpanFull(),
+                Fieldset::make('Compra (uso interno)')
+                    ->columns(2)
+                    ->columnSpanFull()
+                    ->visible(fn (Get $get) => (bool) $get('is_resale'))
+                    ->schema([
+                        Select::make('supplier_id')
+                            ->label('Comprado a')
+                            ->relationship('supplier', 'name')
+                            ->searchable()
+                            ->preload()
+                            ->createOptionForm(SupplierForm::components()),
+                        TextInput::make('cost')
+                            ->label('Costo')
+                            ->numeric()
+                            ->minValue(0)
+                            ->prefix('$')
+                            ->live(onBlur: true)
+                            ->helperText(fn (Get $get) => filled($get('cost')) && filled($get('amount'))
+                                ? 'Margen: $ '.number_format((float) $get('amount') - (float) $get('cost'), 2, ',', '.')
+                                : 'Si todavía no lo sabés, dejalo vacío: queda como costo pendiente.'),
+                    ]),
             ]);
     }
 }

@@ -23,9 +23,9 @@ class ServiceItemResource extends Resource
 
     protected static ?string $slug = 'catalogo';
 
-    protected static ?string $modelLabel = 'servicio';
+    protected static ?string $modelLabel = 'ítem del catálogo';
 
-    protected static ?string $pluralModelLabel = 'catálogo de servicios';
+    protected static ?string $pluralModelLabel = 'catálogo';
 
     protected static ?string $navigationLabel = 'Catálogo';
 

@@ -31,6 +31,7 @@ class BusinessOverview extends StatsOverviewWidget
         $collected = Payment::whereBetween('paid_on', [today()->startOfMonth(), today()->endOfMonth()])->sum('amount') / 100;
         $drafts = Charge::where('status', ChargeStatus::Draft)->count();
         $pendingQuotes = Quote::where('status', QuoteStatus::Sent);
+        $costPending = Charge::costPending()->count();
 
         return [
             Stat::make('Por cobrar', QuotePdf::money(Charge::totalOutstanding()))
@@ -43,6 +44,12 @@ class BusinessOverview extends StatsOverviewWidget
                 ->description($drafts > 0 ? 'Cargos variables en borrador' : 'Ninguno pendiente')
                 ->color($drafts > 0 ? 'warning' : 'gray')
                 ->url(ChargeResource::getUrl('index')),
+            ...($costPending > 0 ? [
+                Stat::make('Ventas sin costo', $costPending)
+                    ->description('Reventas a las que les falta cargar el costo')
+                    ->color('warning')
+                    ->url(ChargeResource::getUrl('index', ['filters' => ['cost_pending' => ['isActive' => true]]])),
+            ] : []),
             Stat::make('Presupuestos sin respuesta', $pendingQuotes->count())
                 ->description(QuotePdf::money($pendingQuotes->sum('total') / 100).' en juego')
                 ->url(QuoteResource::getUrl('index')),

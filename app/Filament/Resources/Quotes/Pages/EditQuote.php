@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Quotes\Pages;
 
 use App\Filament\Resources\Quotes\Actions\QuoteActions;
+use App\Filament\Resources\Quotes\Pages\Concerns\HasFloatingFormActions;
 use App\Filament\Resources\Quotes\QuoteResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ForceDeleteAction;
@@ -12,6 +13,8 @@ use Filament\Resources\Pages\EditRecord;
 
 class EditQuote extends EditRecord
 {
+    use HasFloatingFormActions;
+
     protected static string $resource = QuoteResource::class;
 
     public function getTitle(): string

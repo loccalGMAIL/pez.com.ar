@@ -4,8 +4,10 @@ namespace Tests\Feature;
 
 use App\Enums\QuoteStatus;
 use App\Mail\QuoteMail;
+use App\Models\Charge;
 use App\Models\Quote;
 use App\Models\QuoteItem;
+use App\Models\Supplier;
 use App\Support\QuotePdf;
 use App\Support\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -60,6 +62,57 @@ class QuoteTest extends TestCase
         $quote->items()->create(['description' => 'Algo', 'quantity' => 1, 'unit_price' => 500]);
 
         $this->assertSame(0.0, $quote->refresh()->total);
+    }
+
+    public function test_charging_a_quote_copies_what_the_items_cost(): void
+    {
+        $supplier = Supplier::factory()->create();
+        $quote = Quote::factory()->create();
+        $quote->items()->create(['description' => 'Notebook', 'quantity' => 2, 'unit_price' => 1300, 'unit_cost' => 1000, 'supplier_id' => $supplier->id]);
+        $quote->items()->create(['description' => 'Instalación', 'quantity' => 1, 'unit_price' => 500]);
+
+        $charge = $quote->refresh()->charge();
+
+        $this->assertTrue($charge->is_resale);
+        $this->assertSame(2000.0, $charge->cost);
+        $this->assertSame($supplier->id, $charge->supplier_id);
+        $this->assertSame(1100.0, $charge->margin());
+        $this->assertFalse(Charge::costPending()->exists());
+    }
+
+    public function test_a_charge_stays_cost_pending_while_a_purchased_item_has_no_cost(): void
+    {
+        $quote = Quote::factory()->create();
+        $quote->items()->create(['description' => 'Notebook usada', 'quantity' => 1, 'unit_price' => 900, 'supplier_id' => Supplier::factory()->individual()->create()->id]);
+
+        $charge = $quote->refresh()->charge();
+
+        $this->assertTrue($charge->is_resale);
+        $this->assertNull($charge->cost);
+        $this->assertNull($charge->margin());
+        $this->assertTrue(Charge::costPending()->whereKey($charge->id)->exists());
+    }
+
+    public function test_a_quote_without_purchases_is_not_a_resale(): void
+    {
+        $quote = Quote::factory()->withItems()->create();
+
+        $charge = $quote->refresh()->charge();
+
+        $this->assertFalse($charge->is_resale);
+        $this->assertFalse(Charge::costPending()->exists());
+    }
+
+    public function test_the_pdf_never_prints_the_cost(): void
+    {
+        $quote = Quote::factory()->create();
+        $quote->items()->create(['description' => 'Notebook', 'quantity' => 1, 'unit_price' => 1300, 'unit_cost' => 987654, 'supplier_id' => Supplier::factory()->create(['name' => 'Mayorista Secreto'])->id]);
+
+        $html = view('pdf.quote', ['quote' => $quote->refresh(), 'company' => Settings::company()])->render();
+
+        $this->assertStringContainsString('Notebook', $html);
+        $this->assertStringNotContainsString('Mayorista Secreto', $html);
+        $this->assertStringNotContainsString('987.654', $html);
     }
 
     public function test_renders_a_pdf(): void
