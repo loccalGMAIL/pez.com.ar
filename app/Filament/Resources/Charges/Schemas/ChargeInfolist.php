@@ -58,6 +58,21 @@ class ChargeInfolist
                                 $record->work_order_id !== null => WorkOrderResource::getUrl('view', ['record' => $record->work_order_id]),
                                 default => null,
                             }),
+                        TextEntry::make('supplier.name')
+                            ->label('Comprado a')
+                            ->visible(fn (Charge $record) => $record->is_resale)
+                            ->placeholder('—'),
+                        TextEntry::make('cost')
+                            ->label('Costo')
+                            ->visible(fn (Charge $record) => $record->is_resale)
+                            ->money('ARS', locale: 'es_AR')
+                            ->placeholder('Pendiente'),
+                        TextEntry::make('margin')
+                            ->label('Margen')
+                            ->visible(fn (Charge $record) => $record->is_resale)
+                            ->state(fn (Charge $record) => $record->margin())
+                            ->money('ARS', locale: 'es_AR')
+                            ->placeholder('—'),
                         TextEntry::make('notes')
                             ->label('Detalle')
                             ->placeholder('—')

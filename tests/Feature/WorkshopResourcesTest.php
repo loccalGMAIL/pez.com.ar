@@ -3,7 +3,9 @@
 namespace Tests\Feature;
 
 use App\Enums\DeviceType;
+use App\Enums\PurchaseChannel;
 use App\Enums\QuoteStatus;
+use App\Enums\SupplierKind;
 use App\Enums\WorkOrderStatus;
 use App\Filament\Resources\Clients\ClientResource;
 use App\Filament\Resources\Clients\Pages\EditClient;
@@ -138,6 +140,17 @@ class WorkshopResourcesTest extends TestCase
             ->assertHasNoActionErrors();
 
         $this->assertDatabaseHas('suppliers', ['name' => 'Service Impresoras Sur']);
+    }
+
+    public function test_registers_an_individual_seller_with_the_channel(): void
+    {
+        Livewire::test(ManageSuppliers::class)
+            ->callAction('create', data: ['name' => 'Juan Pérez', 'kind' => SupplierKind::Individual->value, 'channel' => PurchaseChannel::MercadoLibre->value])
+            ->assertHasNoActionErrors();
+
+        $supplier = Supplier::where('name', 'Juan Pérez')->sole();
+        $this->assertSame(SupplierKind::Individual, $supplier->kind);
+        $this->assertSame(PurchaseChannel::MercadoLibre, $supplier->channel);
     }
 
     public function test_converts_an_accepted_quote_from_its_page(): void

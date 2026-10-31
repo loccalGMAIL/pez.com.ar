@@ -15,6 +15,7 @@ use App\Models\ServiceItem;
 use App\Models\User;
 use App\Support\QuotePdf;
 use Filament\Forms\Components\Repeater;
+use Filament\Schemas\Components\Section;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -53,7 +54,6 @@ class QuoteResourceTest extends TestCase
         Livewire::test(CreateQuote::class)
             ->fillForm([
                 'client_id' => $client->id,
-                'title' => 'Instalación de red',
                 'discount' => 10000,
                 'items' => [
                     ['service_item_id' => $service->id, 'description' => 'Soporte', 'quantity' => 2, 'unit' => 'hora', 'unit_price' => 30000],
@@ -71,10 +71,51 @@ class QuoteResourceTest extends TestCase
         $this->assertCount(2, $quote->items);
         $this->assertSame(61500.0, $quote->subtotal);
         $this->assertSame(51500.0, $quote->total);
-        $this->assertSame('Instalación de red', $quote->title);
         $this->assertSame('6 meses', $quote->warranty);
         $this->assertSame('Efectivo o transferencia', $quote->payment_terms);
         $this->assertSame(7, $quote->validDays());
+    }
+
+    public function test_the_form_has_no_title_and_keeps_extras_in_closed_accordions(): void
+    {
+        $page = Livewire::test(CreateQuote::class)
+            ->assertFormFieldDoesNotExist('title');
+
+        $sections = collect($page->instance()->getSchema('form')->getFlatComponents())
+            ->filter(fn ($component) => $component instanceof Section && filled($component->getHeading()))
+            ->keyBy(fn (Section $section) => (string) $section->getHeading());
+
+        foreach (['Condiciones', 'Cuotas', 'Compra (uso interno, no se imprime)'] as $heading) {
+            $this->assertTrue($sections[$heading]->isCollapsed(), "{$heading} should start closed");
+        }
+    }
+
+    public function test_saved_lines_are_closed_accordions_with_a_summary(): void
+    {
+        $quote = Quote::factory()->create();
+        $quote->items()->create(['title' => 'Notebook', 'description' => 'HP Ryzen 5', 'quantity' => 2, 'unit_price' => 65000]);
+        $quote->items()->create(['description' => 'De regalo', 'quantity' => 1, 'unit_price' => 0]);
+
+        $repeater = fn ($page) => collect($page->instance()->getSchema('form')->getFlatComponents())
+            ->first(fn ($component) => $component instanceof Repeater && $component->getName() === 'items');
+
+        $edit = $repeater(Livewire::test(EditQuote::class, ['record' => $quote->getRouteKey()]));
+        $keys = array_keys($edit->getRawState());
+
+        $this->assertTrue($edit->isCollapsible());
+        $this->assertTrue($edit->isCollapsed());
+        $this->assertSame('2 × Notebook — HP Ryzen 5 — $ 130.000,00', (string) $edit->getItemLabel($keys[0]));
+        $this->assertSame('1 × De regalo — SIN CARGO', (string) $edit->getItemLabel($keys[1]));
+
+        $this->assertFalse($repeater(Livewire::test(CreateQuote::class))->isCollapsed());
+    }
+
+    public function test_the_create_page_floats_create_and_cancel_without_create_another(): void
+    {
+        Livewire::test(CreateQuote::class)
+            ->assertSee('Crear')
+            ->assertSee('Cancelar')
+            ->assertDontSee('Crear y crear otro');
     }
 
     public function test_choosing_a_catalog_item_fills_the_line(): void
@@ -92,6 +133,24 @@ class QuoteResourceTest extends TestCase
                 'items.0.unit_price' => 45000,
                 'items.1.title' => 'Servicio Técnico',
                 'items.1.description' => 'Instalación de sistema operativo',
+            ]);
+
+        $undoRepeaterFake();
+    }
+
+    public function test_choosing_a_catalog_product_brings_its_cost_and_supplier(): void
+    {
+        $undoRepeaterFake = Repeater::fake();
+
+        $product = ServiceItem::factory()->product()->withCost(50000)->create(['name' => 'SSD 480 GB', 'price' => 65000]);
+
+        Livewire::test(CreateQuote::class)
+            ->fillForm(['items' => [['service_item_id' => $product->id]]])
+            ->assertSchemaStateSet([
+                'items.0.unit_price' => 65000,
+                'items.0.unit_cost' => 50000,
+                'items.0.supplier_id' => $product->supplier_id,
+                'items.0.markup' => 30,
             ]);
 
         $undoRepeaterFake();

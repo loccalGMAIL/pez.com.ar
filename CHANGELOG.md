@@ -13,6 +13,43 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+## [2.4.0] - 2026-10-31
+
+### Agregado
+
+- Costo y origen de lo que se compra para revender. Los ítems de presupuesto y los
+  cargos manuales (marcando "Reventa") guardan a quién se le compró y cuánto costó;
+  es información interna y no se imprime en el PDF ni se envía al cliente.
+- Al cargar el costo de un ítem, el precio se sugiere con un recargo (30 % por defecto,
+  editable en Configuración y en cada ítem); si se cambia el precio a mano, el recargo
+  se recalcula. El presupuesto muestra el costo y el margen.
+- Los proveedores tienen tipo (proveedor o particular) y canal de compra (Facebook,
+  MercadoLibre u otro), para registrar a quien vende un usado.
+- Las reventas sin costo cargado figuran como "costo pendiente": filtro en Cargos y
+  aviso en el tablero, para completarlas después.
+- El catálogo se separa en pestañas, Servicios y Productos. Cada producto indica si es
+  nuevo o de reventa (usado), y "Agregar" abre el formulario con el tipo de la pestaña activa.
+- Los productos del catálogo guardan su costo, su proveedor habitual y notas internas
+  (links, referencias). Al elegirlos en un presupuesto se copian el costo y el proveedor, y
+  se muestra el recargo resultante.
+- El tablero muestra "Cobrado este mes" (lo que pagaron los clientes) y "Percibido este mes"
+  (lo cobrado menos el costo de lo que se revendió), con aviso de las ventas sin costo cargado.
+
+### Cambiado
+
+- Presupuestos: los totales y los botones Crear/Guardar y Cancelar quedan flotando al pie de
+  la pantalla, y ya no está "Crear y crear otro". Condiciones, Cuotas y los datos de Compra
+  de cada ítem se ven plegados y se abren cuando hacen falta.
+- Presupuestos: al editar, cada ítem se ve cerrado en una sola fila (cantidad, descripción e
+  importe) y se abre para modificarlo; en un presupuesto nuevo el primer ítem arranca abierto.
+- Presupuestos: las filas de ítems reparten mejor el ancho para que los importes no se corten
+  (en la edición y en la vista), y los datos de compra se muestran bajo cada ítem.
+
+### Eliminado
+
+- El campo "Título" de los presupuestos (los que ya lo tenían lo conservan en el PDF).
+- La tarjeta "Presupuestos sin respuesta" del tablero.
+
 ## [2.3.0] - 2026-10-30
 
 ### Agregado

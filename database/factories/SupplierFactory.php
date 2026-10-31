@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\PurchaseChannel;
+use App\Enums\SupplierKind;
 use App\Models\Supplier;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -19,5 +21,17 @@ class SupplierFactory extends Factory
             'phone' => fake()->numerify('11 ####-####'),
             'email' => fake()->companyEmail(),
         ];
+    }
+
+    public function individual(PurchaseChannel $channel = PurchaseChannel::MercadoLibre): static
+    {
+        return $this->state(fn () => [
+            'name' => fake()->name(),
+            'kind' => SupplierKind::Individual,
+            'channel' => $channel,
+            'specialty' => null,
+            'contact_name' => null,
+            'email' => null,
+        ]);
     }
 }

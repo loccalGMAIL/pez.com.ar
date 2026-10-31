@@ -69,12 +69,12 @@ Client ─┬─< ClientContact
 | `ClientContact` | nombre, cargo, email, teléfono, es_principal |
 | `ServiceItem` | nombre, descripción, unidad (hora/unidad/mes), precio base, activo |
 | `Quote` | número correlativo, cliente, fecha, vencimiento, estado, subtotal/descuento/total, notas, condiciones, PDF archivado |
-| `QuoteItem` | descripción, cantidad, precio unitario, subtotal, orden |
+| `QuoteItem` | descripción, cantidad, precio unitario, subtotal, orden, proveedor y costo unitario (internos, no se imprimen) |
 | `WorkOrder` | número, cliente, presupuesto (opcional), abono (opcional), título, descripción, estado, fechas, horas, adjuntos |
-| `Supplier` | nombre, contacto, teléfono, email, rubro |
+| `Supplier` | nombre, tipo (proveedor/particular), canal de compra (Facebook/MercadoLibre/otro), contacto, teléfono, email, rubro |
 | `ExternalRepair` | trabajo, proveedor, equipo (descripción/marca/modelo/serie), falla, nro. orden del proveedor, fecha envío, fecha retorno, costo, precio al cliente, estado |
 | `Subscription` | cliente, concepto, tipo (`fijo`/`variable`), monto base, día de generación, desde/hasta, estado |
-| `Charge` | cliente, origen (presupuesto/trabajo/abono/manual), período (para abonos), concepto, monto, vencimiento, estado (`borrador`/`pendiente`/`parcial`/`pagado`/`anulado`) |
+| `Charge` | cliente, origen (presupuesto/trabajo/abono/manual), período (para abonos), concepto, monto, vencimiento, estado (`borrador`/`pendiente`/`parcial`/`pagado`/`anulado`), reventa (sí/no), proveedor y costo (internos; sin costo = "costo pendiente") |
 | `Payment` | cliente, fecha, monto, medio (efectivo/transferencia/MercadoPago/otro), referencia, comprobante adjunto |
 | `PaymentAllocation` | pago ↔ cargo, monto aplicado (permite pagos parciales y un pago que cancela varios cargos) |
 
@@ -101,7 +101,7 @@ Estados:
   Proveedores, Abonos, Cargos, Pagos.
 - **Acciones:** descargar/enviar PDF de presupuesto, duplicar presupuesto, convertir en
   trabajo, registrar pago desde la ficha del cliente, confirmar cargo variable.
-- **Dashboard:** total por cobrar, cargos vencidos, presupuestos enviados sin respuesta,
+- **Dashboard:** total por cobrar, cargos vencidos,
   trabajos abiertos, equipos en service externo, abonos variables por confirmar.
 
 ## Paquetes

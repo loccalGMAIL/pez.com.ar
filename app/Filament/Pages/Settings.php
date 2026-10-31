@@ -41,6 +41,7 @@ class Settings extends Page
         'company.address',
         'company.slogan',
         'quotes.valid_days',
+        'quotes.default_markup',
         'quotes.default_warranty',
         'quotes.default_payment_terms',
         'quotes.default_delivery_time',
@@ -159,6 +160,13 @@ class Settings extends Page
                             ->minValue(1)
                             ->suffix('días')
                             ->required(),
+                        TextInput::make('quotes_default_markup')
+                            ->label('Recargo sobre el costo')
+                            ->helperText('Se propone al cargar el costo de un ítem; se puede cambiar en cada uno.')
+                            ->numeric()
+                            ->minValue(0)
+                            ->suffix('%')
+                            ->required(),
                         TextInput::make('quotes_default_warranty')
                             ->label('Garantía')
                             ->maxLength(255),
@@ -204,6 +212,7 @@ class Settings extends Page
             ->values()
             ->all();
         $data['quotes_valid_days'] = (int) $data['quotes_valid_days'];
+        $data['quotes_default_markup'] = (float) $data['quotes_default_markup'];
         $data['billing_due_days'] = (int) $data['billing_due_days'];
 
         AppSettings::set(

@@ -248,10 +248,19 @@ class Quote extends Model
             return $existing;
         }
 
+        $purchased = $this->items->filter(fn (QuoteItem $item) => $item->supplier_id !== null || $item->unit_cost !== null);
+        $costs = $purchased->map->costTotal();
+        $suppliers = $purchased->pluck('supplier_id')->filter()->unique();
+
         return $this->charges()->create([
             'client_id' => $this->client_id,
             'concept' => trim("Presupuesto {$this->code} ".($this->title ? "— {$this->title}" : '')),
             'amount' => $this->total,
+            'is_resale' => $purchased->isNotEmpty(),
+            // Left empty while a purchased item lacks its cost, so the charge shows up as pending.
+            'cost' => $purchased->isNotEmpty() && ! $costs->contains(null) ? $costs->sum() : null,
+            // With several sources the charge names none; each item keeps its own.
+            'supplier_id' => $suppliers->count() === 1 ? $suppliers->first() : null,
         ]);
     }
 
@@ -277,7 +286,7 @@ class Quote extends Model
 
             foreach ($this->items as $item) {
                 $copy->items()->create($item->only([
-                    'service_item_id', 'title', 'description', 'quantity', 'unit', 'unit_price', 'sort',
+                    'service_item_id', 'supplier_id', 'title', 'description', 'quantity', 'unit', 'unit_price', 'unit_cost', 'sort',
                 ]));
             }
 
