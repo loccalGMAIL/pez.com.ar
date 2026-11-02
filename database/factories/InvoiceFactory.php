@@ -43,7 +43,7 @@ class InvoiceFactory extends Factory
             'status' => InvoiceStatus::Authorized,
             'number' => fake()->unique()->numberBetween(1, 99999),
             'issued_on' => today(),
-            'cae' => fake()->numerify('7##############'),
+            'cae' => fake()->numerify('7#############'),
             'cae_due_on' => today()->addDays(10),
         ]);
     }
