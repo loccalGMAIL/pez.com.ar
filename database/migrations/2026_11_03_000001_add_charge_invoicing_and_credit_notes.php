@@ -11,8 +11,9 @@ return new class extends Migration
         Schema::table('invoices', function (Blueprint $table) {
             // A payment can have an invoice, its credit note and a new invoice,
             // and deleting the payment must never take a fiscal document with it.
-            $table->dropUnique(['payment_id']);
+            // MySQL backs the foreign key with the unique index: the key goes first.
             $table->dropForeign(['payment_id']);
+            $table->dropUnique(['payment_id']);
             $table->foreign('payment_id')->references('id')->on('payments')->nullOnDelete();
             $table->foreignId('charge_id')->nullable()->after('payment_id')->comment('Factura emitida desde el cargo, antes de cobrar')->constrained()->nullOnDelete();
             $table->foreignId('credited_invoice_id')->nullable()->after('charge_id')->comment('En una nota de crédito, la factura que anula')->constrained('invoices')->restrictOnDelete();
@@ -43,8 +44,8 @@ return new class extends Migration
             $table->dropConstrainedForeignId('charge_id');
             $table->dropColumn('payment_due_on');
             $table->dropForeign(['payment_id']);
-            $table->foreign('payment_id')->references('id')->on('payments')->cascadeOnDelete();
             $table->unique('payment_id');
+            $table->foreign('payment_id')->references('id')->on('payments')->cascadeOnDelete();
         });
     }
 };
