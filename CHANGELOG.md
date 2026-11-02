@@ -43,6 +43,9 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ### Cambiado
 
+- Configuración se organiza en pestañas: Empresa, Presupuestos (valores por defecto y cuotas),
+  Cobranza y Facturación. La pestaña abierta queda en la dirección, así que guardar no vuelve
+  a la primera.
 - Recibos y presupuestos dicen "Documento no válido como factura"; el recibo facturado
   nombra su factura.
 - Un pago con factura autorizada ya no se puede borrar.

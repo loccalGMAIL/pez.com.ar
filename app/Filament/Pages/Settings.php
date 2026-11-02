@@ -20,6 +20,8 @@ use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
@@ -92,147 +94,168 @@ class Settings extends Page
         return $schema
             ->statePath('data')
             ->components([
-                Section::make('Empresa')
-                    ->description('Datos que salen en el encabezado y el pie de los presupuestos, y en los mensajes a clientes.')
-                    ->columns(2)
-                    ->schema([
-                        TextInput::make('company_name')
-                            ->label('Nombre')
-                            ->required()
-                            ->maxLength(255),
-                        TextInput::make('company_owner')
-                            ->label('Responsable')
-                            ->helperText('Se imprime en el pie del PDF.')
-                            ->maxLength(255),
-                        TextInput::make('company_cuit')
-                            ->label('CUIT')
-                            ->mask('99-99999999-9')
-                            ->required(fn (Get $get) => (bool) $get('invoicing_enabled'))
-                            ->rule(new Cuit),
-                        TextInput::make('company_phone')
-                            ->label('Teléfono')
-                            ->tel()
-                            ->maxLength(255),
-                        TextInput::make('company_email')
-                            ->label('Email')
-                            ->helperText('Las respuestas a los mails de presupuestos llegan acá.')
-                            ->email()
-                            ->maxLength(255),
-                        TextInput::make('company_website')
-                            ->label('Sitio web')
-                            ->maxLength(255),
-                        TextInput::make('company_address')
-                            ->label('Dirección')
-                            ->maxLength(255),
-                        TextInput::make('company_slogan')
-                            ->label('Frase')
-                            ->maxLength(255),
-                    ]),
-                Section::make('Cuotas')
-                    ->description('Planes que se proponen al activar "Ofrecer cuotas" en un presupuesto. Cada presupuesto guarda sus importes: cambiar estos recargos no modifica los ya hechos.')
-                    ->schema([
-                        Repeater::make('quotes_installments')
-                            ->hiddenLabel()
-                            ->addActionLabel('Agregar plan')
-                            ->defaultItems(0)
-                            ->reorderable(false)
-                            ->columns(2)
+                Tabs::make('settings')
+                    ->contained(false)
+                    ->persistTabInQueryString()
+                    ->tabs([
+                        Tab::make('Empresa')
+                            ->icon(Heroicon::OutlinedBuildingOffice)
                             ->schema([
-                                TextInput::make('count')
-                                    ->label('Cuotas')
-                                    ->integer()
-                                    ->minValue(2)
-                                    ->maxValue(48)
-                                    ->required()
-                                    ->distinct(),
-                                TextInput::make('surcharge')
-                                    ->label('Recargo')
-                                    ->numeric()
-                                    ->minValue(0)
-                                    ->suffix('%')
-                                    ->default(0)
-                                    ->required(),
+                                Section::make('Datos de la empresa')
+                                    ->description('Datos que salen en el encabezado y el pie de los presupuestos, y en los mensajes a clientes.')
+                                    ->columns(2)
+                                    ->schema([
+                                        TextInput::make('company_name')
+                                            ->label('Nombre')
+                                            ->required()
+                                            ->maxLength(255),
+                                        TextInput::make('company_owner')
+                                            ->label('Responsable')
+                                            ->helperText('Se imprime en el pie del PDF.')
+                                            ->maxLength(255),
+                                        TextInput::make('company_cuit')
+                                            ->label('CUIT')
+                                            ->mask('99-99999999-9')
+                                            ->required(fn (Get $get) => (bool) $get('invoicing_enabled'))
+                                            ->rule(new Cuit),
+                                        TextInput::make('company_phone')
+                                            ->label('Teléfono')
+                                            ->tel()
+                                            ->maxLength(255),
+                                        TextInput::make('company_email')
+                                            ->label('Email')
+                                            ->helperText('Las respuestas a los mails de presupuestos llegan acá.')
+                                            ->email()
+                                            ->maxLength(255),
+                                        TextInput::make('company_website')
+                                            ->label('Sitio web')
+                                            ->maxLength(255),
+                                        TextInput::make('company_address')
+                                            ->label('Dirección')
+                                            ->maxLength(255),
+                                        TextInput::make('company_slogan')
+                                            ->label('Frase')
+                                            ->maxLength(255),
+                                    ]),
                             ]),
-                    ]),
-                Section::make('Cobranza')
-                    ->schema([
-                        TextInput::make('billing_due_days')
-                            ->label('Plazo de pago de los cargos')
-                            ->helperText('Días desde que se genera un cargo (abonos, presupuestos, órdenes de trabajo) hasta su vencimiento.')
-                            ->integer()
-                            ->minValue(0)
-                            ->suffix('días')
-                            ->required(),
-                    ]),
-                Section::make('Facturación electrónica (ARCA)')
-                    ->key('invoicing')
-                    ->description(fn () => self::invoicingDescription())
-                    ->columns(2)
-                    ->headerActions([
-                        Action::make('testArcaConnection')
-                            ->label('Probar conexión')
-                            ->icon(Heroicon::OutlinedSignal)
-                            ->color('gray')
-                            ->tooltip('Usa los datos guardados')
-                            ->action(fn () => self::testArcaConnection()),
-                    ])
-                    ->schema([
-                        Toggle::make('invoicing_enabled')
-                            ->label('Emitir facturas desde los recibos')
-                            ->helperText('Factura C. Es opcional en cada pago: solo se factura lo que elijas.')
-                            ->live()
-                            ->columnSpanFull(),
-                        TextInput::make('invoicing_point_of_sale')
-                            ->label('Punto de venta')
-                            ->helperText('El de tipo "RECE para aplicativo y web services", no el de Comprobantes en línea.')
-                            ->integer()
-                            ->minValue(1)
-                            ->maxValue(99999)
-                            ->required(fn (Get $get) => (bool) $get('invoicing_enabled')),
-                        TextInput::make('invoicing_legal_name')
-                            ->label('Nombre o razón social')
-                            ->helperText('Como figura en ARCA. Si queda vacío se usa el responsable.')
-                            ->maxLength(255),
-                        TextInput::make('invoicing_address')
-                            ->label('Domicilio comercial')
-                            ->helperText('Si queda vacío se usa la dirección de la empresa.')
-                            ->maxLength(255),
-                        TextInput::make('invoicing_gross_income')
-                            ->label('Ingresos Brutos')
-                            ->maxLength(255),
-                        DatePicker::make('invoicing_activity_start')
-                            ->label('Inicio de actividades'),
-                    ]),
-                Section::make('Presupuestos')
-                    ->description('Valores con los que arranca cada presupuesto nuevo.')
-                    ->columns(2)
-                    ->schema([
-                        TextInput::make('quotes_valid_days')
-                            ->label('Validez')
-                            ->integer()
-                            ->minValue(1)
-                            ->suffix('días')
-                            ->required(),
-                        TextInput::make('quotes_default_markup')
-                            ->label('Recargo sobre el costo')
-                            ->helperText('Se propone al cargar el costo de un ítem; se puede cambiar en cada uno.')
-                            ->numeric()
-                            ->minValue(0)
-                            ->suffix('%')
-                            ->required(),
-                        TextInput::make('quotes_default_warranty')
-                            ->label('Garantía')
-                            ->maxLength(255),
-                        TextInput::make('quotes_default_payment_terms')
-                            ->label('Forma de pago')
-                            ->maxLength(255),
-                        TextInput::make('quotes_default_delivery_time')
-                            ->label('Plazo de entrega')
-                            ->maxLength(255),
-                        Textarea::make('quotes_default_terms')
-                            ->label('Nota al pie')
-                            ->rows(2)
-                            ->columnSpanFull(),
+                        Tab::make('Presupuestos')
+                            ->icon(Heroicon::OutlinedDocumentText)
+                            ->schema([
+                                Section::make('Valores por defecto')
+                                    ->description('Valores con los que arranca cada presupuesto nuevo.')
+                                    ->columns(2)
+                                    ->schema([
+                                        TextInput::make('quotes_valid_days')
+                                            ->label('Validez')
+                                            ->integer()
+                                            ->minValue(1)
+                                            ->suffix('días')
+                                            ->required(),
+                                        TextInput::make('quotes_default_markup')
+                                            ->label('Recargo sobre el costo')
+                                            ->helperText('Se propone al cargar el costo de un ítem; se puede cambiar en cada uno.')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->suffix('%')
+                                            ->required(),
+                                        TextInput::make('quotes_default_warranty')
+                                            ->label('Garantía')
+                                            ->maxLength(255),
+                                        TextInput::make('quotes_default_payment_terms')
+                                            ->label('Forma de pago')
+                                            ->maxLength(255),
+                                        TextInput::make('quotes_default_delivery_time')
+                                            ->label('Plazo de entrega')
+                                            ->maxLength(255),
+                                        Textarea::make('quotes_default_terms')
+                                            ->label('Nota al pie')
+                                            ->rows(2)
+                                            ->columnSpanFull(),
+                                    ]),
+                                Section::make('Cuotas')
+                                    ->description('Planes que se proponen al activar "Ofrecer cuotas" en un presupuesto. Cada presupuesto guarda sus importes: cambiar estos recargos no modifica los ya hechos.')
+                                    ->schema([
+                                        Repeater::make('quotes_installments')
+                                            ->hiddenLabel()
+                                            ->addActionLabel('Agregar plan')
+                                            ->defaultItems(0)
+                                            ->reorderable(false)
+                                            ->columns(2)
+                                            ->schema([
+                                                TextInput::make('count')
+                                                    ->label('Cuotas')
+                                                    ->integer()
+                                                    ->minValue(2)
+                                                    ->maxValue(48)
+                                                    ->required()
+                                                    ->distinct(),
+                                                TextInput::make('surcharge')
+                                                    ->label('Recargo')
+                                                    ->numeric()
+                                                    ->minValue(0)
+                                                    ->suffix('%')
+                                                    ->default(0)
+                                                    ->required(),
+                                            ]),
+                                    ]),
+                            ]),
+                        Tab::make('Cobranza')
+                            ->icon(Heroicon::OutlinedBanknotes)
+                            ->schema([
+                                Section::make('Cargos')
+                                    ->schema([
+                                        TextInput::make('billing_due_days')
+                                            ->label('Plazo de pago de los cargos')
+                                            ->helperText('Días desde que se genera un cargo (abonos, presupuestos, órdenes de trabajo) hasta su vencimiento.')
+                                            ->integer()
+                                            ->minValue(0)
+                                            ->suffix('días')
+                                            ->required(),
+                                    ]),
+                            ]),
+                        Tab::make('Facturación')
+                            ->icon(Heroicon::OutlinedDocumentCheck)
+                            ->schema([
+                                Section::make('Facturación electrónica (ARCA)')
+                                    ->key('invoicing')
+                                    ->description(fn () => self::invoicingDescription())
+                                    ->columns(2)
+                                    ->headerActions([
+                                        Action::make('testArcaConnection')
+                                            ->label('Probar conexión')
+                                            ->icon(Heroicon::OutlinedSignal)
+                                            ->color('gray')
+                                            ->tooltip('Usa los datos guardados')
+                                            ->action(fn () => self::testArcaConnection()),
+                                    ])
+                                    ->schema([
+                                        Toggle::make('invoicing_enabled')
+                                            ->label('Emitir facturas desde los recibos')
+                                            ->helperText('Factura C. Es opcional en cada pago: solo se factura lo que elijas.')
+                                            ->live()
+                                            ->columnSpanFull(),
+                                        TextInput::make('invoicing_point_of_sale')
+                                            ->label('Punto de venta')
+                                            ->helperText('El de tipo "RECE para aplicativo y web services", no el de Comprobantes en línea.')
+                                            ->integer()
+                                            ->minValue(1)
+                                            ->maxValue(99999)
+                                            ->required(fn (Get $get) => (bool) $get('invoicing_enabled')),
+                                        TextInput::make('invoicing_legal_name')
+                                            ->label('Nombre o razón social')
+                                            ->helperText('Como figura en ARCA. Si queda vacío se usa el responsable.')
+                                            ->maxLength(255),
+                                        TextInput::make('invoicing_address')
+                                            ->label('Domicilio comercial')
+                                            ->helperText('Si queda vacío se usa la dirección de la empresa.')
+                                            ->maxLength(255),
+                                        TextInput::make('invoicing_gross_income')
+                                            ->label('Ingresos Brutos')
+                                            ->maxLength(255),
+                                        DatePicker::make('invoicing_activity_start')
+                                            ->label('Inicio de actividades'),
+                                    ]),
+                            ]),
                     ]),
             ]);
     }
