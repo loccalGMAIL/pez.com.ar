@@ -13,7 +13,7 @@ desde un subdominio con un panel de Filament.
 | Usuarios | Un solo usuario administrador (sin roles/permisos por ahora) |
 | Moneda | Solo ARS (montos guardados como enteros en centavos) |
 | Presupuestos | Numeración desde `P-00100`, precios finales sin IVA discriminado |
-| Facturación electrónica (ARCA/AFIP) | Más adelante; por ahora cobranza interna |
+| Facturación electrónica (ARCA/AFIP) | Opcional, al cobrar: Factura C (monotributo) desde el recibo; ver "Fase 9" |
 | Abonos mensuales | Sí, con montos fijos y variables |
 | Hosting | Hostinger compartido: SSH + Composer, **sin npm** |
 | Base de datos | MySQL en producción, SQLite en memoria para tests |
@@ -109,7 +109,8 @@ Estados:
 - `filament/filament` ^5
 - `barryvdh/laravel-dompdf` — PDFs de presupuestos (sin Chrome/Node, apto para hosting compartido)
 - `spatie/laravel-backup` — backup diario de base y adjuntos
-- Más adelante: `spatie/laravel-activitylog` (auditoría), SDK de MercadoPago, facturación ARCA
+- `chillerlan/php-qrcode` (fase 9) — QR de ARCA en las facturas, en PNG con GD
+- Más adelante: `spatie/laravel-activitylog` (auditoría), SDK de MercadoPago
 
 ## Fases
 
@@ -124,7 +125,8 @@ Estados:
    descarga, y login con Google vía Socialite (en lugar de la verificación en dos pasos).
 7. ✅ **Actualización y herramientas:** ver sección siguiente.
 8. ✅ **Informes:** ver sección "Fase 8: Informes".
-9. **Futuro:** facturación electrónica, links de pago MercadoPago, portal de clientes.
+9. **Facturación electrónica ARCA:** ver sección "Fase 9: Facturación electrónica ARCA".
+10. **Futuro:** links de pago MercadoPago, portal de clientes.
 
 Cada fase incluye migraciones con `down()`, factories, tests (`php artisan test`), Pint
 y su entrada en `CHANGELOG.md`.
@@ -166,6 +168,124 @@ Se encara al terminar las fases funcionales, con todos los tests en verde.
 - Informes: Ingresos, Margen, Deuda por antigüedad, Clientes, Abonos, Taller y Presupuestos.
 - Sin paquetes nuevos ni build: la pantalla usa los componentes y las variables de color de
   Filament, y el PDF sale con dompdf.
+
+## Fase 9: Facturación electrónica ARCA
+
+Emisor **monotributista**: todo se emite como **Factura C** (código 11) y se anula con
+**Nota de crédito C** (código 13). Sin IVA discriminado: `ImpNeto = ImpTotal`, `ImpIVA = 0`
+y sin alícuotas.
+
+### Cuándo se factura
+
+La factura es **opcional** y se emite **al cobrar**, desde el recibo. Cargos y recibos siguen
+igual que hoy; la factura es un documento aparte que se suma cuando hace falta.
+
+- **A pedido:** acción "Facturar en ARCA" en el recibo (vista, tabla de Pagos y pagos del
+  cliente). Abre una vista previa editable (ítems, concepto, período) y recién al confirmar
+  pide el CAE. Un recibo se factura una sola vez.
+- **Por cliente:** campo "Facturación" en el cliente: `nunca` / `a pedido` (por defecto) /
+  `siempre`. Con `siempre`, registrar un pago emite la factura en la cola; si ARCA falla, el
+  pago queda registrado igual y el recibo muestra "Factura pendiente" con el error y un
+  botón para reintentar. Con `nunca`, la acción se oculta.
+- **Interruptor general** en Configuración: con la facturación apagada no aparece nada de ARCA.
+- Recibos y presupuestos llevan la leyenda "Documento no válido como factura"; el recibo
+  facturado muestra además el número de su factura.
+
+### Qué se factura
+
+- **Ítems:** uno por cada imputación del recibo (concepto del cargo e importe aplicado; "pago
+  parcial de $X" si no lo cancela) y "Pago a cuenta" por lo que quedó sin imputar. El total es
+  siempre el del recibo.
+- **Concepto ARCA:** productos (1) si todos los cargos son reventa, servicios (2) si ninguno,
+  ambos (3) si hay de los dos. Editable en la vista previa.
+- **Período del servicio** (obligatorio con servicios): el mes del abono si el cargo viene de
+  uno; si no, la fecha de emisión de los cargos. **Vencimiento del pago:** la fecha de la
+  factura (ya está cobrada).
+- **Fecha:** la del pago si ARCA la acepta (hasta 10 días atrás con servicios, 5 con
+  productos); si es más vieja, la de hoy.
+- **Receptor:** se copian sus datos a la factura al emitir. Documento: CUIT (80), si no DNI
+  (96), si no consumidor final sin identificar (99 / 0, solo por debajo del tope vigente de
+  ARCA). Condición IVA del receptor (RG 5616) desde `TaxCondition`: responsable inscripto 1,
+  exento 4, consumidor final 5, monotributista 6.
+
+### Modelo de datos
+
+| Entidad | Campos principales |
+|---|---|
+| `Invoice` | cliente, recibo, tipo (11/13), punto de venta, número, fecha, concepto, período desde/hasta, vencimiento del pago, receptor copiado (documento, condición IVA, razón social, domicilio), total, estado, CAE y su vencimiento, factura asociada (en las notas de crédito), pedido y respuesta de ARCA, errores y observaciones, PDF archivado |
+| `InvoiceItem` | descripción, cantidad, precio unitario, subtotal, orden |
+| `Client` | + DNI, + preferencia de facturación |
+
+- Estados: **pendiente → autorizada / rechazada**. Una factura autorizada no se edita ni se
+  borra; una rechazada guarda el motivo y se puede corregir y reintentar.
+- Un recibo con factura autorizada no se puede borrar: primero "Anular con nota de crédito",
+  que emite la NC C asociada (`CbtesAsoc`) por el total, y después se borra o se rehace el pago.
+
+### Integración
+
+- Cliente propio con `ext-soap` y `openssl`, sin paquetes, en `app/Support/Arca`:
+  - **WSAA:** firma el pedido de acceso (CMS) con el certificado; el token y la firma
+    duran 12 h y se guardan en caché.
+  - **WSFEv1:** `FECompUltimoAutorizado`, `FECAESolicitar`, `FECompConsultar` y
+    `FEParamGet*` (para chequear la configuración desde el panel).
+  - Detrás de una interfaz (`ArcaClient`): los tests usan uno falso y nunca llaman a ARCA.
+- `InvoiceIssuer` emite: lock por punto de venta (`Cache::lock`), último número + 1, pedido
+  del CAE. Ante un timeout **consulta con `FECompConsultar` antes de reintentar**, para no
+  duplicar comprobantes. Guarda pedido, respuesta y observaciones tal como vienen.
+- Los servidores de ARCA usan claves DH que OpenSSL 3 rechaza ("dh key too small"): la
+  conexión SOAP baja el nivel de seguridad (`DEFAULT@SECLEVEL=1`) solo para esos hosts.
+- `.env`: `ARCA_ENV` (`homologacion` / `produccion`), `ARCA_CUIT`, `ARCA_CERT_PATH`,
+  `ARCA_KEY_PATH`. Certificado y clave en `storage/app/private/arca/`, nunca en el repo ni en
+  la base ni en los backups públicos.
+- Configuración (panel): facturación activa, punto de venta, Ingresos Brutos, inicio de
+  actividades, domicilio comercial, categoría de monotributo y su tope anual; botón
+  "Probar conexión" con ARCA.
+
+### La factura
+
+Mismo diseño que presupuestos y recibos (`pdf/layout.blade.php`: encabezado oscuro, verde,
+Lato, logo), con los datos que exige ARCA integrados:
+
+- Encabezado: recuadro con la letra **C** y "COD. 11" al centro; N.º `00003-00000125`,
+  fecha, CUIT, IIBB e inicio de actividades.
+- Emisor y receptor: razón social, domicilio, condición IVA (emisor "Responsable
+  Monotributo") y documento; período facturado y vencimiento del pago.
+- Ítems y caja de total como en los presupuestos.
+- Pie fiscal: **QR de ARCA** (RG 4291, JSON en base64 en `https://www.afip.gob.ar/fe/qr/`),
+  CAE, vencimiento del CAE y "Comprobante autorizado".
+- El PDF se archiva al emitir, se descarga desde el panel y se envía por mail con link
+  firmado (`/factura/{invoice}`), como los recibos.
+
+### Entregas
+
+- **2.6.0:** cliente ARCA, configuración fiscal, factura desde el recibo con vista previa,
+  PDF con QR, mail, leyendas en recibos y presupuestos, homologación funcionando.
+- **2.7.0:** notas de crédito y bloqueo de borrado, facturación automática por cliente con
+  reintento, informe de facturación (facturado vs. cobrado sin facturar) y aviso en el
+  tablero de lo facturado en los últimos 12 meses contra el tope de la categoría.
+
+Tests de cada parte con el cliente ARCA falso: numeración y lock, reconciliación ante
+timeout, rechazo con errores, armado de ítems desde las imputaciones, concepto y período,
+receptor y condición IVA, QR, PDF y bloqueo de borrado.
+
+### Puesta en marcha de ARCA
+
+1. En Hostinger, verificar que `soap`, `openssl` y `gd` estén activos (`php -m`).
+2. Generar la clave y el pedido de certificado:
+   ```
+   openssl genrsa -out arca.key 2048
+   openssl req -new -key arca.key -subj "/C=AR/O=PEZ/CN=pez-sistema/serialNumber=CUIT XXXXXXXXXXX" -out arca.csr
+   ```
+3. **Homologación:** con clave fiscal, en "WSASS – Autogestión Certificados Homologación",
+   crear el certificado con el CSR y autorizarlo al servicio `wsfe`. Probar con `ARCA_ENV=homologacion`.
+4. **Producción:** en "Administración de Certificados Digitales" subir el CSR y bajar el
+   `.crt`; en "Administrador de Relaciones de Clave Fiscal" autorizarlo a "Facturación
+   Electrónica" (`wsfe`).
+5. En "Administración de puntos de venta y domicilios" crear un punto de venta **nuevo**
+   de tipo "RECE para aplicativo y web services" (distinto del de Comprobantes en línea) y
+   cargarlo en Configuración.
+6. Subir `arca.key` y el `.crt` a `storage/app/private/arca/`, completar el `.env`,
+   `php artisan optimize` y "Probar conexión" desde Configuración.
 
 ## Puesta en marcha en Hostinger (fase 1)
 
