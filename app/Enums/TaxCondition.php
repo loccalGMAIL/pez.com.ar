@@ -20,4 +20,17 @@ enum TaxCondition: string implements HasLabel
             self::ConsumidorFinal => 'Consumidor final',
         };
     }
+
+    /**
+     * Code ARCA expects for the recipient's VAT condition (RG 5616).
+     */
+    public function arcaId(): int
+    {
+        return match ($this) {
+            self::ResponsableInscripto => 1,
+            self::Exento => 4,
+            self::ConsumidorFinal => 5,
+            self::Monotributista => 6,
+        };
+    }
 }

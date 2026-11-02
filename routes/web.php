@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\Invoices\ShowInvoicePdf;
 use App\Http\Controllers\Payments\ShowReceiptPdf;
 use App\Http\Controllers\PwaController;
 use App\Http\Controllers\Quotes\ShowQuotePdf;
@@ -28,6 +29,10 @@ Route::domain(config('app.domain'))->group(function () {
     Route::get('/recibo/{payment}', ShowReceiptPdf::class)
         ->middleware('signed')
         ->name('receipts.pdf');
+
+    Route::get('/factura/{invoice}', ShowInvoicePdf::class)
+        ->middleware('signed')
+        ->name('invoices.pdf');
 
     Route::get('/orden/{workOrder}', ShowWorkOrderPdf::class)
         ->middleware('signed')

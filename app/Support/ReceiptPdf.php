@@ -17,7 +17,7 @@ class ReceiptPdf
      */
     public static function render(Payment $payment): string
     {
-        $payment->loadMissing(['client', 'allocations.charge']);
+        $payment->loadMissing(['client', 'allocations.charge', 'invoice']);
 
         return Pdf::loadView('pdf.receipt', [
             'payment' => $payment,

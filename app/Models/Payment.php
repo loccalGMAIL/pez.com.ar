@@ -11,8 +11,10 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\URL;
+use LogicException;
 
 class Payment extends Model
 {
@@ -44,8 +46,15 @@ class Payment extends Model
 
     protected static function booted(): void
     {
-        // One by one so each charge recomputes what it has been paid.
-        static::deleting(fn (Payment $payment) => $payment->allocations()->get()->each->delete());
+        static::deleting(function (Payment $payment) {
+            // The invoice is a fiscal document: it is undone with a credit note, never deleted.
+            if ($payment->invoice?->isAuthorized()) {
+                throw new LogicException("El pago {$payment->code} tiene la {$payment->invoice->title} autorizada: no se puede borrar.");
+            }
+
+            // One by one so each charge recomputes what it has been paid.
+            $payment->allocations()->get()->each->delete();
+        });
     }
 
     /**
@@ -116,6 +125,16 @@ class Payment extends Model
     public function allocations(): HasMany
     {
         return $this->hasMany(PaymentAllocation::class);
+    }
+
+    /**
+     * ARCA invoice for this payment, when it was invoiced (optional).
+     *
+     * @return HasOne<Invoice, $this>
+     */
+    public function invoice(): HasOne
+    {
+        return $this->hasOne(Invoice::class);
     }
 
     /**

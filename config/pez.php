@@ -50,6 +50,18 @@ return [
         'due_days' => 10,
     ],
 
+    // Electronic invoicing with ARCA (Factura C, monotributo). Connection
+    // settings and the certificate live in config/arca.php and .env.
+    'invoicing' => [
+        'enabled' => false,
+        'point_of_sale' => null,
+        // Name registered with ARCA (the monotributista's own name).
+        'legal_name' => null,
+        'address' => null,
+        'gross_income' => null,
+        'activity_start' => null,
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Work Orders

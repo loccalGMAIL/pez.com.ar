@@ -223,23 +223,27 @@ igual que hoy; la factura es un documento aparte que se suma cuando hace falta.
 
 ### Integración
 
-- Cliente propio con `ext-soap` y `openssl`, sin paquetes, en `app/Support/Arca`:
+- Cliente propio, sin paquetes, en `app/Support/Arca`: SOAP armado a mano sobre el cliente
+  HTTP de Laravel (`Soap`), sin depender de `ext-soap`, y `openssl` para firmar.
   - **WSAA:** firma el pedido de acceso (CMS) con el certificado; el token y la firma
     duran 12 h y se guardan en caché.
-  - **WSFEv1:** `FECompUltimoAutorizado`, `FECAESolicitar`, `FECompConsultar` y
-    `FEParamGet*` (para chequear la configuración desde el panel).
-  - Detrás de una interfaz (`ArcaClient`): los tests usan uno falso y nunca llaman a ARCA.
+  - **WSFEv1:** `FECompUltimoAutorizado`, `FECAESolicitar`, `FECompConsultar` y `FEDummy`
+    (estado de los servidores, para "Probar conexión").
+  - Los tests usan `Http::fake()` con respuestas de ARCA (`tests/Concerns/FakesArca.php`) y
+    un certificado autofirmado: nunca llaman a ARCA.
 - `InvoiceIssuer` emite: lock por punto de venta (`Cache::lock`), último número + 1, pedido
   del CAE. Ante un timeout **consulta con `FECompConsultar` antes de reintentar**, para no
   duplicar comprobantes. Guarda pedido, respuesta y observaciones tal como vienen.
 - Los servidores de ARCA usan claves DH que OpenSSL 3 rechaza ("dh key too small"): la
   conexión SOAP baja el nivel de seguridad (`DEFAULT@SECLEVEL=1`) solo para esos hosts.
-- `.env`: `ARCA_ENV` (`homologacion` / `produccion`), `ARCA_CUIT`, `ARCA_CERT_PATH`,
-  `ARCA_KEY_PATH`. Certificado y clave en `storage/app/private/arca/`, nunca en el repo ni en
-  la base ni en los backups públicos.
-- Configuración (panel): facturación activa, punto de venta, Ingresos Brutos, inicio de
-  actividades, domicilio comercial, categoría de monotributo y su tope anual; botón
-  "Probar conexión" con ARCA.
+- `.env`: `ARCA_ENV` (`homologacion` / `produccion`), `ARCA_CERT_PATH`, `ARCA_KEY_PATH`
+  (por defecto en `storage/app/private/arca/`). El CUIT emisor es el de la empresa en
+  Configuración. Certificado y clave nunca van al repo, a la base ni a los backups.
+- Cada factura guarda su ambiente: las de homologación no se mezclan con las reales ni en la
+  numeración ni en el listado.
+- Configuración (panel): facturación activa, punto de venta, nombre, Ingresos Brutos, inicio
+  de actividades y domicilio comercial; botón "Probar conexión" con ARCA. La categoría de
+  monotributo y su tope llegan con la 2.7.0.
 
 ### La factura
 
@@ -258,19 +262,21 @@ Lato, logo), con los datos que exige ARCA integrados:
 
 ### Entregas
 
-- **2.6.0:** cliente ARCA, configuración fiscal, factura desde el recibo con vista previa,
-  PDF con QR, mail, leyendas en recibos y presupuestos, homologación funcionando.
-- **2.7.0:** notas de crédito y bloqueo de borrado, facturación automática por cliente con
+- **2.6.0** (hecha, falta probar en homologación): cliente ARCA, configuración fiscal,
+  factura desde el recibo con vista previa, PDF con QR, mail y WhatsApp, leyendas en recibos
+  y presupuestos, listado de facturas y bloqueo de borrado del pago facturado.
+- **2.7.0:** notas de crédito (y anular un pago facturado con su nota de crédito), facturación automática por cliente con
   reintento, informe de facturación (facturado vs. cobrado sin facturar) y aviso en el
   tablero de lo facturado en los últimos 12 meses contra el tope de la categoría.
 
-Tests de cada parte con el cliente ARCA falso: numeración y lock, reconciliación ante
+Tests de cada parte con ARCA falso: numeración y lock, reconciliación ante
 timeout, rechazo con errores, armado de ítems desde las imputaciones, concepto y período,
 receptor y condición IVA, QR, PDF y bloqueo de borrado.
 
 ### Puesta en marcha de ARCA
 
-1. En Hostinger, verificar que `soap`, `openssl` y `gd` estén activos (`php -m`).
+1. En Hostinger, verificar que `openssl`, `curl` y `gd` estén activos (`php -m`; ya
+   verificado).
 2. Generar la clave y el pedido de certificado:
    ```
    openssl genrsa -out arca.key 2048

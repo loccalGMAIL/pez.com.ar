@@ -21,6 +21,11 @@ class BackupsTest extends TestCase
         $this->assertNotEmpty(config('backup.backup.source.databases'));
     }
 
+    public function test_backups_leave_out_the_arca_private_key(): void
+    {
+        $this->assertContains(storage_path('app/private/arca'), config('backup.backup.source.files.exclude'));
+    }
+
     public function test_failure_mails_always_have_a_valid_recipient(): void
     {
         // laravel-backup validates this address while the app boots (also during

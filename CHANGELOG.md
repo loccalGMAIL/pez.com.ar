@@ -13,6 +13,41 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+### Agregado
+
+- **Facturación electrónica con ARCA (Factura C)**, opcional y al cobrar: "Facturar en ARCA"
+  en el recibo abre una vista previa con el concepto (productos, servicios o ambos), el
+  período facturado y el detail editable, y al confirmar pide el CAE. Los cargos y recibos
+  siguen igual; solo se factura lo que se elige.
+  - Cada ítem es un cargo que cancela el recibo (con "Pago parcial de $X" si no lo cancela
+    entero) y lo que quedó sin imputar va como "Pago a cuenta": el total es el del recibo.
+  - La fecha es la del pago mientras ARCA la acepte (10 días atrás con servicios, 5 con
+    productos) y nunca anterior a la última factura del punto de venta.
+  - El cliente se identifica con su CUIT, su DNI (campo nuevo en el cliente) o como consumidor
+    final sin identificar, e informa su condición frente al IVA. A un responsable inscripto,
+    monotributista o exento sin CUIT no se le factura, y por encima del tope de ARCA hay que
+    identificar al consumidor final.
+  - Si ARCA rechaza la factura se muestran sus mensajes y se puede corregir y reintentar. Si
+    no responde, la factura queda pendiente con su número y el reintento primero consulta a
+    ARCA si llegó a autorizarla, para no duplicarla.
+- Factura en PDF con el diseño de los presupuestos: recuadro con la letra C y su código,
+  datos del emisor y del cliente, período, detalle, total en letras y, al pie de la hoja, el
+  QR de ARCA con el CAE y su vencimiento. Se archiva al autorizarse, se descarga desde el pago
+  y se envía por mail o WhatsApp con un link firmado. Las de homologación llevan la marca
+  "sin validez fiscal".
+- Listado de **Facturas** en Cobranza, con su estado, CAE y recibo.
+- Sección **Facturación electrónica (ARCA)** en Configuración: activarla, punto de venta,
+  nombre, domicilio comercial, Ingresos Brutos, inicio de actividades y botón "Probar
+  conexión". El ambiente y el certificado se configuran en el `.env` (`ARCA_ENV`,
+  `ARCA_CERT_PATH`, `ARCA_KEY_PATH`).
+
+### Cambiado
+
+- Recibos y presupuestos dicen "Documento no válido como factura"; el recibo facturado
+  nombra su factura.
+- Un pago con factura autorizada ya no se puede borrar.
+- El backup no incluye el certificado ni la clave de ARCA.
+
 ## [2.5.0] - 2026-11-02
 
 ### Agregado

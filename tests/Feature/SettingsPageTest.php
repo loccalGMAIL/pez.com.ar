@@ -9,13 +9,15 @@ use App\Models\Quote;
 use App\Models\Setting;
 use App\Models\User;
 use App\Support\Settings;
+use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Concerns\FakesArca;
 use Tests\TestCase;
 
 class SettingsPageTest extends TestCase
 {
-    use RefreshDatabase;
+    use FakesArca, RefreshDatabase;
 
     protected function setUp(): void
     {
@@ -140,5 +142,63 @@ class SettingsPageTest extends TestCase
         $this->assertSame('PEZ Servicios IT', Settings::get('company.name'));
 
         putenv('COMPANY_NAME');
+    }
+
+    public function test_saves_the_invoicing_data(): void
+    {
+        Livewire::test(SettingsPage::class)
+            ->fillForm([
+                'company_cuit' => '20-30405060-9',
+                'invoicing_enabled' => true,
+                'invoicing_point_of_sale' => '3',
+                'invoicing_legal_name' => 'Juan Pérez',
+                'invoicing_gross_income' => 'Exento',
+                'invoicing_activity_start' => '2019-03-01',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame([
+            'enabled' => true,
+            'point_of_sale' => 3,
+            'legal_name' => 'Juan Pérez',
+            'address' => null,
+            'gross_income' => 'Exento',
+            'activity_start' => '2019-03-01',
+        ], Settings::invoicing());
+    }
+
+    public function test_invoicing_needs_the_point_of_sale_and_the_cuit(): void
+    {
+        Livewire::test(SettingsPage::class)
+            ->fillForm(['invoicing_enabled' => true, 'invoicing_point_of_sale' => null, 'company_cuit' => null])
+            ->call('save')
+            ->assertHasFormErrors(['invoicing_point_of_sale' => 'required', 'company_cuit' => 'required']);
+    }
+
+    public function test_checks_the_connection_with_arca(): void
+    {
+        $this->enableInvoicing();
+        $this->fakeArca([
+            'FEDummy' => ['<AppServer>OK</AppServer><DbServer>OK</DbServer><AuthServer>OK</AuthServer>'],
+            'FECompUltimoAutorizado' => [self::lastAuthorized(41)],
+        ]);
+
+        Livewire::test(SettingsPage::class)
+            ->callAction(TestAction::make('testArcaConnection')->schemaComponent('invoicing', schema: 'form'))
+            ->assertNotified('Conexión con ARCA correcta');
+    }
+
+    public function test_the_connection_check_shows_arca_errors(): void
+    {
+        $this->enableInvoicing();
+        $this->fakeArca([
+            'FEDummy' => ['<AppServer>OK</AppServer><DbServer>OK</DbServer><AuthServer>OK</AuthServer>'],
+            'FECompUltimoAutorizado' => [self::error('10015', 'El punto de venta no se encuentra habilitado')],
+        ]);
+
+        Livewire::test(SettingsPage::class)
+            ->callAction(TestAction::make('testArcaConnection')->schemaComponent('invoicing', schema: 'form'))
+            ->assertNotified('No se pudo verificar la conexión');
     }
 }

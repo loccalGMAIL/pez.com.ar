@@ -22,6 +22,7 @@ class Client extends Model
         'business_name',
         'trade_name',
         'cuit',
+        'dni',
         'tax_condition',
         'email',
         'phone',
@@ -144,6 +145,22 @@ class Client extends Model
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);
+    }
+
+    /**
+     * @return HasMany<Invoice, $this>
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class);
+    }
+
+    /**
+     * Address in one line: street, city and province.
+     */
+    public function fullAddress(): ?string
+    {
+        return collect([$this->address, $this->city, $this->province])->filter()->join(', ') ?: null;
     }
 
     /**
