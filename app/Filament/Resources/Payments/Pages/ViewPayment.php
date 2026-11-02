@@ -5,11 +5,9 @@ namespace App\Filament\Resources\Payments\Pages;
 use App\Filament\Resources\Payments\Actions\PaymentActions;
 use App\Filament\Resources\Payments\PaymentResource;
 use App\Models\Payment;
-use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
-use Filament\Support\Icons\Heroicon;
 
 class ViewPayment extends ViewRecord
 {
@@ -25,21 +23,13 @@ class ViewPayment extends ViewRecord
     {
         return [
             PaymentActions::issueInvoice(),
-            ActionGroup::make([
-                PaymentActions::downloadInvoice(),
-                PaymentActions::sendInvoice(),
-                PaymentActions::shareInvoiceOnWhatsApp(),
-            ])
-                ->label('Factura')
-                ->icon(Heroicon::OutlinedDocumentText)
-                ->color('primary')
-                ->button(),
+            PaymentActions::viewInvoice(),
             PaymentActions::shareReceiptOnWhatsApp(),
             PaymentActions::downloadReceipt(),
             EditAction::make(),
             DeleteAction::make()
-                // An invoiced payment is undone with a credit note, not deleted.
-                ->hidden(fn (Payment $record) => (bool) $record->invoice?->isAuthorized())
+                // An invoiced payment is deleted once its invoice is annulled with a credit note.
+                ->hidden(fn (Payment $record) => (bool) $record->invoice?->isInForce())
                 ->modalDescription('Los cargos que cancelaba vuelven a quedar pendientes.'),
         ];
     }

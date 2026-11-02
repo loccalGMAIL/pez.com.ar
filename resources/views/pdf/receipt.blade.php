@@ -86,8 +86,9 @@
 
         <div class="footnote">
             Documento no válido como factura.
-            @if ($payment->invoice?->isAuthorized())
-                Facturado con la {{ $payment->invoice->title }}.
+            @php($invoices = $payment->coveringInvoices())
+            @if ($invoices->isNotEmpty())
+                Facturado con la {{ $invoices->pluck('title')->join(', ', ' y la ') }}.
             @endif
         </div>
 @endsection

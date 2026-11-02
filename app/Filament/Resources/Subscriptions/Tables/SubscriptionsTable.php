@@ -44,6 +44,10 @@ class SubscriptionsTable
                     ->date('d/m/Y')
                     ->placeholder('—')
                     ->toggleable(),
+                IconColumn::make('invoice_before_payment')
+                    ->label('Factura antes')
+                    ->boolean()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 IconColumn::make('is_active')
                     ->label('Activo')
                     ->boolean(),

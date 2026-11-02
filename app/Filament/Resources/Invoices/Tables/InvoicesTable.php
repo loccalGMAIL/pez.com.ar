@@ -3,16 +3,14 @@
 namespace App\Filament\Resources\Invoices\Tables;
 
 use App\Enums\InvoiceStatus;
+use App\Filament\Resources\Invoices\Actions\InvoiceActions;
 use App\Filament\Resources\Payments\PaymentResource;
 use App\Models\Invoice;
-use App\Support\InvoicePdf;
-use Filament\Actions\Action;
-use Filament\Support\Icons\Heroicon;
+use Filament\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class InvoicesTable
 {
@@ -20,7 +18,7 @@ class InvoicesTable
     {
         return $table
             ->defaultSort('id', 'desc')
-            ->modifyQueryUsing(fn (Builder $query) => $query->with('payment'))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['payment', 'creditNote']))
             ->columns([
                 TextColumn::make('title')
                     ->label('Comprobante')
@@ -39,7 +37,9 @@ class InvoicesTable
                     ->sortable(),
                 TextColumn::make('status')
                     ->label('Estado')
-                    ->badge(),
+                    ->badge()
+                    ->formatStateUsing(fn (Invoice $record) => $record->isCredited() ? 'Anulada' : $record->status->getLabel())
+                    ->color(fn (Invoice $record) => $record->isCredited() ? 'gray' : $record->status->getColor()),
                 TextColumn::make('cae')
                     ->label('CAE')
                     ->placeholder('—')
@@ -63,16 +63,8 @@ class InvoicesTable
                     ->default(config('arca.environment')),
             ])
             ->recordActions([
-                Action::make('download')
-                    ->label('PDF')
-                    ->icon(Heroicon::OutlinedArrowDownTray)
-                    ->color('gray')
-                    ->visible(fn (Invoice $record) => $record->isAuthorized())
-                    ->action(fn (Invoice $record): StreamedResponse => response()->streamDownload(
-                        fn () => print (InvoicePdf::contents($record)),
-                        InvoicePdf::filename($record),
-                        ['Content-Type' => 'application/pdf'],
-                    )),
+                ViewAction::make(),
+                InvoiceActions::download(),
             ]);
     }
 }

@@ -35,7 +35,7 @@ class InvoiceIssuingTest extends TestCase
 
     private function issue(Payment $payment, array $data = []): Invoice
     {
-        return app(InvoiceIssuer::class)->issue($payment, $data);
+        return app(InvoiceIssuer::class)->issueForPayment($payment, $data);
     }
 
     private function registeredTaxpayer(): Client
@@ -233,7 +233,7 @@ class InvoiceIssuingTest extends TestCase
             Charge::factory()->for($client)->create(['amount' => 1000, 'is_resale' => $isResale, 'cost' => $isResale ? 500 : null]);
         }
 
-        $this->assertSame($expected, InvoiceDraft::for($this->pay($client, 2000))['concept']);
+        $this->assertSame($expected, InvoiceDraft::forPayment($this->pay($client, 2000))['concept']);
     }
 
     public function test_items_list_what_the_payment_settled_and_what_was_left_on_account(): void
@@ -242,13 +242,13 @@ class InvoiceIssuingTest extends TestCase
         Charge::factory()->for($client)->create(['concept' => 'Visita técnica', 'amount' => 45000, 'issued_on' => today()->subMonth()]);
         Charge::factory()->for($client)->create(['concept' => 'Mantenimiento', 'amount' => 85000]);
 
-        $items = InvoiceDraft::for($this->pay($client, 150000))['items'];
+        $items = InvoiceDraft::forPayment($this->pay($client, 150000))['items'];
 
         $this->assertSame([
             ['description' => 'Visita técnica', 'detail' => null, 'amount' => 45000.0],
             ['description' => 'Mantenimiento', 'detail' => null, 'amount' => 85000.0],
             ['description' => 'Pago a cuenta', 'detail' => null, 'amount' => 20000.0],
-        ], $items);
+        ], array_map(fn (array $item) => array_diff_key($item, ['charge_id' => null]), $items));
     }
 
     public function test_partial_payments_say_so_and_subscriptions_bill_their_month(): void
@@ -257,7 +257,7 @@ class InvoiceIssuingTest extends TestCase
         $subscription = Subscription::factory()->for($client)->create();
         Charge::factory()->for($client)->for($subscription)->create(['concept' => 'Abono octubre', 'amount' => 85000, 'period' => '2026-10-01', 'issued_on' => '2026-10-05']);
 
-        $draft = InvoiceDraft::for($this->pay($client, 15000));
+        $draft = InvoiceDraft::forPayment($this->pay($client, 15000));
 
         $this->assertSame('Pago parcial de $ 85.000,00', $draft['items'][0]['detail']);
         $this->assertSame('2026-10-01', $draft['service_from']->toDateString());

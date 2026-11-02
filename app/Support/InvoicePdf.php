@@ -6,6 +6,7 @@ use App\Models\Invoice;
 use App\Support\Arca\InvoiceQr;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class InvoicePdf
 {
@@ -13,12 +14,12 @@ class InvoicePdf
 
     public static function filename(Invoice $invoice): string
     {
-        return str_replace(' ', '-', $invoice->title).'.pdf';
+        return str_replace(' ', '-', Str::ascii($invoice->title)).'.pdf';
     }
 
     public static function render(Invoice $invoice): string
     {
-        $invoice->loadMissing(['items', 'payment']);
+        $invoice->loadMissing(['items', 'payment', 'creditedInvoice']);
 
         return Pdf::loadView('pdf.invoice', [
             'invoice' => $invoice,

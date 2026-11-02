@@ -58,7 +58,7 @@ class Wsaa
         $key = (string) config('arca.key');
 
         if (! is_readable($certificate) || ! is_readable($key)) {
-            throw new ArcaException('No se encontró el certificado o la clave de ARCA. Revisá ARCA_CERT_PATH y ARCA_KEY_PATH.');
+            throw new ArcaException('No hay certificado de ARCA instalado para este ambiente: generalo e instalalo en Configuración → Facturación.');
         }
 
         $input = (string) tempnam(sys_get_temp_dir(), 'arca-tra');

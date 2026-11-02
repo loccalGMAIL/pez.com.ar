@@ -4,12 +4,15 @@ namespace App\Filament\Resources\Payments\Schemas;
 
 use App\Filament\Resources\Charges\ChargeResource;
 use App\Filament\Resources\Clients\ClientResource;
+use App\Filament\Resources\Invoices\Schemas\InvoiceInfolist;
+use App\Models\Invoice;
 use App\Models\Payment;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Storage;
 
 class PaymentInfolist
@@ -49,29 +52,10 @@ class PaymentInfolist
                             ->label('Notas')
                             ->placeholder('—'),
                     ]),
-                Section::make('Factura')
-                    ->visible(fn (Payment $record) => $record->invoice !== null)
-                    ->columns(4)
+                Section::make('Facturación')
+                    ->visible(fn (Payment $record) => self::invoices($record)->isNotEmpty())
                     ->schema([
-                        TextEntry::make('invoice.title')
-                            ->label('Comprobante'),
-                        TextEntry::make('invoice.status')
-                            ->label('Estado')
-                            ->badge(),
-                        TextEntry::make('invoice.issued_on')
-                            ->label('Fecha')
-                            ->date('d/m/Y')
-                            ->placeholder('—'),
-                        TextEntry::make('invoice.cae')
-                            ->label('CAE')
-                            ->placeholder('—')
-                            ->copyable(),
-                        TextEntry::make('invoice.messages')
-                            ->label('Mensajes de ARCA')
-                            ->listWithLineBreaks()
-                            ->bulleted()
-                            ->placeholder('—')
-                            ->columnSpanFull(),
+                        InvoiceInfolist::related('billing', fn (Payment $record) => self::invoices($record)),
                     ]),
                 Section::make('Imputado a')
                     ->schema([
@@ -90,5 +74,18 @@ class PaymentInfolist
                             ]),
                     ]),
             ]);
+    }
+
+    /**
+     * Invoices that bill the payment (its own and its charges'), plus its own latest attempt when it failed.
+     *
+     * @return Collection<int, Invoice>
+     */
+    private static function invoices(Payment $record): Collection
+    {
+        return $record->coveringInvoices()
+            ->when($record->invoice !== null && ! $record->invoice->isInForce(), fn (Collection $invoices) => $invoices->push($record->invoice))
+            ->unique('id')
+            ->values();
     }
 }

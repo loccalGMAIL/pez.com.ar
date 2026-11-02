@@ -48,14 +48,14 @@ class ArcaConnectionTest extends TestCase
         $this->assertStringContainsString('<Token>TOKEN-123</Token><Sign>SIGN-456</Sign><Cuit>20304050609</Cuit>', $this->arcaRequests('FECompUltimoAutorizado')[0]);
     }
 
-    public function test_a_missing_certificate_says_where_to_set_it(): void
+    public function test_a_missing_certificate_says_where_to_install_it(): void
     {
         $this->enableInvoicing();
         config(['arca.certificate' => '/nonexistent/arca.crt']);
         Http::preventStrayRequests();
 
         $this->expectException(ArcaException::class);
-        $this->expectExceptionMessage('ARCA_CERT_PATH');
+        $this->expectExceptionMessage('No hay certificado de ARCA instalado');
 
         app(Wsfe::class)->lastAuthorized(3, InvoiceType::FacturaC);
     }

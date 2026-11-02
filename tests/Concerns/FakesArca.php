@@ -58,10 +58,29 @@ trait FakesArca
     }
 
     /**
+     * WSFE answers still to give, per operation.
+     *
+     * @var array<string, list<string|callable(Request): mixed>>
+     */
+    private array $arcaAnswers = [];
+
+    private bool $arcaFaked = false;
+
+    /**
+     * Sets the answers ARCA gives next. The fake is registered once per test
+     * (the HTTP client keeps every fake it gets), and later calls replace the queue.
+     *
      * @param  array<string, list<string|callable(Request): mixed>>  $wsfe  answers per operation: result XML or a callback
      */
     protected function fakeArca(array $wsfe = []): void
     {
+        $this->arcaAnswers = $wsfe;
+
+        if ($this->arcaFaked) {
+            return;
+        }
+
+        $this->arcaFaked = true;
         $this->useArcaCertificate();
         // Authorized invoices archive their PDF.
         Storage::fake('local');
@@ -69,14 +88,14 @@ trait FakesArca
         Http::preventStrayRequests();
         Http::fake([
             'wsaahomo.afip.gov.ar/*' => Http::response(self::loginResponse()),
-            'wswhomo.afip.gov.ar/*' => function (Request $request) use (&$wsfe) {
+            'wswhomo.afip.gov.ar/*' => function (Request $request) {
                 $operation = Str::afterLast(trim($request->header('SOAPAction')[0] ?? '', '"'), '/');
 
-                if (($wsfe[$operation] ?? []) === []) {
+                if (($this->arcaAnswers[$operation] ?? []) === []) {
                     throw new RuntimeException("Unexpected call to ARCA: {$operation}");
                 }
 
-                $answer = array_shift($wsfe[$operation]);
+                $answer = array_shift($this->arcaAnswers[$operation]);
 
                 return is_callable($answer) ? $answer($request) : Http::response(self::wsfeResponse($operation, $answer));
             },

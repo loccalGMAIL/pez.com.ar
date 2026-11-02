@@ -3,17 +3,21 @@
 namespace App\Filament\Resources\Invoices;
 
 use App\Filament\Resources\Invoices\Pages\ListInvoices;
+use App\Filament\Resources\Invoices\Pages\ViewInvoice;
+use App\Filament\Resources\Invoices\Schemas\InvoiceInfolist;
 use App\Filament\Resources\Invoices\Tables\InvoicesTable;
 use App\Models\Invoice;
 use App\Support\Settings;
 use BackedEnum;
 use Filament\Resources\Resource;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use UnitEnum;
 
 /**
- * Read-only list: invoices are issued from the payment and never edited.
+ * Read-only: invoices are issued from a payment or a charge, never edited,
+ * and annulled with a credit note from their own page.
  */
 class InvoiceResource extends Resource
 {
@@ -43,6 +47,11 @@ class InvoiceResource extends Resource
         return false;
     }
 
+    public static function infolist(Schema $schema): Schema
+    {
+        return InvoiceInfolist::configure($schema);
+    }
+
     public static function table(Table $table): Table
     {
         return InvoicesTable::configure($table);
@@ -52,6 +61,7 @@ class InvoiceResource extends Resource
     {
         return [
             'index' => ListInvoices::route('/'),
+            'view' => ViewInvoice::route('/{record}'),
         ];
     }
 }

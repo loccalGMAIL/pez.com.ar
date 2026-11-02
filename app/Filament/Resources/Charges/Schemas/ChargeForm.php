@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Charges\Schemas;
 
 use App\Filament\Resources\Suppliers\Schemas\SupplierForm;
+use App\Models\Charge;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -32,11 +33,14 @@ class ChargeForm
                     ->columnSpanFull(),
                 TextInput::make('concept')
                     ->label('Concepto')
+                    ->disabled(fn (?Charge $record) => self::isInvoiced($record))
                     ->required()
                     ->maxLength(255)
                     ->columnSpanFull(),
                 TextInput::make('amount')
                     ->label('Monto')
+                    ->disabled(fn (?Charge $record) => self::isInvoiced($record))
+                    ->helperText(fn (?Charge $record) => self::isInvoiced($record) ? 'Está facturado: para cambiarlo, anulá la factura con nota de crédito y volvé a facturar.' : null)
                     ->numeric()
                     ->minValue(0)
                     ->prefix('$')
@@ -83,5 +87,13 @@ class ChargeForm
                                 : 'Si todavía no lo sabés, dejalo vacío: queda como costo pendiente.'),
                     ]),
             ]);
+    }
+
+    /**
+     * An invoiced charge keeps the concept and amount it was invoiced with.
+     */
+    private static function isInvoiced(?Charge $record): bool
+    {
+        return $record !== null && once(fn () => $record->invoicesInForce()->isNotEmpty());
     }
 }

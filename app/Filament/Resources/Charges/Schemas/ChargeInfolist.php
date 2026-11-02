@@ -3,15 +3,18 @@
 namespace App\Filament\Resources\Charges\Schemas;
 
 use App\Filament\Resources\Clients\ClientResource;
+use App\Filament\Resources\Invoices\Schemas\InvoiceInfolist;
 use App\Filament\Resources\Payments\PaymentResource;
 use App\Filament\Resources\Quotes\QuoteResource;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use App\Models\Charge;
+use App\Models\Invoice;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Collection;
 
 class ChargeInfolist
 {
@@ -79,6 +82,11 @@ class ChargeInfolist
                             ->extraAttributes(['class' => 'whitespace-pre-line'])
                             ->columnSpan(3),
                     ]),
+                Section::make('Facturación')
+                    ->visible(fn (Charge $record) => self::invoices($record)->isNotEmpty())
+                    ->schema([
+                        InvoiceInfolist::related('billing', fn (Charge $record) => self::invoices($record)),
+                    ]),
                 Section::make('Pagos imputados')
                     ->schema([
                         RepeatableEntry::make('allocations')
@@ -99,5 +107,18 @@ class ChargeInfolist
                             ]),
                     ]),
             ]);
+    }
+
+    /**
+     * Invoices that bill the charge (from it or from its payments), plus its own latest attempt when it failed.
+     *
+     * @return Collection<int, Invoice>
+     */
+    private static function invoices(Charge $record): Collection
+    {
+        return $record->invoicesInForce()
+            ->when($record->invoice !== null && ! $record->invoice->isInForce(), fn (Collection $invoices) => $invoices->push($record->invoice))
+            ->unique('id')
+            ->values();
     }
 }

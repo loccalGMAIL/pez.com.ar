@@ -15,6 +15,7 @@ class InvoiceItem extends Model
 
     protected $fillable = [
         'invoice_id',
+        'charge_id',
         'description',
         'detail',
         'amount',
@@ -34,5 +35,15 @@ class InvoiceItem extends Model
     public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
+    }
+
+    /**
+     * Charge this item invoices; null for what a payment left on account.
+     *
+     * @return BelongsTo<Charge, $this>
+     */
+    public function charge(): BelongsTo
+    {
+        return $this->belongsTo(Charge::class);
     }
 }

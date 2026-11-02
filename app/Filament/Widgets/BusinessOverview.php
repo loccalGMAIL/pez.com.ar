@@ -13,6 +13,7 @@ use App\Models\ExternalRepair;
 use App\Models\Payment;
 use App\Models\WorkOrder;
 use App\Support\QuotePdf;
+use App\Support\Settings;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -29,6 +30,7 @@ class BusinessOverview extends StatsOverviewWidget
         $costs = Payment::costBetween(today()->startOfMonth(), today()->endOfMonth());
         $drafts = Charge::where('status', ChargeStatus::Draft)->count();
         $costPending = Charge::costPending()->count();
+        $toInvoice = Settings::invoicing()['enabled'] ? Charge::awaitingInvoice()->count() : 0;
 
         return [
             Stat::make('Por cobrar', QuotePdf::money(Charge::totalOutstanding()))
@@ -44,6 +46,12 @@ class BusinessOverview extends StatsOverviewWidget
                 ->description($drafts > 0 ? 'Cargos variables en borrador' : 'Ninguno pendiente')
                 ->color($drafts > 0 ? 'warning' : 'gray')
                 ->url(ChargeResource::getUrl('index')),
+            ...($toInvoice > 0 ? [
+                Stat::make('Para facturar', $toInvoice)
+                    ->description('Cargos de abonos que se facturan antes de cobrar')
+                    ->color('warning')
+                    ->url(ChargeResource::getUrl('index', ['filters' => ['to_invoice' => ['isActive' => true]]])),
+            ] : []),
             ...($costPending > 0 ? [
                 Stat::make('Ventas sin costo', $costPending)
                     ->description('Reventas a las que les falta cargar el costo')

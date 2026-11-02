@@ -177,13 +177,20 @@ y sin alícuotas.
 
 ### Cuándo se factura
 
-La factura es **opcional** y se emite **al cobrar**, desde el recibo. Cargos y recibos siguen
-igual que hoy; la factura es un documento aparte que se suma cuando hace falta.
+La factura es **opcional**. Por defecto se emite **al cobrar**, desde el recibo; para los
+clientes que necesitan la factura para pagar, **antes de cobrar**, desde el cargo. Cargos y
+recibos siguen igual que hoy; la factura es un documento aparte que se suma cuando hace falta.
 
-- **A pedido:** acción "Facturar en ARCA" en el recibo (vista, tabla de Pagos y pagos del
+- **Al cobrar:** acción "Facturar en ARCA" en el recibo (vista, tabla de Pagos y pagos del
   cliente). Abre una vista previa editable (ítems, concepto, período) y recién al confirmar
-  pide el CAE. Un recibo se factura una sola vez.
-- **Por cliente:** campo "Facturación" en el cliente: `nunca` / `a pedido` (por defecto) /
+  pide el CAE.
+- **Antes de cobrar (hecho):** check "Facturar antes de cobrar" en el abono. Sus cargos quedan
+  "Para facturar" (columna, filtro y tablero) hasta que se usa "Facturar cargo", con la misma
+  vista previa; vence cuando vence el cargo. "Facturar cargo" sirve para cualquier cargo.
+- **Nunca dos veces:** cada ítem guarda el cargo que factura. Lo facturado de un cargo es la
+  suma de sus ítems en facturas vigentes, más lo que recibió de pagos facturados con saldo "a
+  cuenta". El recibo factura de cada cargo solo lo que le falta, y el cargo, lo que le falta.
+- **Por cliente (pendiente):** campo "Facturación" en el cliente: `nunca` / `a pedido` (por defecto) /
   `siempre`. Con `siempre`, registrar un pago emite la factura en la cola; si ARCA falla, el
   pago queda registrado igual y el recibo muestra "Factura pendiente" con el error y un
   botón para reintentar. Con `nunca`, la acción se oculta.
@@ -194,15 +201,16 @@ igual que hoy; la factura es un documento aparte que se suma cuando hace falta.
 ### Qué se factura
 
 - **Ítems:** uno por cada imputación del recibo (concepto del cargo e importe aplicado; "pago
-  parcial de $X" si no lo cancela) y "Pago a cuenta" por lo que quedó sin imputar. El total es
-  siempre el del recibo.
+  parcial de $X" si no lo cancela) y "Pago a cuenta" por lo que quedó sin imputar, sin lo que
+  ya estaba facturado. Desde el cargo, un ítem por lo que le falta facturar.
 - **Concepto ARCA:** productos (1) si todos los cargos son reventa, servicios (2) si ninguno,
   ambos (3) si hay de los dos. Editable en la vista previa.
 - **Período del servicio** (obligatorio con servicios): el mes del abono si el cargo viene de
-  uno; si no, la fecha de emisión de los cargos. **Vencimiento del pago:** la fecha de la
-  factura (ya está cobrada).
-- **Fecha:** la del pago si ARCA la acepta (hasta 10 días atrás con servicios, 5 con
-  productos); si es más vieja, la de hoy.
+  uno; si no, la fecha de emisión de los cargos. **Vencimiento del pago:** desde el recibo, la
+  fecha de la factura (ya está cobrada); desde el cargo, el vencimiento del cargo (nunca antes
+  de la fecha de la factura).
+- **Fecha:** desde el recibo, la del pago si ARCA la acepta (hasta 10 días atrás con
+  servicios, 5 con productos); si no, y desde el cargo o la nota de crédito, la de hoy.
 - **Receptor:** se copian sus datos a la factura al emitir. Documento: CUIT (80), si no DNI
   (96), si no consumidor final sin identificar (99 / 0, solo por debajo del tope vigente de
   ARCA). Condición IVA del receptor (RG 5616) desde `TaxCondition`: responsable inscripto 1,
@@ -212,14 +220,18 @@ igual que hoy; la factura es un documento aparte que se suma cuando hace falta.
 
 | Entidad | Campos principales |
 |---|---|
-| `Invoice` | cliente, recibo, tipo (11/13), punto de venta, número, fecha, concepto, período desde/hasta, vencimiento del pago, receptor copiado (documento, condición IVA, razón social, domicilio), total, estado, CAE y su vencimiento, factura asociada (en las notas de crédito), pedido y respuesta de ARCA, errores y observaciones, PDF archivado |
-| `InvoiceItem` | descripción, cantidad, precio unitario, subtotal, orden |
-| `Client` | + DNI, + preferencia de facturación |
+| `Invoice` | cliente, origen (recibo o cargo), tipo (11/13), punto de venta, número, fecha, concepto, período desde/hasta, vencimiento del pago, receptor copiado (documento, condición IVA, razón social, domicilio), total, estado, CAE y su vencimiento, factura que anula (en las notas de crédito), respuesta de ARCA, errores y observaciones, PDF archivado |
+| `InvoiceItem` | cargo que factura (vacío en "Pago a cuenta"), descripción, aclaración, importe, orden |
+| `Client` | + DNI |
+| `Subscription` | + facturar antes de cobrar |
 
 - Estados: **pendiente → autorizada / rechazada**. Una factura autorizada no se edita ni se
   borra; una rechazada guarda el motivo y se puede corregir y reintentar.
-- Un recibo con factura autorizada no se puede borrar: primero "Anular con nota de crédito",
-  que emite la NC C asociada (`CbtesAsoc`) por el total, y después se borra o se rehace el pago.
+- **Nota de crédito C (hecha):** "Anular con nota de crédito" en la página de la factura emite
+  la NC por el total, asociada (`CbtesAsoc`), con los mismos ítems, y libera lo que facturaba.
+  Un pago con factura vigente no se borra hasta anularla, y borrar un pago nunca borra una
+  factura emitida. Anular un cargo facturado desde el cargo emite antes su NC (si ARCA no la
+  autoriza, el cargo queda); si se facturó junto con su pago, se anula desde esa factura.
 
 ### Integración
 
@@ -264,12 +276,13 @@ Lato, logo), con los datos que exige ARCA integrados:
 
 ### Entregas
 
-- **2.6.0** (hecha, falta probar en homologación): cliente ARCA, configuración fiscal,
-  factura desde el recibo con vista previa, PDF con QR, mail y WhatsApp, leyendas en recibos
-  y presupuestos, listado de facturas y bloqueo de borrado del pago facturado.
-- **2.7.0:** notas de crédito (y anular un pago facturado con su nota de crédito), facturación automática por cliente con
-  reintento, informe de facturación (facturado vs. cobrado sin facturar) y aviso en el
-  tablero de lo facturado en los últimos 12 meses contra el tope de la categoría.
+- **2.6.0** (hecha, falta probar en homologación): cliente ARCA y certificado desde el panel,
+  configuración fiscal, factura desde el recibo y desde el cargo (abonos que se facturan antes
+  de cobrar) con vista previa, notas de crédito, página de la factura, PDF con QR, mail y
+  WhatsApp, leyendas en recibos y presupuestos y listado de facturas.
+- **Siguiente:** facturación automática por cliente con reintento, informe de facturación
+  (facturado vs. cobrado sin facturar) y aviso en el tablero de lo facturado en los últimos
+  12 meses contra el tope de la categoría.
 
 Tests de cada parte con ARCA falso: numeración y lock, reconciliación ante
 timeout, rechazo con errores, armado de ítems desde las imputaciones, concepto y período,
