@@ -236,9 +236,11 @@ igual que hoy; la factura es un documento aparte que se suma cuando hace falta.
   duplicar comprobantes. Guarda pedido, respuesta y observaciones tal como vienen.
 - Los servidores de ARCA usan claves DH que OpenSSL 3 rechaza ("dh key too small"): la
   conexión SOAP baja el nivel de seguridad (`DEFAULT@SECLEVEL=1`) solo para esos hosts.
-- `.env`: `ARCA_ENV` (`homologacion` / `produccion`), `ARCA_CERT_PATH`, `ARCA_KEY_PATH`
-  (por defecto en `storage/app/private/arca/`). El CUIT emisor es el de la empresa en
-  Configuración. Certificado y clave nunca van al repo, a la base ni a los backups.
+- `.env`: `ARCA_ENV` (`homologacion` / `produccion`). El certificado se genera e instala
+  desde el panel (`App\Support\Arca\Certificate`), uno por ambiente en
+  `storage/app/private/arca/{ambiente}/`; `ARCA_CERT_PATH` y `ARCA_KEY_PATH` solo para
+  usar otra ubicación. El CUIT emisor es el de la empresa en Configuración. Certificado y
+  clave nunca van al repo, a la base ni a los backups.
 - Cada factura guarda su ambiente: las de homologación no se mezclan con las reales ni en la
   numeración ni en el listado.
 - Configuración (panel): facturación activa, punto de venta, nombre, Ingresos Brutos, inicio
@@ -275,23 +277,37 @@ receptor y condición IVA, QR, PDF y bloqueo de borrado.
 
 ### Puesta en marcha de ARCA
 
+El certificado se maneja desde **Configuración → Facturación → Certificado de ARCA**: el
+panel crea la clave privada en el servidor (nunca sale de ahí) y descarga el pedido (`.csr`);
+después se sube el `.crt` que entrega ARCA, y el panel verifica que sea para el CUIT de la
+empresa, que esté vigente y que corresponda al pedido. Hasta instalar el nuevo sigue
+funcionando el anterior. Hay un certificado por ambiente, en
+`storage/app/private/arca/{homologacion|produccion}/` (excluido del backup).
+
 1. En Hostinger, verificar que `openssl`, `curl` y `gd` estén activos (`php -m`; ya
    verificado).
-2. Generar la clave y el pedido de certificado:
-   ```
-   openssl genrsa -out arca.key 2048
-   openssl req -new -key arca.key -subj "/C=AR/O=PEZ/CN=pez-sistema/serialNumber=CUIT XXXXXXXXXXX" -out arca.csr
-   ```
-3. **Homologación:** con clave fiscal, en "WSASS – Autogestión Certificados Homologación",
-   crear el certificado con el CSR y autorizarlo al servicio `wsfe`. Probar con `ARCA_ENV=homologacion`.
-4. **Producción:** en "Administración de Certificados Digitales" subir el CSR y bajar el
-   `.crt`; en "Administrador de Relaciones de Clave Fiscal" autorizarlo a "Facturación
-   Electrónica" (`wsfe`).
-5. En "Administración de puntos de venta y domicilios" crear un punto de venta **nuevo**
-   de tipo "RECE para aplicativo y web services" (distinto del de Comprobantes en línea) y
-   cargarlo en Configuración.
-6. Subir `arca.key` y el `.crt` a `storage/app/private/arca/`, completar el `.env`,
-   `php artisan optimize` y "Probar conexión" desde Configuración.
+2. Deploy (`git pull`, `composer install --no-dev -o`, `php artisan migrate --force`,
+   `php artisan optimize`) y en Configuración → Empresa cargar y guardar el CUIT.
+3. **Homologación** (`ARCA_ENV=homologacion`, el valor por defecto):
+   1. Configuración → Facturación → "Generar pedido": se descarga `pezsistema.csr`.
+   2. Con clave fiscal, adherir "WSASS – Autogestión Certificados Homologación"; ahí crear el
+      certificado pegando el `.csr` y autorizarlo al servicio `wsfe`.
+   3. "Subir certificado" con el `.crt` (o pegando el texto), activar la facturación con
+      cualquier punto de venta (por ejemplo 1), guardar y "Probar conexión".
+   4. Facturar recibos de prueba: consumidor final, con DNI y responsable inscripto.
+4. **Producción:**
+   1. En el `.env`, `ARCA_ENV=produccion` y `php artisan optimize`.
+   2. "Generar pedido" (ahora es para producción).
+   3. En ARCA, "Administración de Certificados Digitales": crear el alias, subir el `.csr` y
+      bajar el `.crt`. En "Administrador de Relaciones de Clave Fiscal": nueva relación con
+      el servicio "Facturación Electrónica" para ese certificado (computador fiscal).
+   4. En "Administración de puntos de venta y domicilios", un punto de venta **nuevo**
+      "Factura Electrónica - Monotributo - Web Services" (distinto del de Comprobantes en
+      línea).
+   5. "Subir certificado", cargar el punto de venta nuevo, guardar y "Probar conexión". La
+      primera factura real conviene que sea chica, y verificar su QR en el sitio de ARCA.
+5. No correr `php artisan cache:clear` con la facturación en uso: el acceso de ARCA (12 h)
+   vive en la caché y, si se borra, ARCA no entrega otro hasta que venza.
 
 ## Puesta en marcha en Hostinger (fase 1)
 
