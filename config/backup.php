@@ -38,6 +38,8 @@ return [
                  */
                 'exclude' => [
                     storage_path('app/private/livewire-tmp'),
+                    // ARCA certificate and private key: if lost, a new one is issued in ARCA.
+                    storage_path('app/private/arca'),
                 ],
 
                 /*

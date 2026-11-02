@@ -105,4 +105,6 @@
         @if ($quote->terms)
             <div class="footnote pre">{{ $quote->terms }}</div>
         @endif
+
+        <div class="footnote">Documento no válido como factura.</div>
 @endsection

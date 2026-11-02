@@ -21,6 +21,7 @@ class PaymentsTable
     {
         return $table
             ->defaultSort('paid_on', 'desc')
+            ->modifyQueryUsing(fn (Builder $query) => $query->with('invoice'))
             ->columns([
                 TextColumn::make('code')
                     ->label('Recibo')
@@ -47,6 +48,13 @@ class PaymentsTable
                     ->label('Monto')
                     ->money('ARS', locale: 'es_AR')
                     ->sortable(),
+                TextColumn::make('invoice_status')
+                    ->label('Factura')
+                    ->state(fn (Payment $record) => $record->invoice?->isAuthorized() ? $record->invoice->code : $record->invoice?->status->getLabel())
+                    ->badge()
+                    ->color(fn (Payment $record) => $record->invoice?->status->getColor())
+                    ->placeholder('—')
+                    ->toggleable(),
                 TextColumn::make('unallocated')
                     ->label('A favor')
                     ->state(fn (Payment $record) => $record->unallocated() ?: null)
@@ -71,6 +79,8 @@ class PaymentsTable
                 ActionGroup::make([
                     PaymentActions::shareReceiptOnWhatsApp(),
                     PaymentActions::downloadReceipt(),
+                    PaymentActions::issueInvoice(),
+                    PaymentActions::downloadInvoice(),
                 ]),
             ]);
     }

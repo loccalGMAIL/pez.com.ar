@@ -83,4 +83,11 @@
         @if ($payment->notes)
             <div class="footnote pre">{{ $payment->notes }}</div>
         @endif
+
+        <div class="footnote">
+            Documento no válido como factura.
+            @if ($payment->invoice?->isAuthorized())
+                Facturado con la {{ $payment->invoice->title }}.
+            @endif
+        </div>
 @endsection

@@ -38,6 +38,12 @@ class ClientForm
                         Select::make('tax_condition')
                             ->label('Condición frente al IVA')
                             ->options(TaxCondition::class),
+                        TextInput::make('dni')
+                            ->label('DNI')
+                            ->helperText('Para facturar a un consumidor final que no tiene CUIT cargado.')
+                            ->regex('/^\d{7,8}$/')
+                            ->validationMessages(['regex' => 'El DNI tiene 7 u 8 números, sin puntos.'])
+                            ->maxLength(8),
                     ]),
                 Section::make('Contacto')
                     ->columns(2)

@@ -33,6 +33,25 @@ class Settings
     }
 
     /**
+     * Issuer data for ARCA invoices.
+     *
+     * @return array{enabled: bool, point_of_sale: ?int, legal_name: ?string, address: ?string, gross_income: ?string, activity_start: ?string}
+     */
+    public static function invoicing(): array
+    {
+        $pointOfSale = self::get('invoicing.point_of_sale');
+
+        return [
+            'enabled' => (bool) self::get('invoicing.enabled'),
+            'point_of_sale' => blank($pointOfSale) ? null : (int) $pointOfSale,
+            'legal_name' => self::get('invoicing.legal_name'),
+            'address' => self::get('invoicing.address'),
+            'gross_income' => self::get('invoicing.gross_income'),
+            'activity_start' => self::get('invoicing.activity_start'),
+        ];
+    }
+
+    /**
      * @param  array<string, mixed>  $values
      */
     public static function set(array $values): void

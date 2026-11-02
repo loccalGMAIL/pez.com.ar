@@ -49,6 +49,30 @@ class PaymentInfolist
                             ->label('Notas')
                             ->placeholder('—'),
                     ]),
+                Section::make('Factura')
+                    ->visible(fn (Payment $record) => $record->invoice !== null)
+                    ->columns(4)
+                    ->schema([
+                        TextEntry::make('invoice.title')
+                            ->label('Comprobante'),
+                        TextEntry::make('invoice.status')
+                            ->label('Estado')
+                            ->badge(),
+                        TextEntry::make('invoice.issued_on')
+                            ->label('Fecha')
+                            ->date('d/m/Y')
+                            ->placeholder('—'),
+                        TextEntry::make('invoice.cae')
+                            ->label('CAE')
+                            ->placeholder('—')
+                            ->copyable(),
+                        TextEntry::make('invoice.messages')
+                            ->label('Mensajes de ARCA')
+                            ->listWithLineBreaks()
+                            ->bulleted()
+                            ->placeholder('—')
+                            ->columnSpanFull(),
+                    ]),
                 Section::make('Imputado a')
                     ->schema([
                         RepeatableEntry::make('allocations')

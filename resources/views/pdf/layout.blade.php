@@ -1,6 +1,8 @@
 {{--
-    Shared layout of the documents sent to clients (quotes, receipts).
+    Shared layout of the documents sent to clients (quotes, receipts, invoices).
     Expects $company, $kicker (small label), $heading (title) and $meta (label => value).
+    Optional sections: "header-extra" (right after the header) and "page-fixed"
+    (fixed elements, drawn on every page above the footer).
 --}}
 @php
     $font = fn (string $file) => 'file://'.resource_path("fonts/lato/{$file}");
@@ -110,9 +112,13 @@
         </tr>
     </table>
 
+    @yield('header-extra')
+
     <div class="content">
         @yield('content')
     </div>
+
+    @yield('page-fixed')
 
     <div class="footer">
         <table>

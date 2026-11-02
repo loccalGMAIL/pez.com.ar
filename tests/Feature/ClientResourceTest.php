@@ -81,6 +81,17 @@ class ClientResourceTest extends TestCase
             ->assertHasFormErrors(['cuit']);
     }
 
+    public function test_rejects_a_dni_with_dots(): void
+    {
+        Livewire::test(CreateClient::class)
+            ->fillForm([
+                'business_name' => 'Cliente',
+                'dni' => '28.123.456',
+            ])
+            ->call('create')
+            ->assertHasFormErrors(['dni' => 'regex']);
+    }
+
     public function test_rejects_a_duplicated_cuit(): void
     {
         Client::factory()->create(['cuit' => '20123456786']);

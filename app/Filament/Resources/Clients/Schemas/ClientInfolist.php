@@ -53,6 +53,9 @@ class ClientInfolist
                         TextEntry::make('tax_condition')
                             ->label('Condición frente al IVA')
                             ->placeholder('—'),
+                        TextEntry::make('dni')
+                            ->label('DNI')
+                            ->visible(fn (?string $state) => filled($state)),
                     ]),
                 Section::make('Contacto')
                     ->columns(2)
