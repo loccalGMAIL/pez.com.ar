@@ -5,11 +5,13 @@ namespace App\Filament\Pages;
 use App\Enums\InvoiceType;
 use App\Rules\Cuit;
 use App\Support\Arca\ArcaException;
+use App\Support\Arca\Certificate;
 use App\Support\Arca\Wsfe;
 use App\Support\Settings as AppSettings;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -22,10 +24,13 @@ use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Http\Client\ConnectionException;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use UnitEnum;
 
 /**
@@ -236,7 +241,7 @@ class Settings extends Page
                                             ->columnSpanFull(),
                                         TextInput::make('invoicing_point_of_sale')
                                             ->label('Punto de venta')
-                                            ->helperText('El de tipo "RECE para aplicativo y web services", no el de Comprobantes en línea.')
+                                            ->helperText('Uno nuevo para web services ("Factura Electrónica - Monotributo - Web Services"), no el de Comprobantes en línea. En homologación sirve cualquiera.')
                                             ->integer()
                                             ->minValue(1)
                                             ->maxValue(99999)
@@ -254,6 +259,19 @@ class Settings extends Page
                                             ->maxLength(255),
                                         DatePicker::make('invoicing_activity_start')
                                             ->label('Inicio de actividades'),
+                                    ]),
+                                Section::make('Certificado de ARCA')
+                                    ->key('certificate')
+                                    ->description(fn () => self::certificateDescription())
+                                    ->headerActions([
+                                        self::generateCertificateRequestAction(),
+                                        self::downloadCertificateRequestAction(),
+                                        self::installCertificateAction(),
+                                    ])
+                                    ->schema([
+                                        Text::make('1. Generá el pedido y descargalo. La clave privada queda guardada en el servidor.'),
+                                        Text::make('2. En ARCA, con ese pedido creá el certificado y autorizalo al servicio de Facturación Electrónica (wsfe). En homologación se hace en "WSASS – Autogestión Certificados Homologación"; en producción, en "Administración de Certificados Digitales" y "Administrador de Relaciones de Clave Fiscal".'),
+                                        Text::make('3. Subí acá el certificado que te entrega ARCA. Hasta entonces sigue funcionando el certificado anterior.'),
                                     ]),
                             ]),
                     ]),
@@ -305,14 +323,141 @@ class Settings extends Page
 
     private static function invoicingDescription(): string
     {
-        $environment = config('arca.environment') === 'produccion'
-            ? 'Producción.'
-            : 'Homologación: facturas de prueba, sin validez fiscal.';
-        $certificate = is_readable((string) config('arca.certificate')) && is_readable((string) config('arca.key'))
-            ? 'Certificado cargado.'
-            : 'Falta el certificado o la clave (ver ARCA_CERT_PATH y ARCA_KEY_PATH en el .env).';
+        return config('arca.environment') === 'produccion'
+            ? 'Ambiente: producción.'
+            : 'Ambiente: homologación (facturas de prueba, sin validez fiscal). Se cambia con ARCA_ENV en el .env.';
+    }
 
-        return "Ambiente: {$environment} {$certificate}";
+    private static function certificateDescription(): string
+    {
+        $environment = config('arca.environment') === 'produccion' ? 'producción' : 'homologación';
+        $certificate = Certificate::installed();
+
+        $status = match (true) {
+            $certificate === null => "No hay certificado de {$environment} instalado.",
+            ! $certificate['matches_key'] => 'El certificado instalado no corresponde a la clave guardada: generá un pedido nuevo.',
+            $certificate['valid_until']->isPast() => "El certificado \"{$certificate['alias']}\" venció el {$certificate['valid_until']->format('d/m/Y')}: generá un pedido nuevo.",
+            default => "Certificado de {$environment} \"{$certificate['alias']}\" instalado, vence el {$certificate['valid_until']->format('d/m/Y')}.",
+        };
+
+        return Certificate::pendingRequest() === null
+            ? $status
+            : "{$status} Hay un pedido generado esperando el certificado de ARCA.";
+    }
+
+    /**
+     * Creates the key and the signing request on the server and downloads the request.
+     */
+    private static function generateCertificateRequestAction(): Action
+    {
+        return Action::make('generateCertificateRequest')
+            ->label('Generar pedido')
+            ->icon(Heroicon::OutlinedKey)
+            ->modalHeading('Generar pedido de certificado')
+            ->modalDescription(fn () => collect([
+                'Se crea la clave privada en el servidor y se descarga el pedido (.csr) para subir a ARCA.',
+                config('arca.environment') === 'produccion'
+                    ? 'Es para producción: subilo en "Administración de Certificados Digitales".'
+                    : 'Es para homologación: subilo en "WSASS – Autogestión Certificados Homologación".',
+                Certificate::installed() === null ? null : 'El certificado instalado sigue funcionando hasta que subas el nuevo.',
+            ])->filter()->join(' '))
+            ->modalSubmitActionLabel('Generar y descargar')
+            ->fillForm(fn () => [
+                'alias' => Certificate::DEFAULT_ALIAS,
+                'organization' => AppSettings::get('company.name'),
+            ])
+            ->schema([
+                TextInput::make('alias')
+                    ->label('Nombre del certificado')
+                    ->helperText('Con este nombre lo vas a ver en ARCA. Solo letras y números.')
+                    ->regex('/^[A-Za-z0-9]+$/')
+                    ->validationMessages(['regex' => 'Usá solo letras y números, sin espacios.'])
+                    ->maxLength(30)
+                    ->required(),
+                TextInput::make('organization')
+                    ->label('Empresa')
+                    ->maxLength(100)
+                    ->required(),
+            ])
+            ->action(function (array $data, Action $action) {
+                try {
+                    $request = Certificate::generateRequest($data['alias'], $data['organization']);
+                } catch (ArcaException $exception) {
+                    Notification::make()->title('No se pudo generar el pedido')->body($exception->getMessage())->danger()->send();
+                    $action->halt();
+
+                    return null;
+                }
+
+                Notification::make()
+                    ->title('Pedido generado')
+                    ->body('Subilo a ARCA y después subí acá el certificado que te entregue.')
+                    ->success()
+                    ->send();
+
+                return response()->streamDownload(fn () => print ($request), "{$data['alias']}.csr", ['Content-Type' => 'application/pkcs10']);
+            });
+    }
+
+    private static function downloadCertificateRequestAction(): Action
+    {
+        return Action::make('downloadCertificateRequest')
+            ->label('Descargar pedido')
+            ->icon(Heroicon::OutlinedArrowDownTray)
+            ->color('gray')
+            ->visible(fn () => Certificate::pendingRequest() !== null)
+            ->action(fn (): StreamedResponse => response()->streamDownload(
+                fn () => print (Certificate::pendingRequest()),
+                'pedido-arca.csr',
+                ['Content-Type' => 'application/pkcs10'],
+            ));
+    }
+
+    /**
+     * Installs the certificate ARCA returned, uploaded as a file or pasted as text.
+     */
+    private static function installCertificateAction(): Action
+    {
+        return Action::make('installCertificate')
+            ->label('Subir certificado')
+            ->icon(Heroicon::OutlinedArrowUpTray)
+            ->color('gray')
+            ->modalHeading('Subir el certificado de ARCA')
+            ->modalDescription('Se verifica que sea para el CUIT de la empresa y que corresponda al pedido generado.')
+            ->modalSubmitActionLabel('Instalar')
+            ->schema([
+                FileUpload::make('file')
+                    ->label('Archivo del certificado (.crt)')
+                    ->storeFiles(false)
+                    ->maxSize(64),
+                Textarea::make('text')
+                    ->label('O pegá el texto del certificado')
+                    ->placeholder("-----BEGIN CERTIFICATE-----\n...\n-----END CERTIFICATE-----")
+                    ->rows(6),
+            ])
+            ->action(function (array $data, Action $action) {
+                $file = $data['file'] ?? null;
+                $content = $file instanceof TemporaryUploadedFile ? (string) $file->get() : (string) ($data['text'] ?? '');
+
+                try {
+                    if (trim($content) === '') {
+                        throw new ArcaException('Subí el archivo o pegá el texto del certificado.');
+                    }
+
+                    $certificate = Certificate::install($content);
+                } catch (ArcaException $exception) {
+                    Notification::make()->title('No se pudo instalar el certificado')->body($exception->getMessage())->danger()->persistent()->send();
+                    $action->halt();
+
+                    return;
+                }
+
+                Notification::make()
+                    ->title('Certificado instalado')
+                    ->body("\"{$certificate['alias']}\", vence el {$certificate['valid_until']->format('d/m/Y')}. Probá la conexión para confirmar que ARCA lo autorizó.")
+                    ->success()
+                    ->send();
+            });
     }
 
     /**

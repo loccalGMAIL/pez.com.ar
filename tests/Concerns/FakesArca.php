@@ -5,6 +5,7 @@ namespace Tests\Concerns;
 use App\Support\Settings;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use RuntimeException;
 
@@ -62,6 +63,8 @@ trait FakesArca
     protected function fakeArca(array $wsfe = []): void
     {
         $this->useArcaCertificate();
+        // Authorized invoices archive their PDF.
+        Storage::fake('local');
 
         Http::preventStrayRequests();
         Http::fake([

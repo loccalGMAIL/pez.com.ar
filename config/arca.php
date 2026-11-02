@@ -16,9 +16,11 @@ return [
 
     'environment' => env('ARCA_ENV', 'homologacion'),
 
-    'certificate' => env('ARCA_CERT_PATH', storage_path('app/private/arca/arca.crt')),
+    // One certificate per environment: ARCA issues them separately. They are
+    // generated and installed from Sistema → Configuración → Facturación.
+    'certificate' => env('ARCA_CERT_PATH', storage_path('app/private/arca/'.env('ARCA_ENV', 'homologacion').'/arca.crt')),
 
-    'key' => env('ARCA_KEY_PATH', storage_path('app/private/arca/arca.key')),
+    'key' => env('ARCA_KEY_PATH', storage_path('app/private/arca/'.env('ARCA_ENV', 'homologacion').'/arca.key')),
 
     'key_passphrase' => env('ARCA_KEY_PASSPHRASE'),
 

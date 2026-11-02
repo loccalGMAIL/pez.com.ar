@@ -38,8 +38,13 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 - Listado de **Facturas** en Cobranza, con su estado, CAE y recibo.
 - Sección **Facturación electrónica (ARCA)** en Configuración: activarla, punto de venta,
   nombre, domicilio comercial, Ingresos Brutos, inicio de actividades y botón "Probar
-  conexión". El ambiente y el certificado se configuran en el `.env` (`ARCA_ENV`,
-  `ARCA_CERT_PATH`, `ARCA_KEY_PATH`).
+  conexión". El ambiente se elige con `ARCA_ENV` en el `.env`.
+- **Certificado de ARCA desde el panel:** "Generar pedido" crea la clave privada en el
+  servidor y descarga el pedido (`.csr`) para subir a ARCA, y "Subir certificado" instala el
+  `.crt` que ARCA devuelve (archivo o texto pegado), después de verificar que sea para el CUIT
+  de la empresa, que esté vigente y que corresponda al pedido. El certificado anterior sigue
+  funcionando hasta instalar el nuevo, y la sección muestra el instalado y su vencimiento.
+  Hay uno por ambiente (homologación y producción).
 
 ### Cambiado
 
