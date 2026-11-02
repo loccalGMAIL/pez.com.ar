@@ -11,7 +11,7 @@ class NavigationTest extends TestCase
     {
         $groups = Filament::getCurrentOrDefaultPanel()->getNavigationGroups();
 
-        $this->assertCount(4, $groups);
+        $this->assertCount(5, $groups);
 
         foreach ($groups as $group) {
             $this->assertTrue($group->isCollapsed(), "{$group->getLabel()} should start collapsed");

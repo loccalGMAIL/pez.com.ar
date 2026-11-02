@@ -88,6 +88,8 @@
         .slogan { color: #27fb6b; font-style: italic; font-size: 9px; }
         .owner { font-weight: bold; font-size: 9px; margin-top: 5px; }
         .contact { color: #9fb3b7; font-size: 9px; text-align: right; }
+
+        @yield('styles')
     </style>
 </head>
 <body>

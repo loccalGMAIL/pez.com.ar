@@ -13,6 +13,26 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+## [2.5.0] - 2026-11-02
+
+### Agregado
+
+- Sección **Informes** en el panel, con siete informes que se filtran por período (este mes,
+  mes anterior, este año, año anterior u otro rango) y por cliente, y se descargan en PDF:
+  - **Ingresos:** lo cobrado según la fecha de cada pago, por medio de pago y por mes, con el
+    detalle de los recibos.
+  - **Margen:** lo cobrado menos el costo de lo revendido (en proporción a lo que se pagó de
+    cada cargo), por origen (abonos, presupuestos, órdenes, cargos manuales), lo que quedó a
+    cuenta y los cobros de reventas sin costo cargado.
+  - **Deuda por antigüedad:** saldos pendientes de hoy por cliente, en tramos de atraso
+    (a vencer, 1–30, 31–60, 61–90 y más de 90 días), y el listado de cargos vencidos.
+  - **Clientes:** ranking por lo cobrado en el período, con lo facturado y lo que debe hoy cada uno.
+  - **Abonos:** abonos vigentes, mensual de los fijos, lo cobrado y lo adeudado de cada abono,
+    variables a confirmar y altas y bajas del período.
+  - **Taller:** órdenes ingresadas y terminadas, horas cargadas, días promedio de resolución,
+    service externo por proveedor (envíos, demora, costo y precio) y equipos que siguen afuera.
+  - **Presupuestos:** emitidos, aceptados, tasa de aceptación y montos, por estado y en detalle.
+
 ## [2.4.0] - 2026-10-31
 
 ### Agregado

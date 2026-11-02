@@ -36,7 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('PEZ Sistema')
             ->navigationGroups(array_map(
                 fn (string $label) => NavigationGroup::make($label)->collapsed(),
-                ['Ventas', 'Taller', 'Cobranza', 'Sistema'],
+                ['Ventas', 'Taller', 'Cobranza', 'Informes', 'Sistema'],
             ))
             ->colors([
                 'primary' => Color::Emerald,
