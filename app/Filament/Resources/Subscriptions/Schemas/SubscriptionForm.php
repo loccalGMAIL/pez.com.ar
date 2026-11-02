@@ -61,6 +61,10 @@ class SubscriptionForm
                     ->label('Activo')
                     ->default(true)
                     ->inline(false),
+                Toggle::make('invoice_before_payment')
+                    ->label('Facturar antes de cobrar')
+                    ->helperText('Para clientes que necesitan la factura para pagar: cada cargo del abono queda "Para facturar" hasta que lo factures desde el cargo.')
+                    ->inline(false),
                 DatePicker::make('starts_on')
                     ->label('Desde')
                     ->native(false)

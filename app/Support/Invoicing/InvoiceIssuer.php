@@ -2,13 +2,16 @@
 
 namespace App\Support\Invoicing;
 
+use App\Enums\ChargeStatus;
 use App\Enums\InvoiceConcept;
 use App\Enums\InvoiceStatus;
 use App\Enums\InvoiceType;
 use App\Enums\RecipientDocumentType;
 use App\Enums\TaxCondition;
+use App\Models\Charge;
 use App\Models\Client;
 use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use App\Models\Payment;
 use App\Rules\Cuit;
 use App\Support\Arca\ArcaException;
@@ -24,8 +27,10 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Issues the Factura C of a payment: saves it with its own copy of the
- * recipient and items, takes the next number from ARCA and asks for the CAE.
+ * Issues the Factura C of a payment (after payment) or of a charge (before
+ * payment), and the Nota de crédito C that annuls one: saves it with its own
+ * copy of the recipient and items, takes the next number from ARCA and asks
+ * for the CAE.
  *
  * The number is saved before asking. If ARCA does not answer, the invoice
  * stays pending with that number, and the next attempt looks it up in ARCA
@@ -36,63 +41,143 @@ class InvoiceIssuer
     public function __construct(private readonly Wsfe $wsfe) {}
 
     /**
-     * Issues the invoice of a payment, or retries the one that failed.
+     * Invoices what a payment settles that is not invoiced yet (after
+     * payment), or retries the payment's invoice that failed.
      *
-     * @param  array{concept?: InvoiceConcept|int|string|null, service_from?: Carbon|string|null, service_to?: Carbon|string|null, items?: array<int, array{description?: ?string, detail?: ?string}>}  $data  what the preview changed
+     * @param  array<string, mixed>  $data  what the preview changed: concept, service_from, service_to, items
      *
      * @throws InvoicingException
      */
-    public function issue(Payment $payment, array $data = []): Invoice
+    public function issueForPayment(Payment $payment, array $data = []): Invoice
     {
-        $settings = Settings::invoicing();
+        $settings = $this->settings();
+        $previous = $payment->invoice;
 
-        if (! $settings['enabled']) {
-            throw new InvoicingException('La facturación electrónica está desactivada en Configuración.');
+        if ($previous?->isInForce()) {
+            throw new InvoicingException("El pago {$payment->code} ya tiene la {$previous->title}.");
         }
 
-        if ($settings['point_of_sale'] === null) {
-            throw new InvoicingException('Cargá el punto de venta de ARCA en Configuración.');
+        if ($previous?->isAwaitingArca()) {
+            return $this->authorize($previous);
         }
 
-        if (strlen(Cuit::normalize((string) Settings::get('company.cuit'))) !== 11) {
-            throw new InvoicingException('Cargá el CUIT de la empresa en Configuración.');
+        $retrying = $previous?->isAuthorized() === false ? $previous : null;
+        $draft = InvoiceDraft::forPayment($payment, $retrying);
+
+        if ($draft['total'] <= 0) {
+            throw new InvoicingException("Todo lo que cancela el recibo {$payment->code} ya está facturado.");
         }
 
-        $invoice = $payment->invoice;
+        $invoice = $this->authorize($this->save($retrying, $payment->client, $draft, $data, $settings['point_of_sale'], [
+            'payment_id' => $payment->id,
+        ]));
+        $payment->setRelation('invoice', $invoice);
 
-        if ($invoice?->isAuthorized()) {
-            throw new InvoicingException("El pago {$payment->code} ya tiene la {$invoice->title}.");
+        return $invoice;
+    }
+
+    /**
+     * Invoices a charge before it is paid (the client needs the invoice to
+     * pay), or retries the charge's invoice that failed.
+     *
+     * @param  array<string, mixed>  $data  what the preview changed: concept, service_from, service_to, items
+     *
+     * @throws InvoicingException
+     */
+    public function issueForCharge(Charge $charge, array $data = []): Invoice
+    {
+        $settings = $this->settings();
+
+        if ($charge->status === ChargeStatus::Draft) {
+            throw new InvoicingException('Confirmá el monto del cargo antes de facturarlo.');
         }
 
-        // Sent without an answer: ARCA may have it, so it is looked up as it was sent.
-        if ($invoice?->number !== null && $invoice->environment === config('arca.environment')) {
-            return $this->authorize($invoice);
+        if ($charge->status === ChargeStatus::Cancelled) {
+            throw new InvoicingException('El cargo está anulado.');
         }
 
-        $invoice = DB::transaction(function () use ($payment, $data, $invoice, $settings) {
-            $invoice ??= new Invoice;
-            $invoice->fill([
-                ...$this->recipient($payment),
-                ...$this->content($payment, $data),
-                'client_id' => $payment->client_id,
-                'payment_id' => $payment->id,
-                'environment' => config('arca.environment'),
-                'type' => InvoiceType::FacturaC,
-                'point_of_sale' => $settings['point_of_sale'],
+        $previous = $charge->invoice;
+
+        if ($previous?->isAwaitingArca()) {
+            return $this->authorize($previous);
+        }
+
+        $retrying = $previous?->isAuthorized() === false ? $previous : null;
+        $draft = InvoiceDraft::forCharge($charge, $retrying);
+
+        if ($draft['total'] <= 0) {
+            throw new InvoicingException('El cargo ya está facturado.');
+        }
+
+        $invoice = $this->authorize($this->save($retrying, $charge->client, $draft, $data, $settings['point_of_sale'], [
+            'charge_id' => $charge->id,
+        ]));
+        $charge->setRelation('invoice', $invoice);
+
+        return $invoice;
+    }
+
+    /**
+     * Annuls an authorized invoice with a Nota de crédito C for its total,
+     * with the same recipient, items and period. Retries one that failed.
+     *
+     * @throws InvoicingException
+     */
+    public function creditNote(Invoice $invoice): Invoice
+    {
+        $this->settings(requireEnabled: false);
+
+        if ($invoice->isCreditNote() || ! $invoice->isAuthorized()) {
+            throw new InvoicingException('Solo se anula con nota de crédito una factura autorizada.');
+        }
+
+        if ($invoice->environment !== config('arca.environment')) {
+            throw new InvoicingException("La {$invoice->title} es del otro ambiente de ARCA: se anula desde ese ambiente.");
+        }
+
+        $previous = $invoice->creditNote;
+
+        if ($previous?->isAuthorized()) {
+            throw new InvoicingException("La {$invoice->title} ya está anulada con la {$previous->title}.");
+        }
+
+        if ($previous?->isAwaitingArca()) {
+            $note = $this->authorize($previous);
+            $invoice->setRelation('creditNote', $note);
+
+            return $note;
+        }
+
+        $note = DB::transaction(function () use ($invoice, $previous) {
+            $note = $previous ?? new Invoice;
+            $note->fill([
+                ...$invoice->only([
+                    'client_id', 'environment', 'point_of_sale', 'concept', 'service_from', 'service_to',
+                    'recipient_document_type', 'recipient_document_number', 'recipient_tax_condition',
+                    'recipient_name', 'recipient_address', 'total',
+                ]),
+                'type' => InvoiceType::NotaCreditoC,
+                'credited_invoice_id' => $invoice->id,
+                'payment_id' => null,
+                'charge_id' => null,
+                'payment_due_on' => null,
                 'number' => null,
                 'issued_on' => null,
                 'status' => InvoiceStatus::Pending,
                 'messages' => null,
             ]);
-            $invoice->save();
+            $note->save();
 
-            $invoice->items()->delete();
-            $invoice->items()->createMany($this->items($payment, $data));
+            $note->items()->delete();
+            $note->items()->createMany($invoice->items->map(fn (InvoiceItem $item) => $item->only(['charge_id', 'description', 'detail', 'amount', 'position']))->all());
 
-            return $invoice;
+            return $note;
         });
 
-        return $this->authorize($invoice);
+        $note = $this->authorize($note);
+        $invoice->setRelation('creditNote', $note);
+
+        return $note;
     }
 
     /**
@@ -216,8 +301,9 @@ class InvoiceIssuer
     }
 
     /**
-     * The payment's date when ARCA still accepts it, otherwise today; never
-     * before the last invoice of the point of sale, which ARCA rejects.
+     * A payment's invoice takes the payment's date when ARCA still accepts it;
+     * everything else is dated today. Never before the last voucher of the
+     * point of sale, which ARCA rejects.
      */
     private function issueDate(Invoice $invoice): Carbon
     {
@@ -238,7 +324,8 @@ class InvoiceIssuer
     }
 
     /**
-     * FECAEDetRequest for a Factura C: no VAT, the whole total is net.
+     * FECAEDetRequest for a Factura C or Nota de crédito C: no VAT, the whole
+     * total is net. A credit note names the invoice it annuls (CbtesAsoc).
      *
      * @return array<string, mixed>
      */
@@ -246,6 +333,11 @@ class InvoiceIssuer
     {
         $total = number_format($invoice->total, 2, '.', '');
         $servicePeriod = $invoice->concept->hasServicePeriod();
+        // ARCA rejects a payment due date before the voucher's date.
+        $paymentDueOn = $invoice->payment_due_on !== null && $invoice->issued_on !== null && $invoice->payment_due_on->gt($invoice->issued_on)
+            ? $invoice->payment_due_on
+            : $invoice->issued_on;
+        $credited = $invoice->creditedInvoice;
 
         return [
             'Concepto' => $invoice->concept->value,
@@ -262,11 +354,77 @@ class InvoiceIssuer
             'ImpIVA' => '0.00',
             'FchServDesde' => $servicePeriod ? $invoice->service_from?->format('Ymd') : null,
             'FchServHasta' => $servicePeriod ? $invoice->service_to?->format('Ymd') : null,
-            'FchVtoPago' => $servicePeriod ? $invoice->issued_on?->format('Ymd') : null,
+            'FchVtoPago' => $servicePeriod ? $paymentDueOn?->format('Ymd') : null,
             'MonId' => 'PES',
             'MonCotiz' => 1,
             'CondicionIVAReceptorId' => $invoice->recipient_tax_condition->arcaId(),
+            'CbtesAsoc' => $credited === null ? null : [
+                'CbteAsoc' => [
+                    'Tipo' => $credited->type->value,
+                    'PtoVta' => $credited->point_of_sale,
+                    'Nro' => $credited->number,
+                    'Cuit' => Cuit::normalize((string) Settings::get('company.cuit')),
+                    'CbteFch' => $credited->issued_on?->format('Ymd'),
+                ],
+            ],
         ];
+    }
+
+    /**
+     * Saves the invoice with its recipient, content and items, ready to authorize.
+     *
+     * @param  array{concept: InvoiceConcept, service_from: CarbonInterface, service_to: CarbonInterface, payment_due_on: ?CarbonInterface, items: list<array{charge_id: ?int, description: string, detail: ?string, amount: float}>, total: float}  $draft
+     * @param  array<string, mixed>  $data
+     * @param  array<string, int>  $source
+     */
+    private function save(?Invoice $invoice, Client $client, array $draft, array $data, int $pointOfSale, array $source): Invoice
+    {
+        return DB::transaction(function () use ($invoice, $client, $draft, $data, $pointOfSale, $source) {
+            $invoice ??= new Invoice;
+            $invoice->fill([
+                ...$this->recipient($client, $draft['total']),
+                ...$this->content($draft, $data),
+                ...$source,
+                'client_id' => $client->id,
+                'environment' => config('arca.environment'),
+                'type' => InvoiceType::FacturaC,
+                'point_of_sale' => $pointOfSale,
+                'number' => null,
+                'issued_on' => null,
+                'status' => InvoiceStatus::Pending,
+                'messages' => null,
+            ]);
+            $invoice->save();
+
+            $invoice->items()->delete();
+            $invoice->items()->createMany($this->items($draft, $data));
+
+            return $invoice;
+        });
+    }
+
+    /**
+     * @return array{enabled: bool, point_of_sale: int}
+     *
+     * @throws InvoicingException
+     */
+    private function settings(bool $requireEnabled = true): array
+    {
+        $settings = Settings::invoicing();
+
+        if ($requireEnabled && ! $settings['enabled']) {
+            throw new InvoicingException('La facturación electrónica está desactivada en Configuración.');
+        }
+
+        if ($settings['point_of_sale'] === null) {
+            throw new InvoicingException('Cargá el punto de venta de ARCA en Configuración.');
+        }
+
+        if (strlen(Cuit::normalize((string) Settings::get('company.cuit'))) !== 11) {
+            throw new InvoicingException('Cargá el CUIT de la empresa en Configuración.');
+        }
+
+        return ['enabled' => $settings['enabled'], 'point_of_sale' => $settings['point_of_sale']];
     }
 
     /**
@@ -274,9 +432,8 @@ class InvoiceIssuer
      *
      * @return array<string, mixed>
      */
-    private function recipient(Payment $payment): array
+    private function recipient(Client $client, float $total): array
     {
-        $client = $payment->client;
         $taxCondition = $client->tax_condition ?? TaxCondition::ConsumidorFinal;
         [$documentType, $documentNumber] = self::document($client);
 
@@ -286,7 +443,7 @@ class InvoiceIssuer
 
         $limit = (float) config('arca.unidentified_limit');
 
-        if ($documentType === RecipientDocumentType::Unidentified && $payment->amount >= $limit) {
+        if ($documentType === RecipientDocumentType::Unidentified && $total >= $limit) {
             throw new InvoicingException('Desde '.QuotePdf::money($limit).' ARCA exige identificar al consumidor final: cargale el CUIT o el DNI al cliente.');
         }
 
@@ -312,24 +469,20 @@ class InvoiceIssuer
     }
 
     /**
-     * Concept and service period: the draft's, unless the preview changed them.
+     * Concept, service period and payment due date: the draft's, unless the preview changed them.
      *
+     * @param  array{concept: InvoiceConcept, service_from: CarbonInterface, service_to: CarbonInterface, payment_due_on: ?CarbonInterface, total: float}  $draft
      * @param  array<string, mixed>  $data
-     * @return array{concept: InvoiceConcept, service_from: ?CarbonInterface, service_to: ?CarbonInterface, total: float}
+     * @return array{concept: InvoiceConcept, service_from: ?CarbonInterface, service_to: ?CarbonInterface, payment_due_on: ?CarbonInterface, total: float}
      */
-    private function content(Payment $payment, array $data): array
+    private function content(array $draft, array $data): array
     {
-        $draft = InvoiceDraft::for($payment);
-
-        if ($payment->amount <= 0) {
-            throw new InvoicingException('El pago no tiene monto para facturar.');
-        }
-
         $concept = $data['concept'] ?? null;
         $concept = $concept instanceof InvoiceConcept ? $concept : (filled($concept) ? InvoiceConcept::from((int) $concept) : $draft['concept']);
+        $content = ['concept' => $concept, 'payment_due_on' => $draft['payment_due_on'], 'total' => $draft['total']];
 
         if (! $concept->hasServicePeriod()) {
-            return ['concept' => $concept, 'service_from' => null, 'service_to' => null, 'total' => $payment->amount];
+            return [...$content, 'service_from' => null, 'service_to' => null];
         }
 
         $from = filled($data['service_from'] ?? null) ? Carbon::parse($data['service_from']) : $draft['service_from'];
@@ -339,21 +492,23 @@ class InvoiceIssuer
             throw new InvoicingException('El período facturado termina antes de empezar.');
         }
 
-        return ['concept' => $concept, 'service_from' => $from, 'service_to' => $to, 'total' => $payment->amount];
+        return [...$content, 'service_from' => $from, 'service_to' => $to];
     }
 
     /**
-     * The draft's items with the descriptions from the preview; amounts always come from the payment.
+     * The draft's items with the descriptions from the preview; amounts and charges always come from the draft.
      *
+     * @param  array{items: list<array{charge_id: ?int, description: string, detail: ?string, amount: float}>}  $draft
      * @param  array<string, mixed>  $data
-     * @return list<array{description: string, detail: ?string, amount: float, position: int}>
+     * @return list<array{charge_id: ?int, description: string, detail: ?string, amount: float, position: int}>
      */
-    private function items(Payment $payment, array $data): array
+    private function items(array $draft, array $data): array
     {
         $edited = array_values(is_array($data['items'] ?? null) ? $data['items'] : []);
 
-        return collect(InvoiceDraft::for($payment)['items'])
+        return collect($draft['items'])
             ->map(fn (array $item, int $index) => [
+                'charge_id' => $item['charge_id'],
                 'description' => filled($edited[$index]['description'] ?? null) ? (string) $edited[$index]['description'] : $item['description'],
                 'detail' => array_key_exists('detail', $edited[$index] ?? []) ? ($edited[$index]['detail'] ?: null) : $item['detail'],
                 'amount' => $item['amount'],

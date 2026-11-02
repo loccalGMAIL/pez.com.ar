@@ -3,10 +3,14 @@
 namespace App\Models;
 
 use App\Casts\Money;
+use App\Enums\InvoiceStatus;
+use App\Enums\InvoiceType;
 use App\Enums\PaymentMethod;
 use App\Models\Concerns\HasSequentialNumber;
 use Carbon\CarbonInterface;
 use Database\Factories\PaymentFactory;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -47,10 +51,19 @@ class Payment extends Model
     protected static function booted(): void
     {
         static::deleting(function (Payment $payment) {
+            $invoice = $payment->invoice;
+
             // The invoice is a fiscal document: it is undone with a credit note, never deleted.
-            if ($payment->invoice?->isAuthorized()) {
-                throw new LogicException("El pago {$payment->code} tiene la {$payment->invoice->title} autorizada: no se puede borrar.");
+            if ($invoice?->isInForce()) {
+                throw new LogicException("El pago {$payment->code} tiene la {$invoice->title} vigente: anulala con nota de crédito antes de borrarlo.");
             }
+
+            if ($invoice?->isAwaitingArca()) {
+                throw new LogicException("La factura del pago {$payment->code} espera la respuesta de ARCA: reintentala antes de borrarlo.");
+            }
+
+            // Failed attempts go with the payment; authorized invoices (annulled) stay, unlinked.
+            $payment->invoices()->where('status', '!=', InvoiceStatus::Authorized)->get()->each->delete();
 
             // One by one so each charge recomputes what it has been paid.
             $payment->allocations()->get()->each->delete();
@@ -128,13 +141,44 @@ class Payment extends Model
     }
 
     /**
-     * ARCA invoice for this payment, when it was invoiced (optional).
+     * ARCA invoices issued from this payment (optional). There is more than
+     * one when an invoice was annulled with a credit note and issued again.
+     *
+     * @return HasMany<Invoice, $this>
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class)->where('type', InvoiceType::FacturaC);
+    }
+
+    /**
+     * The latest invoice issued (or attempted) from this payment.
      *
      * @return HasOne<Invoice, $this>
      */
     public function invoice(): HasOne
     {
-        return $this->hasOne(Invoice::class);
+        return $this->hasOne(Invoice::class)->ofMany(['id' => 'max'], fn (Builder $query) => $query->where('type', InvoiceType::FacturaC));
+    }
+
+    /**
+     * Authorized invoices in force that bill this payment: its own, and those
+     * issued before payment for the charges it settles.
+     *
+     * @return EloquentCollection<int, Invoice>
+     */
+    public function coveringInvoices(): EloquentCollection
+    {
+        $charges = $this->allocations()->pluck('charge_id');
+
+        return Invoice::query()
+            ->counting()
+            ->where('status', InvoiceStatus::Authorized)
+            ->where(fn (Builder $query) => $query
+                ->where('payment_id', $this->id)
+                ->orWhereHas('items', fn (Builder $items) => $items->whereIn('charge_id', $charges)))
+            ->orderBy('id')
+            ->get();
     }
 
     /**

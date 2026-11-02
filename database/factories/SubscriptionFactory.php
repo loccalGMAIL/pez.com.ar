@@ -29,4 +29,12 @@ class SubscriptionFactory extends Factory
     {
         return $this->state(fn () => ['type' => SubscriptionType::Variable]);
     }
+
+    /**
+     * The client needs the invoice to pay, so its charges are invoiced first.
+     */
+    public function invoicedBeforePayment(): static
+    {
+        return $this->state(fn () => ['invoice_before_payment' => true]);
+    }
 }

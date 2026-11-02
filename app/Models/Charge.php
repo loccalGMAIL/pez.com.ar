@@ -4,14 +4,18 @@ namespace App\Models;
 
 use App\Casts\Money;
 use App\Enums\ChargeStatus;
+use App\Enums\InvoiceType;
 use App\Support\Settings;
 use Database\Factories\ChargeFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Facades\DB;
+use LogicException;
 
 class Charge extends Model
 {
@@ -124,11 +128,86 @@ class Charge extends Model
      */
     public function cancel(): void
     {
+        // An invoice is a fiscal document: it is annulled with a credit note first.
+        if ($this->invoicesInForce()->isNotEmpty()) {
+            throw new LogicException('El cargo está facturado: anulá su factura con nota de crédito antes de anularlo.');
+        }
+
         $this->status = ChargeStatus::Cancelled;
         $this->save();
 
         $this->allocations()->get()->each->delete();
         $this->client->applyCredit();
+    }
+
+    /**
+     * Invoices that bill this charge (issued from it or from a payment) and
+     * still count: authorized or on their way to ARCA, and not annulled.
+     *
+     * @return EloquentCollection<int, Invoice>
+     */
+    public function invoicesInForce(): EloquentCollection
+    {
+        return Invoice::query()
+            ->counting()
+            ->whereHas('items', fn (Builder $items) => $items->where('charge_id', $this->id))
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
+     * How much of the charge is already invoiced, in pesos: the items that bill
+     * it, plus what it got from payments invoiced with credit left on account
+     * (that invoice already billed the money). $except leaves out an invoice
+     * being retried.
+     */
+    public function invoicedAmount(?Invoice $except = null): float
+    {
+        $counting = fn (Builder $query) => Invoice::whereCounting($query, $except);
+
+        $itemized = InvoiceItem::query()
+            ->where('charge_id', $this->id)
+            ->whereHas('invoice', $counting)
+            ->sum('amount') / 100;
+
+        $fromCredit = $this->allocations()
+            ->whereHas('payment.invoices', $counting)
+            ->whereDoesntHave('payment.invoices', fn (Builder $query) => $counting($query)->whereHas('items', fn (Builder $items) => $items->where('charge_id', $this->id)))
+            ->sum('amount') / 100;
+
+        return min((float) $this->amount, round($itemized + $fromCredit, 2));
+    }
+
+    public function pendingToInvoice(?Invoice $except = null): float
+    {
+        return max(0, round($this->amount - $this->invoicedAmount($except), 2));
+    }
+
+    /**
+     * Charge of a subscription whose client needs the invoice to pay, still not invoiced.
+     */
+    public function needsInvoice(): bool
+    {
+        return in_array($this->status, [ChargeStatus::Pending, ChargeStatus::Partial, ChargeStatus::Paid], true)
+            && (bool) $this->subscription?->invoice_before_payment
+            && $this->pendingToInvoice() > 0;
+    }
+
+    /**
+     * Charges waiting for "Facturar cargo". Few by nature (one per marked
+     * subscription and month), so the invoiced amount is worked out per charge.
+     *
+     * @return EloquentCollection<int, static>
+     */
+    public static function awaitingInvoice(): EloquentCollection
+    {
+        return static::query()
+            ->whereIn('status', [ChargeStatus::Pending, ChargeStatus::Partial, ChargeStatus::Paid])
+            ->whereHas('subscription', fn (Builder $query) => $query->where('invoice_before_payment', true))
+            ->with('subscription')
+            ->get()
+            ->filter(fn (Charge $charge) => $charge->needsInvoice())
+            ->values();
     }
 
     /**
@@ -213,5 +292,25 @@ class Charge extends Model
     public function allocations(): HasMany
     {
         return $this->hasMany(PaymentAllocation::class);
+    }
+
+    /**
+     * Invoices issued from this charge (before it was paid), latest last.
+     *
+     * @return HasMany<Invoice, $this>
+     */
+    public function invoices(): HasMany
+    {
+        return $this->hasMany(Invoice::class)->where('type', InvoiceType::FacturaC);
+    }
+
+    /**
+     * The latest invoice issued (or attempted) from this charge.
+     *
+     * @return HasOne<Invoice, $this>
+     */
+    public function invoice(): HasOne
+    {
+        return $this->hasOne(Invoice::class)->ofMany(['id' => 'max'], fn (Builder $query) => $query->where('type', InvoiceType::FacturaC));
     }
 }

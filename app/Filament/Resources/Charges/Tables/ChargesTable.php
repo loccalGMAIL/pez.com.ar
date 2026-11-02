@@ -71,6 +71,13 @@ class ChargesTable
                 TextColumn::make('status')
                     ->label('Estado')
                     ->badge(),
+                TextColumn::make('invoicing')
+                    ->label('Factura')
+                    ->state(fn (Charge $record) => self::invoicing($record)['label'])
+                    ->color(fn (Charge $record) => self::invoicing($record)['color'])
+                    ->badge()
+                    ->placeholder('—')
+                    ->toggleable(),
                 TextColumn::make('cost')
                     ->label('Costo')
                     ->state(fn (Charge $record) => $record->is_resale ? $record->cost : null)
@@ -88,6 +95,9 @@ class ChargesTable
                 Filter::make('cost_pending')
                     ->label('Costo pendiente')
                     ->query(fn (Builder $query) => $query->scopes('costPending')),
+                Filter::make('to_invoice')
+                    ->label('Para facturar')
+                    ->query(fn (Builder $query) => $query->whereKey(Charge::awaitingInvoice()->modelKeys())),
                 Filter::make('overdue')
                     ->label('Vencidos')
                     ->query(fn (Builder $query) => $query->scopes('overdue')),
@@ -104,8 +114,27 @@ class ChargesTable
                 ChargeActions::registerPayment(),
                 ActionGroup::make([
                     ViewAction::make(),
+                    ChargeActions::issueInvoice(),
                     ChargeActions::cancel(),
                 ]),
             ]);
+    }
+
+    /**
+     * "Para facturar" for a charge whose client needs the invoice to pay, or the invoice that bills it.
+     *
+     * @return array{label: ?string, color: ?string}
+     */
+    private static function invoicing(Charge $record): array
+    {
+        return once(function () use ($record) {
+            $invoice = $record->invoicesInForce()->last();
+
+            return match (true) {
+                $record->needsInvoice() => ['label' => 'Para facturar', 'color' => 'warning'],
+                $invoice !== null => ['label' => $invoice->code, 'color' => $invoice->isAuthorized() ? 'success' : 'warning'],
+                default => ['label' => null, 'color' => null],
+            };
+        });
     }
 }

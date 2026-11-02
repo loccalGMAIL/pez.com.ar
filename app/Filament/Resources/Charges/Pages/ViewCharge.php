@@ -15,6 +15,8 @@ class ViewCharge extends ViewRecord
     {
         return [
             ChargeActions::confirm(),
+            ChargeActions::issueInvoice(),
+            ChargeActions::viewInvoice(),
             ChargeActions::registerPayment(),
             EditAction::make(),
             ChargeActions::cancel(),

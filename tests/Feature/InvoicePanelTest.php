@@ -6,7 +6,9 @@ use App\Enums\InvoiceConcept;
 use App\Enums\InvoiceStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\TaxCondition;
+use App\Filament\Resources\Invoices\InvoiceResource;
 use App\Filament\Resources\Invoices\Pages\ListInvoices;
+use App\Filament\Resources\Invoices\Pages\ViewInvoice;
 use App\Filament\Resources\Payments\Pages\ViewPayment;
 use App\Mail\InvoiceMail;
 use App\Models\Charge;
@@ -129,8 +131,11 @@ class InvoicePanelTest extends TestCase
         $invoice = $this->invoiced($payment);
 
         Livewire::test(ViewPayment::class, ['record' => $payment->getRouteKey()])
-            ->callAction('sendInvoice')
-            ->assertNotified('Factura enviada');
+            ->assertActionHasUrl('viewInvoice', InvoiceResource::getUrl('view', ['record' => $invoice]));
+
+        Livewire::test(ViewInvoice::class, ['record' => $invoice->getRouteKey()])
+            ->callAction('sendByMail')
+            ->assertNotified('Enviada por mail');
 
         Mail::assertSent(InvoiceMail::class, fn (InvoiceMail $mail) => $mail->hasTo('cliente@example.com')
             && $mail->invoice->is($invoice)

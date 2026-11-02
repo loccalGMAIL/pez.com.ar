@@ -4,10 +4,14 @@
 
     $legalName = $issuer['legal_name'] ?: ($company['owner'] ?: $company['name']);
     $isTest = $invoice->environment !== 'produccion';
+    // ARCA never takes a payment due date before the voucher's date.
+    $paymentDueOn = $invoice->payment_due_on && $invoice->issued_on && $invoice->payment_due_on->gt($invoice->issued_on)
+        ? $invoice->payment_due_on
+        : $invoice->issued_on;
 @endphp
 
 @extends('pdf.layout', [
-    'kicker' => 'FACTURA ELECTRÓNICA',
+    'kicker' => $invoice->isCreditNote() ? 'NOTA DE CRÉDITO ELECTRÓNICA' : 'FACTURA ELECTRÓNICA',
     'heading' => $invoice->type->title(),
     'meta' => array_filter([
         'N.º' => $invoice->code,
@@ -110,7 +114,7 @@
                 @if ($invoice->concept->hasServicePeriod())
                     <td><div class="k">PERÍODO DESDE</div><div class="v">{{ $invoice->service_from?->format('d/m/Y') }}</div></td>
                     <td><div class="k">PERÍODO HASTA</div><div class="v">{{ $invoice->service_to?->format('d/m/Y') }}</div></td>
-                    <td><div class="k">VTO. DEL PAGO</div><div class="v">{{ $invoice->issued_on?->format('d/m/Y') }}</div></td>
+                    <td><div class="k">VTO. DEL PAGO</div><div class="v">{{ $paymentDueOn?->format('d/m/Y') }}</div></td>
                 @else
                     <td></td><td></td><td></td>
                 @endif
@@ -148,8 +152,12 @@
             <tr>
                 <td class="summary-left">
                     <div class="in-words" style="margin-top: 0;">Son <strong>{{ AmountInWords::pesos($invoice->total) }}</strong>.</div>
-                    @if ($invoice->payment)
+                    @if ($invoice->creditedInvoice)
+                        <div class="footnote">Anula la {{ $invoice->creditedInvoice->title }} del {{ $invoice->creditedInvoice->issued_on?->format('d/m/Y') }}.</div>
+                    @elseif ($invoice->payment)
                         <div class="footnote">Cobrado con el recibo {{ $invoice->payment->code }} ({{ $invoice->payment->method->getLabel() }}).</div>
+                    @elseif ($invoice->charge_id)
+                        <div class="footnote">Vence el {{ $paymentDueOn?->format('d/m/Y') }}.</div>
                     @endif
                 </td>
                 <td class="summary-right">

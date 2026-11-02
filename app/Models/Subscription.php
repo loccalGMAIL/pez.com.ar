@@ -28,6 +28,7 @@ class Subscription extends Model
         'starts_on',
         'ends_on',
         'is_active',
+        'invoice_before_payment',
         'notes',
     ];
 
@@ -40,6 +41,7 @@ class Subscription extends Model
             'starts_on' => 'date',
             'ends_on' => 'date',
             'is_active' => 'boolean',
+            'invoice_before_payment' => 'boolean',
         ];
     }
 

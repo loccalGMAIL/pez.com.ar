@@ -20,7 +20,8 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
   período facturado y el detail editable, y al confirmar pide el CAE. Los cargos y recibos
   siguen igual; solo se factura lo que se elige.
   - Cada ítem es un cargo que cancela el recibo (con "Pago parcial de $X" si no lo cancela
-    entero) y lo que quedó sin imputar va como "Pago a cuenta": el total es el del recibo.
+    entero) y lo que quedó sin imputar va como "Pago a cuenta". Lo que ya se facturó antes del
+    pago no se vuelve a facturar: si el recibo no tiene nada nuevo, el botón no aparece.
   - La fecha es la del pago mientras ARCA la acepte (10 días atrás con servicios, 5 con
     productos) y nunca anterior a la última factura del punto de venta.
   - El cliente se identifica con su CUIT, su DNI (campo nuevo en el cliente) o como consumidor
@@ -30,12 +31,26 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
   - Si ARCA rechaza la factura se muestran sus mensajes y se puede corregir y reintentar. Si
     no responde, la factura queda pendiente con su número y el reintento primero consulta a
     ARCA si llegó a autorizarla, para no duplicarla.
+- **Facturar antes de cobrar**, para clientes que necesitan la factura para pagar: el abono
+  tiene el check "Facturar antes de cobrar" y sus cargos quedan **"Para facturar"** (columna y
+  filtro en Cargos, y aviso en el tablero) hasta que se factura con **"Facturar cargo"**. La
+  factura vence cuando vence el cargo y el período es el mes del abono. "Facturar cargo" sirve
+  también para cualquier otro cargo. Lo facturado se suma entre recibos y cargos, así que un
+  cargo facturado en parte desde un recibo se completa desde el cargo, y al revés. Mientras un
+  cargo tenga factura vigente, su monto y su concepto no se editan.
+- **Notas de crédito C:** "Anular con nota de crédito" en la factura emite la nota por el total,
+  asociada a la factura en ARCA, con su propia numeración. Al anular un cargo facturado se
+  emite primero su nota de crédito, y si ARCA no la autoriza el cargo no se anula. Un cargo
+  facturado junto con su pago se anula desde esa factura.
+- Página de cada **factura** (Cobranza → Facturas): datos, ítems con el cargo que factura cada
+  uno, mensajes de ARCA, nota de crédito asociada y las acciones (PDF, mail, WhatsApp, anular).
+  El pago y el cargo muestran sus facturas y llevan a esa página.
 - Factura en PDF con el diseño de los presupuestos: recuadro con la letra C y su código,
   datos del emisor y del cliente, período, detalle, total en letras y, al pie de la hoja, el
-  QR de ARCA con el CAE y su vencimiento. Se archiva al autorizarse, se descarga desde el pago
-  y se envía por mail o WhatsApp con un link firmado. Las de homologación llevan la marca
-  "sin validez fiscal".
-- Listado de **Facturas** en Cobranza, con su estado, CAE y recibo.
+  QR de ARCA con el CAE y su vencimiento. Se archiva al autorizarse, se descarga y se envía por
+  mail o WhatsApp con un link firmado. La nota de crédito usa el mismo diseño ("COD. 13" y la
+  factura que anula). Las de homologación llevan la marca "sin validez fiscal".
+- Listado de **Facturas** en Cobranza, con su estado (incluida "Anulada"), CAE y recibo.
 - Sección **Facturación electrónica (ARCA)** en Configuración: activarla, punto de venta,
   nombre, domicilio comercial, Ingresos Brutos, inicio de actividades y botón "Probar
   conexión". El ambiente se elige con `ARCA_ENV` en el `.env`.
@@ -52,8 +67,9 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
   Cobranza y Facturación. La pestaña abierta queda en la dirección, así que guardar no vuelve
   a la primera.
 - Recibos y presupuestos dicen "Documento no válido como factura"; el recibo facturado
-  nombra su factura.
-- Un pago con factura autorizada ya no se puede borrar.
+  nombra sus facturas (la propia y las de los cargos facturados antes de cobrar).
+- Un pago con factura vigente no se puede borrar: primero se anula la factura con nota de
+  crédito. Borrar un pago nunca borra una factura emitida.
 - El backup no incluye el certificado ni la clave de ARCA.
 
 ## [2.5.0] - 2026-11-02

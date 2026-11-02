@@ -21,7 +21,7 @@ class PaymentsTable
     {
         return $table
             ->defaultSort('paid_on', 'desc')
-            ->modifyQueryUsing(fn (Builder $query) => $query->with('invoice'))
+            ->modifyQueryUsing(fn (Builder $query) => $query->with('invoice.creditNote'))
             ->columns([
                 TextColumn::make('code')
                     ->label('Recibo')
@@ -50,9 +50,14 @@ class PaymentsTable
                     ->sortable(),
                 TextColumn::make('invoice_status')
                     ->label('Factura')
-                    ->state(fn (Payment $record) => $record->invoice?->isAuthorized() ? $record->invoice->code : $record->invoice?->status->getLabel())
+                    ->state(fn (Payment $record) => match (true) {
+                        $record->invoice === null => null,
+                        $record->invoice->isCredited() => 'Anulada',
+                        $record->invoice->isAuthorized() => $record->invoice->code,
+                        default => $record->invoice->status->getLabel(),
+                    })
                     ->badge()
-                    ->color(fn (Payment $record) => $record->invoice?->status->getColor())
+                    ->color(fn (Payment $record) => $record->invoice?->isCredited() ? 'gray' : $record->invoice?->status->getColor())
                     ->placeholder('—')
                     ->toggleable(),
                 TextColumn::make('unallocated')
@@ -80,7 +85,7 @@ class PaymentsTable
                     PaymentActions::shareReceiptOnWhatsApp(),
                     PaymentActions::downloadReceipt(),
                     PaymentActions::issueInvoice(),
-                    PaymentActions::downloadInvoice(),
+                    PaymentActions::viewInvoice(),
                 ]),
             ]);
     }
