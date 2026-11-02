@@ -123,7 +123,8 @@ Estados:
 6. ✅ **Backups e ingreso con Google:** `laravel-backup` nocturno con página de
    descarga, y login con Google vía Socialite (en lugar de la verificación en dos pasos).
 7. ✅ **Actualización y herramientas:** ver sección siguiente.
-8. **Futuro:** facturación electrónica, links de pago MercadoPago, portal de clientes.
+8. ✅ **Informes:** ver sección "Fase 8: Informes".
+9. **Futuro:** facturación electrónica, links de pago MercadoPago, portal de clientes.
 
 Cada fase incluye migraciones con `down()`, factories, tests (`php artisan test`), Pint
 y su entrada en `CHANGELOG.md`.
@@ -150,6 +151,21 @@ Se encara al terminar las fases funcionales, con todos los tests en verde.
    de Laravel/Filament para agentes y el servidor MCP (consultas a la base, rutas,
    logs y documentación por versión). Solo en desarrollo, nunca en producción.
 5. Verificar en Hostinger y publicar como `2.0.0`.
+
+## Fase 8: Informes ✅
+
+- Grupo **Informes** en el menú del panel, con una página por informe
+  (`app/Filament/Pages/Reports`). Todas comparten los filtros de período y cliente, y el
+  botón "Descargar PDF".
+- El cálculo vive en `app/Support/Reports` (una clase por informe, que devuelve cifras y
+  tablas con los valores sin formatear). La misma clase alimenta la pantalla y el PDF
+  (`pdf/report.blade.php`, con el diseño de los demás documentos), y se testea sin la interfaz.
+- La plata se cuenta **por fecha de pago**: lo cobrado en el período, no lo facturado. El margen
+  descuenta el costo de lo revendido en proporción a lo que se pagó de cada cargo, igual que
+  "Percibido" en el tablero. La deuda por antigüedad es una foto del día y no usa el período.
+- Informes: Ingresos, Margen, Deuda por antigüedad, Clientes, Abonos, Taller y Presupuestos.
+- Sin paquetes nuevos ni build: la pantalla usa los componentes y las variables de color de
+  Filament, y el PDF sale con dompdf.
 
 ## Puesta en marcha en Hostinger (fase 1)
 
