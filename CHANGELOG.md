@@ -13,6 +13,8 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+## [2.5.0] - 2026-11-02
+
 ### Agregado
 
 - Sección **Informes** en el panel, con siete informes que se filtran por período (este mes,
