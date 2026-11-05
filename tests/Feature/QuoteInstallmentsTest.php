@@ -115,6 +115,24 @@ class QuoteInstallmentsTest extends TestCase
         $this->assertSame(75000.0, $quote->installments()->last()['amount']);
     }
 
+    public function test_editing_the_price_and_adding_installments_prices_them_with_the_new_total(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $quote = $this->quoteTotaling(1000);
+        $item = $quote->items()->sole();
+
+        Livewire::test(EditQuote::class, ['record' => $quote->getRouteKey()])
+            ->set("data.items.record-{$item->id}.unit_price", 3000)
+            ->set('data.offer_installments', true)
+            ->set('data.installment_plans', [['count' => 3, 'surcharge' => 0]])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $quote->refresh();
+        $this->assertSame(3000.0, (float) $quote->total);
+        $this->assertSame(['count' => 3, 'surcharge' => 0.0, 'total' => 3000.0, 'amount' => 1000.0], $quote->installments()->sole());
+    }
+
     public function test_turning_installments_off_removes_them(): void
     {
         $this->actingAs(User::factory()->create());

@@ -72,6 +72,11 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
   crédito. Borrar un pago nunca borra una factura emitida.
 - El backup no incluye el certificado ni la clave de ARCA.
 
+### Corregido
+
+- Al editar un presupuesto cambiando precios y agregando (o modificando) cuotas en la misma
+  guardada, las cuotas se calculaban con el total anterior. Ahora usan el total nuevo.
+
 ## [2.5.0] - 2026-11-02
 
 ### Agregado

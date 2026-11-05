@@ -69,7 +69,12 @@ class Quote extends Model
     protected static function booted(): void
     {
         static::saving(function (Quote $quote) {
-            if ($quote->isDirty('discount')) {
+            // The edit form saves the items first, through other instances, so this one may still hold the old subtotal.
+            if ($quote->exists) {
+                $quote->subtotal = $quote->items()->sum('subtotal') / 100;
+            }
+
+            if ($quote->exists || $quote->isDirty('discount')) {
                 $quote->total = max(0, $quote->subtotal - $quote->discount);
             }
 
