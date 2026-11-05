@@ -12,8 +12,10 @@ use App\Support\QuotePdf;
 use App\Support\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Mail\Mailables\Attachment;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
+use InvalidArgumentException;
 use Tests\TestCase;
 
 class QuoteTest extends TestCase
@@ -71,7 +73,7 @@ class QuoteTest extends TestCase
         $quote->items()->create(['description' => 'Notebook', 'quantity' => 2, 'unit_price' => 1300, 'unit_cost' => 1000, 'supplier_id' => $supplier->id]);
         $quote->items()->create(['description' => 'Instalación', 'quantity' => 1, 'unit_price' => 500]);
 
-        $charge = $quote->refresh()->charge();
+        $charge = $quote->refresh()->charge()->sole();
 
         $this->assertTrue($charge->is_resale);
         $this->assertSame(2000.0, $charge->cost);
@@ -85,7 +87,7 @@ class QuoteTest extends TestCase
         $quote = Quote::factory()->create();
         $quote->items()->create(['description' => 'Notebook usada', 'quantity' => 1, 'unit_price' => 900, 'supplier_id' => Supplier::factory()->individual()->create()->id]);
 
-        $charge = $quote->refresh()->charge();
+        $charge = $quote->refresh()->charge()->sole();
 
         $this->assertTrue($charge->is_resale);
         $this->assertNull($charge->cost);
@@ -97,10 +99,55 @@ class QuoteTest extends TestCase
     {
         $quote = Quote::factory()->withItems()->create();
 
-        $charge = $quote->refresh()->charge();
+        $charge = $quote->refresh()->charge()->sole();
 
         $this->assertFalse($charge->is_resale);
         $this->assertFalse(Charge::costPending()->exists());
+    }
+
+    public function test_charging_in_installments_creates_one_monthly_charge_per_installment(): void
+    {
+        $quote = Quote::factory()->create(['title' => 'Cámaras', 'installment_plans' => [['count' => 3, 'surcharge' => 10]]]);
+        $quote->items()->create(['description' => 'Kit', 'quantity' => 1, 'unit_price' => 1000]);
+
+        $charges = $quote->refresh()->charge(3, Carbon::parse('2026-01-31'));
+
+        $this->assertCount(3, $charges);
+        $this->assertSame([366.66, 366.66, 366.68], $charges->pluck('amount')->all());
+        $this->assertSame(1100.0, round($charges->sum('amount'), 2));
+        $this->assertSame(['2026-01-31', '2026-02-28', '2026-03-31'], $charges->map(fn (Charge $charge) => $charge->due_on->toDateString())->all());
+        $this->assertSame('Presupuesto P-00100 — Cámaras (cuota 2/3)', $charges[1]->concept);
+    }
+
+    public function test_the_resale_cost_goes_on_the_first_installment(): void
+    {
+        $quote = Quote::factory()->create(['installment_plans' => [['count' => 2, 'surcharge' => 0]]]);
+        $quote->items()->create(['description' => 'Notebook', 'quantity' => 1, 'unit_price' => 1300, 'unit_cost' => 1000, 'supplier_id' => Supplier::factory()->create()->id]);
+
+        $charges = $quote->refresh()->charge(2);
+
+        $this->assertSame([1000.0, 0.0], $charges->pluck('cost')->all());
+        $this->assertTrue($charges->every->is_resale);
+        $this->assertFalse(Charge::costPending()->exists());
+    }
+
+    public function test_charging_again_returns_the_existing_charges(): void
+    {
+        $quote = Quote::factory()->withItems()->create(['installment_plans' => [['count' => 2, 'surcharge' => 0]]]);
+
+        $first = $quote->refresh()->charge(2);
+
+        $this->assertSame($first->modelKeys(), $quote->charge()->modelKeys());
+        $this->assertSame(2, Charge::count());
+    }
+
+    public function test_charging_a_plan_the_quote_did_not_offer_fails(): void
+    {
+        $quote = Quote::factory()->withItems()->create();
+
+        $this->expectException(InvalidArgumentException::class);
+
+        $quote->refresh()->charge(6);
     }
 
     public function test_the_pdf_never_prints_the_cost(): void

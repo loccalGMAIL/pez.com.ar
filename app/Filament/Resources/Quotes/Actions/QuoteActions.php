@@ -4,14 +4,19 @@ namespace App\Filament\Resources\Quotes\Actions;
 
 use App\Enums\QuoteStatus;
 use App\Filament\Resources\Charges\ChargeResource;
+use App\Filament\Resources\Clients\ClientResource;
 use App\Filament\Resources\Quotes\QuoteResource;
 use App\Filament\Resources\WorkOrders\WorkOrderResource;
 use App\Models\Quote;
 use App\Support\QuotePdf;
+use App\Support\Settings;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -141,20 +146,63 @@ class QuoteActions
             });
     }
 
+    /**
+     * Charges the accepted quote in cash or in one of the installment plans it
+     * offered; once charged, it opens the charge (or the client's account when
+     * there are several installments).
+     */
     public static function charge(): Action
     {
         return Action::make('charge')
-            ->label(fn (Quote $record) => $record->charges()->exists() ? 'Ver cargo' : 'Generar cargo')
+            ->label(fn (Quote $record) => match ($record->charges()->count()) {
+                0 => 'Generar cargo',
+                1 => 'Ver cargo',
+                default => 'Ver cargos',
+            })
             ->icon(Heroicon::OutlinedReceiptPercent)
             ->color('gray')
             ->visible(fn (Quote $record) => $record->status === QuoteStatus::Accepted)
-            ->requiresConfirmation(fn (Quote $record) => ! $record->charges()->exists())
-            ->modalDescription(fn (Quote $record) => 'Se carga '.QuotePdf::money($record->total).' en la cuenta corriente del cliente.')
-            ->action(function (Quote $record, Action $action) {
-                $charge = $record->charge();
+            ->modalHidden(fn (Quote $record) => $record->charges()->exists())
+            ->modalHeading(fn (Quote $record) => "Generar cargo del presupuesto {$record->code}")
+            ->modalDescription('Se carga en la cuenta corriente del cliente, en un cargo por cuota con vencimiento mensual.')
+            ->modalSubmitActionLabel('Generar')
+            ->schema(fn (Quote $record) => $record->charges()->exists() ? null : [
+                Select::make('installments')
+                    ->label('Plan')
+                    ->options(self::chargePlans($record))
+                    ->default(1)
+                    ->selectablePlaceholder(false)
+                    ->required(),
+                DatePicker::make('first_due_on')
+                    ->label('Vencimiento de la primera cuota')
+                    ->default(today()->addDays((int) Settings::get('billing.due_days')))
+                    ->required(),
+            ])
+            ->action(function (Quote $record, Action $action, array $data) {
+                $charges = $record->charge(
+                    (int) ($data['installments'] ?? 1),
+                    isset($data['first_due_on']) ? Carbon::parse($data['first_due_on']) : null,
+                );
 
-                $action->redirect(ChargeResource::getUrl('view', ['record' => $charge]));
+                $action->redirect($charges->count() === 1
+                    ? ChargeResource::getUrl('view', ['record' => $charges->first()])
+                    : ClientResource::getUrl('view', ['record' => $record->client_id]));
             });
+    }
+
+    /**
+     * Cash plus each installment plan the quote offered, keyed by installment count.
+     *
+     * @return array<int, string>
+     */
+    private static function chargePlans(Quote $record): array
+    {
+        return [1 => 'Contado — '.QuotePdf::money($record->total)]
+            + $record->installments()
+                ->mapWithKeys(fn (array $plan) => [
+                    $plan['count'] => "{$plan['count']} cuotas de ".QuotePdf::money($plan['amount']).' (total '.QuotePdf::money($plan['total']).')',
+                ])
+                ->all();
     }
 
     public static function duplicate(): Action

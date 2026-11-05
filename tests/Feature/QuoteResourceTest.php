@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Enums\QuoteStatus;
+use App\Filament\Resources\Clients\ClientResource;
 use App\Filament\Resources\Quotes\Pages\CreateQuote;
 use App\Filament\Resources\Quotes\Pages\EditQuote;
 use App\Filament\Resources\Quotes\Pages\ListQuotes;
@@ -192,6 +193,18 @@ class QuoteResourceTest extends TestCase
             ->callAction('accept');
 
         $this->assertSame(QuoteStatus::Accepted, $quote->refresh()->status);
+    }
+
+    public function test_charges_an_accepted_quote_in_the_chosen_installments(): void
+    {
+        $quote = Quote::factory()->status(QuoteStatus::Accepted)->withItems()->create(['installment_plans' => [['count' => 2, 'surcharge' => 0]]]);
+
+        Livewire::test(ViewQuote::class, ['record' => $quote->getRouteKey()])
+            ->callAction('charge', ['installments' => 2, 'first_due_on' => '2026-12-10'])
+            ->assertHasNoFormErrors()
+            ->assertRedirect(ClientResource::getUrl('view', ['record' => $quote->client_id]));
+
+        $this->assertSame(['2026-12-10', '2027-01-10'], $quote->charges()->orderBy('id')->get()->map(fn ($charge) => $charge->due_on->toDateString())->all());
     }
 
     public function test_answered_quotes_can_not_be_edited_or_deleted(): void

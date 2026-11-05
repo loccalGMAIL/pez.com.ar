@@ -13,6 +13,14 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+### Agregado
+
+- **Cargos en cuotas desde un presupuesto aceptado**: "Generar cargo" pide el plan (contado o
+  uno de los planes en cuotas que ofrecía el presupuesto) y el vencimiento de la primera cuota.
+  Crea un cargo por cuota ("cuota 1/3", …) con el recargo del plan y vencimiento mensual; la
+  última cuota absorbe el redondeo. El costo de reventa va completo en la primera cuota. Con
+  varias cuotas, el botón pasa a "Ver cargos" y abre la cuenta del cliente.
+
 ## [2.6.0] - 2026-11-05
 
 ### Agregado

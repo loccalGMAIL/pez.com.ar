@@ -174,10 +174,10 @@ class BillingTest extends TestCase
         $quote = Quote::factory()->status(QuoteStatus::Accepted)->create(['title' => 'Cámaras']);
         $quote->items()->create(['description' => 'Kit', 'quantity' => 1, 'unit_price' => 250000]);
 
-        $charge = $quote->refresh()->charge();
+        $charge = $quote->refresh()->charge()->sole();
 
         $this->assertSame('Presupuesto P-00100 — Cámaras', $charge->concept);
         $this->assertSame(250000.0, $charge->amount);
-        $this->assertTrue($charge->is($quote->charge()));
+        $this->assertTrue($charge->is($quote->charge()->sole()));
     }
 }
