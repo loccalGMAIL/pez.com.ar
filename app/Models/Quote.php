@@ -8,8 +8,10 @@ use App\Mail\QuoteMail;
 use App\Models\Concerns\HasSequentialNumber;
 use App\Support\QuotePdf;
 use App\Support\Settings;
+use Carbon\CarbonInterface;
 use Database\Factories\QuoteFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,6 +22,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
+use InvalidArgumentException;
 
 class Quote extends Model
 {
@@ -245,28 +248,65 @@ class Quote extends Model
     }
 
     /**
-     * Charges the accepted quote to the client's account, once.
+     * Charges the accepted quote to the client's account, once: in cash (one
+     * charge for the total) or in one of the installment plans it offered, as
+     * one charge per installment due monthly from $firstDueOn. The resale cost
+     * goes on the first installment.
+     *
+     * @return EloquentCollection<int, Charge>
      */
-    public function charge(): Charge
+    public function charge(int $installments = 1, ?CarbonInterface $firstDueOn = null): EloquentCollection
     {
-        if ($existing = $this->charges()->first()) {
+        $existing = $this->charges()->orderBy('id')->get();
+
+        if ($existing->isNotEmpty()) {
             return $existing;
+        }
+
+        if ($installments > 1) {
+            $plan = $this->installments()->firstWhere('count', $installments)
+                ?? throw new InvalidArgumentException("El presupuesto no ofrece {$installments} cuotas.");
+            $total = $plan['total'];
+        } else {
+            $installments = 1;
+            $total = $this->total;
         }
 
         $purchased = $this->items->filter(fn (QuoteItem $item) => $item->supplier_id !== null || $item->unit_cost !== null);
         $costs = $purchased->map->costTotal();
         $suppliers = $purchased->pluck('supplier_id')->filter()->unique();
+        $concept = trim("Presupuesto {$this->code} ".($this->title ? "— {$this->title}" : ''));
 
-        return $this->charges()->create([
-            'client_id' => $this->client_id,
-            'concept' => trim("Presupuesto {$this->code} ".($this->title ? "— {$this->title}" : '')),
-            'amount' => $this->total,
-            'is_resale' => $purchased->isNotEmpty(),
-            // Left empty while a purchased item lacks its cost, so the charge shows up as pending.
-            'cost' => $purchased->isNotEmpty() && ! $costs->contains(null) ? $costs->sum() : null,
-            // With several sources the charge names none; each item keeps its own.
-            'supplier_id' => $suppliers->count() === 1 ? $suppliers->first() : null,
-        ]);
+        // Worked in cents so the installments add up exactly to the total; the last one takes the remainder.
+        $totalCents = (int) round($total * 100);
+        $installmentCents = intdiv($totalCents, $installments);
+
+        return DB::transaction(function () use ($installments, $totalCents, $installmentCents, $purchased, $costs, $suppliers, $concept, $firstDueOn) {
+            $charges = new EloquentCollection;
+
+            for ($number = 1; $number <= $installments; $number++) {
+                $cents = $number === $installments ? $totalCents - $installmentCents * ($installments - 1) : $installmentCents;
+
+                $charges->push($this->charges()->create([
+                    'client_id' => $this->client_id,
+                    'concept' => $installments > 1 ? "{$concept} (cuota {$number}/{$installments})" : $concept,
+                    'amount' => $cents / 100,
+                    'is_resale' => $purchased->isNotEmpty(),
+                    // Left empty while a purchased item lacks its cost, so the charge shows up as pending.
+                    // Later installments carry no cost, so they never show up as pending.
+                    'cost' => match (true) {
+                        $purchased->isEmpty() => null,
+                        $number > 1 => 0,
+                        default => $costs->contains(null) ? null : $costs->sum(),
+                    },
+                    // With several sources the charge names none; each item keeps its own.
+                    'supplier_id' => $suppliers->count() === 1 ? $suppliers->first() : null,
+                    'due_on' => $firstDueOn?->copy()->addMonthsNoOverflow($number - 1),
+                ]));
+            }
+
+            return $charges;
+        });
     }
 
     /**
