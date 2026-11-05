@@ -13,6 +13,8 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+## [2.7.0] - 2026-11-05
+
 ### Agregado
 
 - **Cargos en cuotas desde un presupuesto aceptado**: "Generar cargo" pide el plan (contado o
