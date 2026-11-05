@@ -13,6 +13,8 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+## [2.6.0] - 2026-11-05
+
 ### Agregado
 
 - **Facturación electrónica con ARCA (Factura C)**, opcional y al cobrar: "Facturar en ARCA"
