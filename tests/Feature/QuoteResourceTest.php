@@ -77,6 +77,28 @@ class QuoteResourceTest extends TestCase
         $this->assertSame(7, $quote->validDays());
     }
 
+    public function test_creates_a_quote_with_an_empty_discount(): void
+    {
+        $undoRepeaterFake = Repeater::fake();
+
+        Livewire::test(CreateQuote::class)
+            ->fillForm([
+                'client_id' => Client::factory()->create()->id,
+                'discount' => null,
+                'items' => [
+                    ['service_item_id' => null, 'description' => 'Soporte', 'quantity' => 1, 'unit' => 'hora', 'unit_price' => 30000],
+                ],
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $undoRepeaterFake();
+
+        $quote = Quote::sole();
+        $this->assertSame(0.0, $quote->discount);
+        $this->assertSame(30000.0, $quote->total);
+    }
+
     public function test_the_form_has_no_title_and_keeps_extras_in_closed_accordions(): void
     {
         $page = Livewire::test(CreateQuote::class)

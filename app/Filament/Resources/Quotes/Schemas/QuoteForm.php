@@ -257,6 +257,7 @@ class QuoteForm
                     ->numeric()
                     ->minValue(0)
                     ->default(0)
+                    ->dehydrateStateUsing(fn (mixed $state): float => (float) ($state ?? 0))
                     ->prefix('$')
                     ->live(onBlur: true),
                 TextEntry::make('subtotal_preview')

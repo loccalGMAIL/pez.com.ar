@@ -13,6 +13,11 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+### Corregido
+
+- Crear o guardar un presupuesto con el campo **Descuento** vacío daba error 500
+  (`discount` no puede ser nulo); ahora un descuento vacío se guarda como $0.
+
 ## [2.7.0] - 2026-11-05
 
 ### Agregado
