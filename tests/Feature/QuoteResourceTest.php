@@ -15,6 +15,7 @@ use App\Models\Quote;
 use App\Models\ServiceItem;
 use App\Models\User;
 use App\Support\QuotePdf;
+use Filament\Actions\Testing\TestAction;
 use Filament\Forms\Components\Repeater;
 use Filament\Schemas\Components\Section;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -109,6 +110,25 @@ class QuoteResourceTest extends TestCase
         $this->assertSame('1 × De regalo — SIN CARGO', (string) $edit->getItemLabel($keys[1]));
 
         $this->assertFalse($repeater(Livewire::test(CreateQuote::class))->isCollapsed());
+    }
+
+    public function test_duplicates_a_line_right_below_it(): void
+    {
+        $quote = Quote::factory()->create();
+        $notebook = $quote->items()->create(['description' => 'Notebook HP', 'quantity' => 2, 'unit_price' => 65000, 'unit_cost' => 50000, 'sort' => 1]);
+        $quote->items()->create(['description' => 'Instalación', 'quantity' => 1, 'unit_price' => 20000, 'sort' => 2]);
+
+        Livewire::test(EditQuote::class, ['record' => $quote->getRouteKey()])
+            ->callAction(TestAction::make('clone')->schemaComponent('items')->arguments(['item' => "record-{$notebook->id}"]))
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $lines = $quote->items()->orderBy('sort')->get();
+
+        $this->assertSame(['Notebook HP', 'Notebook HP', 'Instalación'], $lines->pluck('description')->all());
+        $this->assertNotSame($notebook->id, $lines[1]->id);
+        $this->assertSame(50000.0, (float) $lines[1]->unit_cost);
+        $this->assertSame(280000.0, (float) $quote->fresh()->total);
     }
 
     public function test_the_create_page_floats_create_and_cancel_without_create_another(): void
