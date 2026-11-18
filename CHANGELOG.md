@@ -13,6 +13,12 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ## [Sin publicar]
 
+### Agregado
+
+- **Duplicar ítems en los presupuestos**: cada línea tiene un botón "Duplicar ítem" que la copia
+  (con su costo, proveedor y recargo) justo debajo de la original y la deja abierta para
+  editarla. La copia se guarda como un ítem nuevo al guardar el presupuesto.
+
 ## [2.7.0] - 2026-11-05
 
 ### Agregado

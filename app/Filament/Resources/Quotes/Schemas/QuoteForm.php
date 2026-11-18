@@ -9,6 +9,7 @@ use App\Models\Quote;
 use App\Models\ServiceItem;
 use App\Support\QuotePdf;
 use App\Support\Settings;
+use Filament\Actions\Action;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -72,6 +73,10 @@ class QuoteForm
                             ->collapsible()
                             ->collapsed(fn (string $operation) => $operation === 'edit')
                             ->itemLabel(fn (array $state) => self::lineSummary($state))
+                            ->cloneable()
+                            ->cloneAction(fn (Action $action) => $action
+                                ->label('Duplicar ítem')
+                                ->action(fn (array $arguments, Repeater $component) => self::duplicateLine($component, (string) $arguments['item'])))
                             ->columns(['default' => 2, 'md' => 12])
                             ->live()
                             ->schema([
@@ -276,6 +281,44 @@ class QuoteForm
                     ->alignment(Alignment::End)
                     ->verticalAlignment(VerticalAlignment::End),
             ]);
+    }
+
+    /**
+     * Copies a line right below the original (Filament's own clone appends it at the end), opened to edit it.
+     */
+    private static function duplicateLine(Repeater $component, string $itemKey): void
+    {
+        $state = $component->getRawState() ?? [];
+
+        if (! array_key_exists($itemKey, $state)) {
+            return;
+        }
+
+        $newKey = $component->generateUuid();
+
+        if (! $newKey) {
+            $state[] = [];
+            $newKey = array_key_last($state);
+            unset($state[$newKey]);
+        }
+
+        $lines = [];
+
+        foreach ($state as $key => $line) {
+            $lines[$key] = $line;
+
+            if ((string) $key === $itemKey) {
+                $lines[$newKey] = $line;
+            }
+        }
+
+        $component->rawState($lines);
+        $component->collapsed(false, shouldMakeComponentCollapsible: false);
+        $component->callAfterStateUpdated();
+
+        if ($component->shouldPartiallyRenderAfterActionsCalled()) {
+            $component->partiallyRender();
+        }
     }
 
     /**
