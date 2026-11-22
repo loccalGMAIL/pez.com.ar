@@ -80,6 +80,30 @@ class WorkOrder extends Model
                 $order->delivered_at = null;
             }
         });
+
+        // After-sales message some business days after delivery; reopening the job drops it.
+        static::created(function (WorkOrder $order) {
+            if ($order->quote_id !== null) {
+                // The job is followed up on delivery instead of the quote's sale.
+                FollowUp::query()->pending()->where('quote_id', $order->quote_id)->get()->each->cancel();
+            }
+
+            if ($order->status === WorkOrderStatus::Delivered) {
+                FollowUp::scheduleForWorkOrder($order);
+            }
+        });
+
+        static::updated(function (WorkOrder $order) {
+            if (! $order->wasChanged('status')) {
+                return;
+            }
+
+            if ($order->status === WorkOrderStatus::Delivered) {
+                FollowUp::scheduleForWorkOrder($order);
+            } else {
+                $order->followUps()->pending()->get()->each->cancel();
+            }
+        });
     }
 
     /**
@@ -110,6 +134,14 @@ class WorkOrder extends Model
     public function publicPdfUrl(): string
     {
         return URL::signedRoute('work-orders.pdf', $this);
+    }
+
+    /**
+     * @return HasMany<FollowUp, $this>
+     */
+    public function followUps(): HasMany
+    {
+        return $this->hasMany(FollowUp::class);
     }
 
     /**

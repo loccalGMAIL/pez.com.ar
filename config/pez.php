@@ -62,6 +62,16 @@ return [
         'activity_start' => null,
     ],
 
+    // After-sales message proposed on the dashboard some business days after
+    // a job is delivered or something is sold. {nombre} is replaced with the
+    // client's main contact (or the client's name).
+    'follow_ups' => [
+        'enabled' => true,
+        'business_days' => 7,
+        'work_order_message' => "Hola!! Cómo estás?\nTe envío este mensaje para preguntarte: cómo está funcionando el equipo que reparamos?\nRecordá que podés avisarme ante alguna dificultad, y puedo brindarte soporte remoto.\nNos vemos!",
+        'sale_message' => "Hola!! Cómo estás?\nTe envío este mensaje para preguntarte: cómo está funcionando el equipo que te vendimos?\nRecordá que podés avisarme ante alguna dificultad, y puedo brindarte soporte remoto.\nNos vemos!",
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Work Orders

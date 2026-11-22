@@ -71,6 +71,21 @@ class Charge extends Model
                 $charge->client->applyCredit();
             }
         });
+
+        static::created(fn (Charge $charge) => FollowUp::scheduleForSale($charge));
+
+        // A cancelled sale is not followed up; a quote only once none of its charges stands.
+        static::updated(function (Charge $charge) {
+            if (! $charge->wasChanged('status') || $charge->status !== ChargeStatus::Cancelled) {
+                return;
+            }
+
+            $charge->followUps()->pending()->get()->each->cancel();
+
+            if ($charge->quote_id !== null && ! $charge->quote->charges()->where('status', '!=', ChargeStatus::Cancelled)->exists()) {
+                $charge->quote->followUps()->pending()->get()->each->cancel();
+            }
+        });
     }
 
     public function outstanding(): float
@@ -284,6 +299,14 @@ class Charge extends Model
     public function workOrder(): BelongsTo
     {
         return $this->belongsTo(WorkOrder::class)->withTrashed();
+    }
+
+    /**
+     * @return HasMany<FollowUp, $this>
+     */
+    public function followUps(): HasMany
+    {
+        return $this->hasMany(FollowUp::class);
     }
 
     /**

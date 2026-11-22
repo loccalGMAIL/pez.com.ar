@@ -68,6 +68,10 @@ class Settings extends Page
         'invoicing.address',
         'invoicing.gross_income',
         'invoicing.activity_start',
+        'follow_ups.enabled',
+        'follow_ups.business_days',
+        'follow_ups.work_order_message',
+        'follow_ups.sale_message',
     ];
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCog6Tooth;
@@ -218,6 +222,37 @@ class Settings extends Page
                                             ->required(),
                                     ]),
                             ]),
+                        Tab::make('Seguimientos')
+                            ->icon(Heroicon::OutlinedChatBubbleLeftRight)
+                            ->schema([
+                                Section::make('Seguimiento postventa')
+                                    ->description('Mensaje para preguntar cómo anda el equipo después de entregar un trabajo o de una venta (presupuesto aceptado o cargo de reventa). Aparece en el tablero el día que toca y se envía por WhatsApp con un toque; nunca sale solo. Los clientes con un abono activo no lo reciben.')
+                                    ->columns(2)
+                                    ->schema([
+                                        Toggle::make('follow_ups_enabled')
+                                            ->label('Proponer seguimientos')
+                                            ->columnSpanFull(),
+                                        TextInput::make('follow_ups_business_days')
+                                            ->label('Esperar')
+                                            ->helperText('De lunes a viernes, desde la entrega o la venta.')
+                                            ->integer()
+                                            ->minValue(1)
+                                            ->maxValue(60)
+                                            ->suffix('días hábiles')
+                                            ->required(),
+                                        Textarea::make('follow_ups_work_order_message')
+                                            ->label('Mensaje para trabajos entregados')
+                                            ->helperText('{nombre} se reemplaza por el nombre del contacto principal o del cliente.')
+                                            ->rows(5)
+                                            ->required()
+                                            ->columnSpanFull(),
+                                        Textarea::make('follow_ups_sale_message')
+                                            ->label('Mensaje para ventas')
+                                            ->rows(5)
+                                            ->required()
+                                            ->columnSpanFull(),
+                                    ]),
+                            ]),
                         Tab::make('Facturación')
                             ->icon(Heroicon::OutlinedDocumentCheck)
                             ->schema([
@@ -309,6 +344,8 @@ class Settings extends Page
         $data['quotes_default_markup'] = (float) $data['quotes_default_markup'];
         $data['billing_due_days'] = (int) $data['billing_due_days'];
         $data['invoicing_enabled'] = (bool) ($data['invoicing_enabled'] ?? false);
+        $data['follow_ups_enabled'] = (bool) ($data['follow_ups_enabled'] ?? false);
+        $data['follow_ups_business_days'] = (int) $data['follow_ups_business_days'];
         $data['invoicing_point_of_sale'] = blank($data['invoicing_point_of_sale'] ?? null) ? null : (int) $data['invoicing_point_of_sale'];
 
         AppSettings::set(

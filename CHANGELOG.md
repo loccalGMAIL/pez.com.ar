@@ -15,6 +15,21 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 
 ### Agregado
 
+- **Seguimiento postventa**: a los 7 días hábiles (configurable) de entregar un trabajo o de
+  una venta, el tablero muestra "Seguimientos para hoy" con el mensaje para preguntarle al
+  cliente cómo anda el equipo. "Enviar por WhatsApp" abre el chat con el texto escrito y lo
+  marca como enviado; nunca se envía solo. También se puede posponer u omitir.
+  - Cuenta como venta un presupuesto aceptado al generar su cargo (uno solo aunque sea en
+    cuotas) o un cargo de reventa cargado a mano. Un presupuesto convertido en trabajo se
+    sigue al entregar el trabajo.
+  - Reabrir el trabajo o anular el cargo anula el seguimiento pendiente, y cada cliente
+    recibe uno solo por período: un trabajo y una compra en la misma semana generan un
+    único mensaje.
+  - Los clientes con un abono activo no reciben seguimientos, y cada cliente tiene el check
+    "No enviar seguimientos postventa". El historial queda en la pestaña "Seguimientos"
+    del cliente.
+  - En Configuración → Seguimientos se activa o desactiva, se eligen los días y se editan
+    los textos para trabajos y para ventas (`{nombre}` pone el nombre del contacto).
 - **Duplicar ítems en los presupuestos**: cada línea tiene un botón "Duplicar ítem" que la copia
   (con su costo, proveedor y recargo) justo debajo de la original y la deja abierta para
   editarla. La copia se guarda como un ítem nuevo al guardar el presupuesto.

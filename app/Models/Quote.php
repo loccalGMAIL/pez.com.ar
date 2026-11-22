@@ -357,6 +357,14 @@ class Quote extends Model
     }
 
     /**
+     * @return HasMany<FollowUp, $this>
+     */
+    public function followUps(): HasMany
+    {
+        return $this->hasMany(FollowUp::class);
+    }
+
+    /**
      * @return HasMany<Charge, $this>
      */
     public function charges(): HasMany

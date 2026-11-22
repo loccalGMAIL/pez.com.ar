@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Pages\Dashboard;
 use App\Http\Controllers\Auth\GoogleLoginController;
+use App\Http\Controllers\FollowUps\SendFollowUpOnWhatsApp;
 use App\Http\Controllers\Quotes\ShareQuoteOnWhatsApp;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -72,6 +73,7 @@ class AdminPanelProvider extends PanelProvider
             })
             ->authenticatedRoutes(function () {
                 Route::get('presupuestos/{quote}/whatsapp', ShareQuoteOnWhatsApp::class)->name('quotes.whatsapp');
+                Route::get('seguimientos/{followUp}/whatsapp', SendFollowUpOnWhatsApp::class)->name('follow-ups.whatsapp');
             });
     }
 }
