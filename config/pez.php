@@ -68,6 +68,8 @@ return [
     'follow_ups' => [
         'enabled' => true,
         'business_days' => 7,
+        // Business-day hour of the push notice; empty turns it off.
+        'notify_at' => '09:30',
         'work_order_message' => "Hola!! Cómo estás?\nTe envío este mensaje para preguntarte: cómo está funcionando el equipo que reparamos?\nRecordá que podés avisarme ante alguna dificultad, y puedo brindarte soporte remoto.\nNos vemos!",
         'sale_message' => "Hola!! Cómo estás?\nTe envío este mensaje para preguntarte: cómo está funcionando el equipo que te vendimos?\nRecordá que podés avisarme ante alguna dificultad, y puedo brindarte soporte remoto.\nNos vemos!",
     ],

@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Pages\Dashboard;
 use App\Http\Controllers\Auth\GoogleLoginController;
 use App\Http\Controllers\FollowUps\SendFollowUpOnWhatsApp;
+use App\Http\Controllers\Push\PushSubscriptionController;
 use App\Http\Controllers\Quotes\ShareQuoteOnWhatsApp;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -64,6 +65,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->renderHook(PanelsRenderHook::HEAD_END, fn () => view('filament.pwa.head'))
             ->renderHook(PanelsRenderHook::SCRIPTS_AFTER, fn () => view('filament.pwa.scripts'))
+            ->renderHook(PanelsRenderHook::SCRIPTS_AFTER, fn () => view('filament.pwa.push'))
             ->renderHook(PanelsRenderHook::USER_MENU_PROFILE_AFTER, fn () => view('filament.pwa.user-menu-item'))
             ->renderHook(PanelsRenderHook::TOPBAR_END, fn () => view('filament.version'))
             ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn () => view('filament.auth.google-button'))
@@ -74,6 +76,8 @@ class AdminPanelProvider extends PanelProvider
             ->authenticatedRoutes(function () {
                 Route::get('presupuestos/{quote}/whatsapp', ShareQuoteOnWhatsApp::class)->name('quotes.whatsapp');
                 Route::get('seguimientos/{followUp}/whatsapp', SendFollowUpOnWhatsApp::class)->name('follow-ups.whatsapp');
+                Route::post('notificaciones-push', [PushSubscriptionController::class, 'store'])->name('push-subscriptions.store');
+                Route::delete('notificaciones-push', [PushSubscriptionController::class, 'destroy'])->name('push-subscriptions.destroy');
             });
     }
 }

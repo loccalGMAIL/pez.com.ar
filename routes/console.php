@@ -11,6 +11,10 @@ Artisan::command('inspire', function () {
 Schedule::command('quotes:expire')->dailyAt('00:10');
 Schedule::command('subscriptions:bill')->dailyAt('06:15');
 
+// Daily notice on the phone with the after-sales messages to send; the hour is
+// set in Configuración → Seguimientos and the command checks it.
+Schedule::command('follow-ups:notify')->weekdays()->everyMinute();
+
 // Nightly backup of the database and uploaded files (Sistema → Backups).
 Schedule::command('backup:clean')->dailyAt('01:00');
 Schedule::command('backup:run')->dailyAt('01:30');

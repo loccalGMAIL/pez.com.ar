@@ -7,6 +7,7 @@ use App\Rules\Cuit;
 use App\Support\Arca\ArcaException;
 use App\Support\Arca\Certificate;
 use App\Support\Arca\Wsfe;
+use App\Support\Push\PushNotifier;
 use App\Support\Settings as AppSettings;
 use BackedEnum;
 use Filament\Actions\Action;
@@ -15,6 +16,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\TimePicker;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -70,6 +72,7 @@ class Settings extends Page
         'invoicing.activity_start',
         'follow_ups.enabled',
         'follow_ups.business_days',
+        'follow_ups.notify_at',
         'follow_ups.work_order_message',
         'follow_ups.sale_message',
     ];
@@ -240,6 +243,12 @@ class Settings extends Page
                                             ->maxValue(60)
                                             ->suffix('días hábiles')
                                             ->required(),
+                                        TimePicker::make('follow_ups_notify_at')
+                                            ->label('Aviso en el celular')
+                                            ->helperText(fn () => PushNotifier::isConfigured()
+                                                ? 'De lunes a viernes a esta hora llega una notificación con los seguimientos del día. Se activa en cada dispositivo desde el menú de usuario → "Activar notificaciones". Vacío: sin aviso.'
+                                                : 'Faltan las claves de las notificaciones: corré php artisan push:keys en el servidor y copiá lo que muestra al .env.')
+                                            ->seconds(false),
                                         Textarea::make('follow_ups_work_order_message')
                                             ->label('Mensaje para trabajos entregados')
                                             ->helperText('{nombre} se reemplaza por el nombre del contacto principal o del cliente.')
@@ -346,6 +355,8 @@ class Settings extends Page
         $data['invoicing_enabled'] = (bool) ($data['invoicing_enabled'] ?? false);
         $data['follow_ups_enabled'] = (bool) ($data['follow_ups_enabled'] ?? false);
         $data['follow_ups_business_days'] = (int) $data['follow_ups_business_days'];
+        // Empty rather than null: a null setting falls back to the default hour.
+        $data['follow_ups_notify_at'] = substr((string) ($data['follow_ups_notify_at'] ?? ''), 0, 5);
         $data['invoicing_point_of_sale'] = blank($data['invoicing_point_of_sale'] ?? null) ? null : (int) $data['invoicing_point_of_sale'];
 
         AppSettings::set(

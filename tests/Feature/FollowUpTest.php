@@ -322,6 +322,7 @@ class FollowUpTest extends TestCase
             ->fillForm([
                 'follow_ups_enabled' => false,
                 'follow_ups_business_days' => '5',
+                'follow_ups_notify_at' => '08:45',
                 'follow_ups_sale_message' => 'Hola {nombre}, cómo anda lo que compraste?',
             ])
             ->call('save')
@@ -330,5 +331,18 @@ class FollowUpTest extends TestCase
         $this->assertFalse(Settings::get('follow_ups.enabled'));
         $this->assertSame(5, Settings::get('follow_ups.business_days'));
         $this->assertSame('Hola {nombre}, cómo anda lo que compraste?', Settings::get('follow_ups.sale_message'));
+        $this->assertSame('08:45', Settings::get('follow_ups.notify_at'));
+    }
+
+    public function test_clearing_the_notice_hour_turns_it_off_instead_of_restoring_the_default(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(SettingsPage::class)
+            ->fillForm(['follow_ups_notify_at' => null])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame('', Settings::get('follow_ups.notify_at'));
     }
 }

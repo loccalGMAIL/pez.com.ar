@@ -30,6 +30,17 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
     del cliente.
   - En Configuración → Seguimientos se activa o desactiva, se eligen los días y se editan
     los textos para trabajos y para ventas (`{nombre}` pone el nombre del contacto).
+- **Notificaciones push en la app instalada**: de lunes a viernes, a la hora elegida en
+  Configuración → Seguimientos (09:30 por defecto; vacío = sin aviso), llega al celular
+  "Tenés 3 seguimientos para enviar: …" y al tocarla se abre el tablero. Solo avisa si hay
+  seguimientos para ese día, y una sola vez por día.
+  - Se activan en cada dispositivo desde el menú de usuario → "Activar notificaciones", que
+    manda una notificación de prueba; el mismo botón las desactiva. En Android funcionan con
+    la app instalada o desde Chrome; en el iPhone (iOS 16.4 o más) con la app en la pantalla
+    de inicio.
+  - Usa Web Push con claves VAPID (paquete `minishlink/web-push`): se generan una sola vez
+    con `php artisan push:keys` y van al `.env`. El comando `follow-ups:notify` corre con el
+    cron que ya está configurado. Los dispositivos dados de baja se borran solos.
 - **Duplicar ítems en los presupuestos**: cada línea tiene un botón "Duplicar ítem" que la copia
   (con su costo, proveedor y recargo) justo debajo de la original y la deja abierta para
   editarla. La copia se guarda como un ítem nuevo al guardar el presupuesto.

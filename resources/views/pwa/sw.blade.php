@@ -91,3 +91,54 @@ self.addEventListener('fetch', (event) => {
         return response;
     })());
 });
+
+/*
+ * Push notifications (Configuración → Seguimientos). The server sends
+ * { title, body, url, tag }; a newer notice with the same tag replaces the
+ * previous one instead of piling up.
+ */
+const APP_NAME = @js(\App\Http\Controllers\PwaController::appName());
+const NOTIFICATION_ICON = @js(parse_url(asset('icons/icon-192.png'), PHP_URL_PATH));
+
+self.addEventListener('push', (event) => {
+    let data = {};
+
+    try {
+        data = event.data ? event.data.json() : {};
+    } catch (error) {
+        data = { body: event.data ? event.data.text() : '' };
+    }
+
+    event.waitUntil(self.registration.showNotification(data.title || APP_NAME, {
+        body: data.body || '',
+        tag: data.tag || 'pez',
+        renotify: true,
+        icon: NOTIFICATION_ICON,
+        badge: NOTIFICATION_ICON,
+        data: { url: data.url || '/' },
+    }));
+});
+
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+
+    // Only pages of this app: a URL elsewhere falls back to the dashboard.
+    let url = new URL(event.notification.data?.url || '/', self.location.origin);
+
+    if (url.origin !== self.location.origin) {
+        url = new URL('/', self.location.origin);
+    }
+
+    event.waitUntil((async () => {
+        const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        const open = windows.find((client) => new URL(client.url).origin === self.location.origin);
+
+        if (open) {
+            await open.focus();
+
+            return open.navigate(url.href);
+        }
+
+        return self.clients.openWindow(url.href);
+    })());
+});
