@@ -8,6 +8,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -66,5 +67,15 @@ class User extends Authenticatable implements FilamentUser, HasAvatar
     public function getFilamentAvatarUrl(): ?string
     {
         return $this->avatar_url;
+    }
+
+    /**
+     * Devices where this user turned on notifications.
+     *
+     * @return HasMany<PushSubscription, $this>
+     */
+    public function pushSubscriptions(): HasMany
+    {
+        return $this->hasMany(PushSubscription::class);
     }
 }

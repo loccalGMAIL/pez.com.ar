@@ -9,6 +9,7 @@ use App\Filament\Resources\Clients\Pages\ViewClient;
 use App\Filament\Resources\Clients\RelationManagers\ChargesRelationManager;
 use App\Filament\Resources\Clients\RelationManagers\ContactsRelationManager;
 use App\Filament\Resources\Clients\RelationManagers\DevicesRelationManager;
+use App\Filament\Resources\Clients\RelationManagers\FollowUpsRelationManager;
 use App\Filament\Resources\Clients\RelationManagers\PaymentsRelationManager;
 use App\Filament\Resources\Clients\RelationManagers\QuotesRelationManager;
 use App\Filament\Resources\Clients\RelationManagers\SubscriptionsRelationManager;
@@ -66,6 +67,7 @@ class ClientResource extends Resource
             ChargesRelationManager::class,
             PaymentsRelationManager::class,
             SubscriptionsRelationManager::class,
+            FollowUpsRelationManager::class,
         ];
     }
 

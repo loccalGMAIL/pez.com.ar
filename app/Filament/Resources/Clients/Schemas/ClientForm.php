@@ -74,6 +74,9 @@ class ClientForm
                         Toggle::make('is_active')
                             ->label('Activo')
                             ->default(true),
+                        Toggle::make('skip_follow_ups')
+                            ->label('No enviar seguimientos postventa')
+                            ->helperText('Los clientes con un abono activo ya quedan afuera.'),
                     ]),
             ]);
     }

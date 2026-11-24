@@ -43,4 +43,13 @@ return [
         'redirect' => '/auth/google/callback',
     ],
 
+    // Push notifications to the installed app (Web Push). The VAPID keys are
+    // generated once with `php artisan push:keys`; the subject identifies the
+    // sender to the push services (mailto: or https URL).
+    'webpush' => [
+        'public_key' => env('VAPID_PUBLIC_KEY'),
+        'private_key' => env('VAPID_PRIVATE_KEY'),
+        'subject' => env('VAPID_SUBJECT', env('APP_URL')),
+    ],
+
 ];

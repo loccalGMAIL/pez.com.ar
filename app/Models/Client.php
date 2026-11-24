@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\TaxCondition;
 use App\Rules\Cuit;
 use Database\Factories\ClientFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class Client extends Model
 {
@@ -31,6 +33,7 @@ class Client extends Model
         'province',
         'notes',
         'is_active',
+        'skip_follow_ups',
     ];
 
     protected function casts(): array
@@ -38,6 +41,7 @@ class Client extends Model
         return [
             'tax_condition' => TaxCondition::class,
             'is_active' => 'boolean',
+            'skip_follow_ups' => 'boolean',
         ];
     }
 
@@ -76,6 +80,33 @@ class Client extends Model
     public function whatsappPhone(): ?string
     {
         return $this->phone ?: $this->primaryContact?->phone;
+    }
+
+    /**
+     * Name used in messages: the main contact's first name, or the client's.
+     */
+    public function greetingName(): string
+    {
+        $contact = $this->primaryContact?->name;
+
+        return filled($contact) ? Str::before(trim($contact), ' ') : ($this->trade_name ?: $this->business_name);
+    }
+
+    /**
+     * Clients on a subscription are in touch anyway, so they get no after-sales messages.
+     */
+    public function receivesFollowUps(): bool
+    {
+        return ! $this->skip_follow_ups && ! $this->subscriptions()->active()->exists();
+    }
+
+    /**
+     * @param  Builder<Client>  $query
+     */
+    public function scopeReceivingFollowUps(Builder $query): void
+    {
+        $query->where('skip_follow_ups', false)
+            ->whereDoesntHave('subscriptions', fn (Builder $query) => $query->active());
     }
 
     /**
@@ -169,6 +200,14 @@ class Client extends Model
     public function devices(): HasMany
     {
         return $this->hasMany(Device::class);
+    }
+
+    /**
+     * @return HasMany<FollowUp, $this>
+     */
+    public function followUps(): HasMany
+    {
+        return $this->hasMany(FollowUp::class);
     }
 
     /**

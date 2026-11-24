@@ -46,6 +46,17 @@ class Subscription extends Model
     }
 
     /**
+     * Turned on and not ended yet.
+     *
+     * @param  Builder<Subscription>  $query
+     */
+    public function scopeActive(Builder $query): void
+    {
+        $query->where('is_active', true)
+            ->where(fn (Builder $query) => $query->whereNull('ends_on')->orWhereDate('ends_on', '>=', today()));
+    }
+
+    /**
      * Subscriptions whose charge for the month of $date is due by that day.
      *
      * @param  Builder<Subscription>  $query
