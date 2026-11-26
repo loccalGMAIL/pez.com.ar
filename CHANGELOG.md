@@ -26,8 +26,14 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
     recibe uno solo por período: un trabajo y una compra en la misma semana generan un
     único mensaje.
   - Los clientes con un abono activo no reciben seguimientos, y cada cliente tiene el check
-    "No enviar seguimientos postventa". El historial queda en la pestaña "Seguimientos"
-    del cliente.
+    "No enviar seguimientos postventa".
+  - **Ventas → Seguimientos** lista quién está en seguimiento (pendientes, del más atrasado
+    al más lejano, con el número de los de hoy en el menú), los enviados, los omitidos y
+    anulados. Cada fila despliega el mensaje, y la página de cada seguimiento muestra el
+    texto exacto con el que se abrió WhatsApp y cuándo, aunque después cambien los textos
+    de Configuración. Un enviado se puede abrir de nuevo en WhatsApp con el mismo texto y
+    un omitido se puede volver a proponer. La ficha del cliente tiene su pestaña
+    "Seguimientos" con el mismo historial.
   - En Configuración → Seguimientos se activa o desactiva, se eligen los días y se editan
     los textos para trabajos y para ventas (`{nombre}` pone el nombre del contacto).
 - **Notificaciones push en la app instalada**: de lunes a viernes, a la hora elegida en

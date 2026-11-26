@@ -306,12 +306,14 @@ class FollowUpTest extends TestCase
         $this->actingAs(User::factory()->create());
         $client = Client::factory()->create();
         $sent = FollowUp::factory()->for($client)->status(FollowUpStatus::Sent)->create();
+        $cancelled = FollowUp::factory()->for($client)->status(FollowUpStatus::Cancelled)->create();
         $other = FollowUp::factory()->create();
 
         Livewire::test(FollowUpsRelationManager::class, ['ownerRecord' => $client, 'pageClass' => ViewClient::class])
-            ->assertCanSeeTableRecords([$sent])
+            ->assertCanSeeTableRecords([$sent, $cancelled])
             ->assertCanNotSeeTableRecords([$other])
-            ->assertTableActionHidden('sendFollowUp', $sent);
+            ->assertTableActionHasLabel('sendFollowUp', 'Abrir de nuevo en WhatsApp', $sent)
+            ->assertTableActionHidden('sendFollowUp', $cancelled);
     }
 
     public function test_saves_the_follow_up_settings(): void

@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\Clients\RelationManagers;
 
-use App\Filament\Resources\Clients\Actions\FollowUpActions;
+use App\Filament\Resources\FollowUps\Actions\FollowUpActions;
+use App\Filament\Resources\FollowUps\FollowUpResource;
 use App\Models\FollowUp;
+use Filament\Actions\ActionGroup;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -45,10 +47,13 @@ class FollowUpsRelationManager extends RelationManager
                     ->dateTime('d/m/Y H:i')
                     ->placeholder('—'),
             ])
+            ->recordUrl(fn (FollowUp $record) => FollowUpResource::getUrl('view', ['record' => $record]))
             ->recordActions([
                 FollowUpActions::send(),
-                FollowUpActions::postpone(),
-                FollowUpActions::skip(),
+                ActionGroup::make([
+                    FollowUpActions::postpone(),
+                    FollowUpActions::skip(),
+                ]),
             ]);
     }
 }
