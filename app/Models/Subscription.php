@@ -70,6 +70,20 @@ class Subscription extends Model
     }
 
     /**
+     * Whether the charge for the month of $date can still be created, even
+     * before the billing day: the subscription runs that month and was not billed yet.
+     */
+    public function canBillEarly(Carbon $date): bool
+    {
+        $period = $date->copy()->startOfMonth();
+
+        return $this->is_active
+            && $this->starts_on->lte($date)
+            && ($this->ends_on === null || $this->ends_on->gte($period))
+            && ! $this->charges()->whereDate('period', $period)->exists();
+    }
+
+    /**
      * Creates the charge for the month of $date, once. Fixed subscriptions are
      * owed right away; variable ones start as a draft listing last month's jobs
      * so the amount can be adjusted before confirming it.

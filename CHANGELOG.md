@@ -50,6 +50,11 @@ Cada versión publicada lleva un tag `vX.Y.Z` en `master`.
 - **Duplicar ítems en los presupuestos**: cada línea tiene un botón "Duplicar ítem" que la copia
   (con su costo, proveedor y recargo) justo debajo de la original y la deja abierta para
   editarla. La copia se guarda como un ítem nuevo al guardar el presupuesto.
+- **Generar el cargo del mes de un abono por adelantado**: los abonos tienen el botón
+  "Generar cargo del mes" (en la lista de abonos, en la pestaña del cliente y al editarlo)
+  para crear el cargo antes del día de facturación, por ejemplo cuando el cliente paga todo
+  junto. Así el recibo ya sale con el concepto del abono. Ese día el cargo no se vuelve a
+  generar, y el botón solo aparece mientras el cargo del mes no exista.
 
 ## [2.7.0] - 2026-11-05
 

@@ -33,6 +33,7 @@ use App\Models\User;
 use App\Models\WorkOrder;
 use App\Support\Settings;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -63,6 +64,33 @@ class BillingResourcesTest extends TestCase
         $subscription = $client->subscriptions()->sole();
         $this->assertSame(SubscriptionType::Variable, $subscription->type);
         $this->assertSame(120000.0, $subscription->amount);
+    }
+
+    public function test_bills_a_subscription_before_its_billing_day_only_once(): void
+    {
+        Carbon::setTestNow('2026-11-26');
+        $subscription = Subscription::factory()->create(['billing_day' => 28, 'amount' => 80000]);
+
+        Livewire::test(SubscriptionsRelationManager::class, ['ownerRecord' => $subscription->client, 'pageClass' => EditClient::class])
+            ->callTableAction('billNow', $subscription)
+            ->assertNotified('Cargo generado')
+            ->assertTableActionHidden('billNow', $subscription);
+
+        $charge = $subscription->charges()->sole();
+        $this->assertSame('Abono Mantenimiento mensual — Noviembre 2026', $charge->concept);
+        $this->assertSame(ChargeStatus::Pending, $charge->status);
+
+        Carbon::setTestNow('2026-11-28');
+        $this->artisan('subscriptions:bill')->expectsOutput('Cargos generados: 0');
+    }
+
+    public function test_subscriptions_not_running_this_month_can_not_be_billed_early(): void
+    {
+        Carbon::setTestNow('2026-11-26');
+
+        $this->assertFalse(Subscription::factory()->create(['starts_on' => '2026-12-01'])->canBillEarly(today()));
+        $this->assertFalse(Subscription::factory()->create(['ends_on' => '2026-10-31'])->canBillEarly(today()));
+        $this->assertFalse(Subscription::factory()->create(['is_active' => false])->canBillEarly(today()));
     }
 
     public function test_creates_a_manual_charge(): void
