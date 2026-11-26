@@ -2,7 +2,8 @@
 
 namespace App\Filament\Widgets;
 
-use App\Filament\Resources\Clients\Actions\FollowUpActions;
+use App\Filament\Resources\FollowUps\Actions\FollowUpActions;
+use App\Filament\Resources\FollowUps\FollowUpResource;
 use App\Models\FollowUp;
 use Filament\Actions\ActionGroup;
 use Filament\Support\Enums\FontWeight;
@@ -59,6 +60,7 @@ class DueFollowUps extends TableWidget
                         ->color('gray'),
                 ])->from('md'),
             ])
+            ->recordUrl(fn (FollowUp $record) => FollowUpResource::getUrl('view', ['record' => $record]))
             ->recordActions([
                 FollowUpActions::send()->button(),
                 ActionGroup::make([
