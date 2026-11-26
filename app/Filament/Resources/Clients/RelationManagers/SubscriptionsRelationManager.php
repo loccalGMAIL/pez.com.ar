@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Clients\RelationManagers;
 
+use App\Filament\Resources\Subscriptions\Actions\SubscriptionActions;
 use App\Filament\Resources\Subscriptions\Schemas\SubscriptionForm;
 use App\Filament\Resources\Subscriptions\Tables\SubscriptionsTable;
 use Filament\Actions\CreateAction;
@@ -36,6 +37,7 @@ class SubscriptionsRelationManager extends RelationManager
                 CreateAction::make(),
             ])
             ->recordActions([
+                SubscriptionActions::billNow(),
                 EditAction::make(),
             ]);
     }

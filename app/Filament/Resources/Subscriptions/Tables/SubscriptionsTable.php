@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Subscriptions\Tables;
 
 use App\Enums\SubscriptionType;
+use App\Filament\Resources\Subscriptions\Actions\SubscriptionActions;
 use App\Models\Client;
 use Filament\Actions\EditAction;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -61,6 +62,7 @@ class SubscriptionsTable
                     ->options(SubscriptionType::class),
             ])
             ->recordActions([
+                SubscriptionActions::billNow(),
                 EditAction::make(),
             ]);
     }
